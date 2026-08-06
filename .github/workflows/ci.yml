@@ -11,11 +11,20 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets a run be started by hand from the Actions tab. Added after this
+  # workflow sat with zero runs for a while: the very first push to a
+  # brand new empty GitHub repo does not fire the push event Actions
+  # listens for, and without this trigger the only fix would have been
+  # pushing a throwaway commit.
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      # false: let both versions run to completion even if one fails, so a
+      # single failing job still tells you the other version's result
+      # instead of getting cancelled.
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
@@ -26,11 +35,25 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and create the venv
+        # A real venv, not "uv pip install --system". --system was tested
+        # locally and found to ignore the matrix version entirely: it
+        # requires an actual system interpreter and skips over any uv
+        # managed toolchain, so both matrix legs silently installed against
+        # whatever Python happened to already be on the runner's PATH,
+        # making the 3.11/3.12 split pointless. "uv venv --python X"
+        # downloads that version if it is not already cached and creates
+        # .venv against it, the same command "make setup" runs locally.
+        # Putting .venv/bin on PATH means every later step in this job
+        # picks it up automatically, each step is a fresh shell, so a
+        # plain "source .venv/bin/activate" here would not survive to the
+        # next one.
+        run: |
+          uv venv --python ${{ matrix.python-version }}
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Install the project
-        run: uv pip install --system -e ".[dev]"
+        run: uv pip install -e ".[dev]"
 
       - name: Lint
         run: ruff check src tests
