@@ -11,11 +11,12 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Lets a run be started by hand from the Actions tab. Added after this
-  # workflow sat with zero runs for a while: the very first push to a
-  # brand new empty GitHub repo does not fire the push event Actions
-  # listens for, and without this trigger the only fix would have been
-  # pushing a throwaway commit.
+  # Lets a run be started by hand from the Actions tab. Added because push
+  # events have not been triggering runs on this repo: Actions itself is
+  # enabled and working (workflow_dispatch runs complete fine), but two
+  # separate pushes to main, including the very first commit, have not
+  # started a run on their own. Cause not yet known. Until it is, this is
+  # the working fallback.
   workflow_dispatch:
 
 jobs:
@@ -30,10 +31,14 @@ jobs:
         python-version: ["3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        # Pinned to the exact release, not a floating major tag: this
+        # project published floating v1 through v7 but has not published
+        # one for v8 or v9, only exact tags exist there (checked
+        # 2026-08-06), so v9.0.0 has to be pinned exactly.
+        uses: astral-sh/setup-uv@v9.0.0
 
       - name: Set up Python ${{ matrix.python-version }} and create the venv
         # A real venv, not "uv pip install --system". --system was tested
