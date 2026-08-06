@@ -73,3 +73,4 @@ Three structural ideas hold it up, and they are the ideas worth carrying into ev
 ## Open question, still unanswered
 
 `Config.sma_fast` and `Config.sma_slow` default to 10 and 20. Those are placeholders. The rulebook says "only take trades above BOTH the red and blue SMA lines", and the actual periods of the red and blue lines on the charting setup have never been written down. Confirm them, change the two numbers in `config.py`, and rerun the tests. Nothing else needs to move, which is the whole point of keeping numbers in one place.
+.
