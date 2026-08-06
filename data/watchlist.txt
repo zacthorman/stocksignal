@@ -1,0 +1,31 @@
+# One ticker a line. Lines starting with # are ignored.
+# Keep this short at first. A 500-ticker watchlist on a free data source is
+# how you discover rate limiting the hard way.
+
+# Index and sector ETFs
+SPY
+QQQ
+IWM
+XLE
+XLF
+XLK
+
+# Large-cap tech
+AAPL
+MSFT
+NVDA
+AMD
+GOOGL
+AMZN
+META
+
+# Higher-volatility names, useful for testing whether the screens actually
+# discriminate rather than just passing everything liquid
+TSLA
+PLTR
+COIN
+MARA
+
+# Red-day candidates, for screen 6 when you get there
+SQQQ
+UVXY
