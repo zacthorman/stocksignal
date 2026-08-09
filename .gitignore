@@ -16,3 +16,6 @@ build/
 cache/
 out/
 signals.db
+
+# Machine local tool settings, not shared
+.claude/settings.local.json
