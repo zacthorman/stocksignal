@@ -170,6 +170,19 @@ class TestFindingLevels:
         assert 0.0 < stale_top.recency < 1.0
         assert fresh_top.touches == stale_top.touches, "same evidence, different freshness"
 
+    def test_a_chart_that_only_goes_up_has_no_swing_highs(self, lvl_cfg):
+        """A strictly rising chart never puts a bar above the ones after it.
+
+        Worth a test because it is the one realistic way a swing series comes back
+        completely empty, and the empty path had no cover.
+        """
+        df = flat_ohlc([100.0 + i for i in range(40)])
+        assert find_levels(df, lvl_cfg) == ()
+
+    def test_a_chart_that_only_goes_down_has_no_swing_lows(self, lvl_cfg):
+        df = flat_ohlc([200.0 - i for i in range(40)])
+        assert find_levels(df, lvl_cfg) == ()
+
     def test_a_flat_chart_has_no_levels(self, lvl_cfg):
         assert find_levels(flat_ohlc([100.0] * 40), lvl_cfg) == ()
 

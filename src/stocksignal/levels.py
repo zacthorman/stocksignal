@@ -223,11 +223,16 @@ def _recency(last_touch: pd.Timestamp, df: pd.DataFrame, cfg: Config) -> float:
 
     Age is counted in sessions rather than calendar days, because a market that was shut
     for a fortnight has not made a level any staler.
+
+    The `max(0.0, ...)` is a clamp, not a branch. An earlier version had an explicit
+    `if age >= level_lookback_days: return 0.0` and the coverage report showed that line
+    was never reached, which turned out to be correct rather than a missing test:
+    `_recent_touches` drops anything older than the window before this function ever sees
+    it, so the oldest age that can arrive is `lookback - 1`. The clamp keeps the floor for
+    anyone who calls this directly later without pretending to be a tested code path.
     """
     age = len(df) - 1 - df.index.get_loc(last_touch)
     if age <= cfg.level_fresh_days:
         return 1.0
-    if age >= cfg.level_lookback_days:
-        return 0.0
     span = cfg.level_lookback_days - cfg.level_fresh_days
-    return round(1.0 - (age - cfg.level_fresh_days) / span, 4)
+    return round(max(0.0, 1.0 - (age - cfg.level_fresh_days) / span), 4)
