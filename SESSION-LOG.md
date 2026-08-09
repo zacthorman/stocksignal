@@ -72,14 +72,37 @@ build plan's question about what test-first changed.
 
 ### Open items
 
-1. **Push events still do not trigger CI.** Carried from session 1, untouched. This
-   session's two commits are the free retest: push them, then look at the Actions tab.
-   If a run appears on its own it has cleared itself and the whole entry can be deleted.
+1. ~~**Push events still do not trigger CI.**~~ **RESOLVED, same evening.** Pushing this
+   session's commit started CI run #2 on its own, 18 seconds, nobody pressed anything.
+   Nothing was changed on this side between the four pushes that produced no run and the
+   one that did, which makes the session 1 guess (a new-account restriction on automatic
+   triggers, lifted after a few days) the only story that fits. Steps (b) through (d) of
+   the escalation plan were never needed; step (a), "push anything and look", was the
+   whole answer. The stale comment in `ci.yml` claiming the trigger was broken has been
+   rewritten, because a confidently worded false comment is the exact thing session 1
+   caught twice.
 2. **The SMA periods are still placeholders**, unchanged from session 1.
 3. **`level_lookback_days` at 252 is a guess, not a measurement.** It is a defensible
    default (roughly a trading year) but nothing has tested whether a level from ten
    months ago carries any predictive weight. Session 4's backtest is the thing that
    could answer it, and it is worth coming back here afterwards.
+
+### Two mistakes worth recording, both in the commands rather than the code
+
+**The two-commit plan collapsed into one.** `git add -A` stages everything, so the first
+commit swallowed the bug fix and the feature together and the second had nothing left to
+commit. Staging is a separate decision from committing, and `add -A` throws that decision
+away. To split deliberately: `git add` the specific files, commit, then add the rest.
+
+**zsh does not treat `#` as a comment.** Commands pasted with a trailing explanation ran
+as `make test '#' expect 76 passed`. bash strips it, zsh interactive shells do not unless
+`interactive_comments` is set, and macOS defaults to zsh. Paste commands without trailing
+notes.
+
+### Also fixed after the push
+
+`ci.yml` ran `ruff check` but not `ruff format --check`, so CI was weaker than `make lint`
+and a badly formatted file could earn a green tick and then fail locally. Both now run.
 
 ### Next session opens with
 
