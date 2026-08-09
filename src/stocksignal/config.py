@@ -69,7 +69,44 @@ class Config:
     level_break_lookback:
         A level that price crossed within this many sessions is flagged as
         flipped. A flip is news; price living above an old ceiling for six months
-        is not.
+        is not. The breakout screen reuses this as its "broke out in the last
+        few sessions" window, so there is one dial for "recent" rather than two.
+    breakout_volume_spike_min, breakout_volume_spike_strong:
+        The breaking bar's volume, as a multiple of the average volume in the
+        sessions before it, must clear `breakout_volume_spike_min` to count as a
+        spike at all. The volume component of the score ramps from 0 at that
+        floor to 1.0 at `breakout_volume_spike_strong`.
+    breakout_ignition_min_body_pct:
+        The igniting bar's body, as a percentage of its own close, must clear
+        this floor. The rulebook says the igniting bar "must be big", which is
+        an absolute claim, not just "bigger than a small baby bar".
+    breakout_ignition_strong_ratio:
+        The igniting bar's body divided by the baby bar's body must exceed 1.0
+        to pass at all (the rulebook's "bigger than the baby bar before it").
+        The ignition component of the score ramps from 0 at a ratio of 1.0 to
+        1.0 at this ratio.
+    breakout_baby_max_wick_pct:
+        The baby bar's wick, as a percentage of its own high-low range, above
+        which the rulebook's "massive wicks disqualify it" rejects the setup
+        outright.
+    breakout_dip_tolerance_pct:
+        How close a post-breakout pullback's low must get to the broken level,
+        as a percentage of the level's price, to count as "the dip" in the
+        dip-and-reject bonus pattern.
+    breakout_dip_reject_bonus:
+        Flat addition to the score when the dip-and-reject pattern confirms
+        (a pullback to the level followed by a close back above it). Additive
+        rather than another weighted term, because the rulebook treats this as
+        a bonus on top of a setup that already qualifies, not a fourth thing
+        that setup must be good at.
+    w_breakout_volume, w_breakout_ignition, w_breakout_recency:
+        Weights for the three continuous readings that make up the breakout
+        score before the dip-and-reject bonus: how strong the volume spike is,
+        how strong the ignition bar is, and how fresh the broken level is.
+        Deliberately equal. There is no backtest evidence yet that any one of
+        these three matters more than the others for picking winners; the
+        Session 4 backtest is what earns the right to move them apart, not a
+        guess made while writing the screen.
     """
 
     sma_fast: int = 10
@@ -86,6 +123,16 @@ class Config:
     level_lookback_days: int = 252
     level_fresh_days: int = 21
     level_break_lookback: int = 5
+    breakout_volume_spike_min: float = 1.5
+    breakout_volume_spike_strong: float = 3.0
+    breakout_ignition_min_body_pct: float = 1.5
+    breakout_ignition_strong_ratio: float = 3.0
+    breakout_baby_max_wick_pct: float = 60.0
+    breakout_dip_tolerance_pct: float = 1.5
+    breakout_dip_reject_bonus: float = 0.3
+    w_breakout_volume: float = 1 / 3
+    w_breakout_ignition: float = 1 / 3
+    w_breakout_recency: float = 1 / 3
 
     # Tickers scanned when no watchlist file is given.
     default_watchlist: tuple[str, ...] = field(
@@ -109,6 +156,16 @@ class Config:
             raise ValueError("level_fresh_days cannot exceed level_lookback_days")
         if self.level_swing_lookback < 1:
             raise ValueError("level_swing_lookback must be at least 1")
+        if self.breakout_volume_spike_min <= 1.0:
+            raise ValueError("breakout_volume_spike_min must be above 1.0, or it is not a spike")
+        if self.breakout_volume_spike_strong <= self.breakout_volume_spike_min:
+            raise ValueError("breakout_volume_spike_strong must exceed breakout_volume_spike_min")
+        if self.breakout_ignition_strong_ratio <= 1.0:
+            raise ValueError("breakout_ignition_strong_ratio must be above 1.0")
+        if not 0 < self.breakout_baby_max_wick_pct <= 100:
+            raise ValueError("breakout_baby_max_wick_pct must be between 0 and 100")
+        if self.breakout_dip_tolerance_pct <= 0:
+            raise ValueError("breakout_dip_tolerance_pct must be positive")
 
 
 DEFAULT_CONFIG = Config()

@@ -17,16 +17,23 @@ import pandas as pd
 from stocksignal.config import DEFAULT_CONFIG, Config
 from stocksignal.data import DataError, PriceSource
 from stocksignal.indicators import average_volume
-from stocksignal.models import Quote, ScreenResult, Signal
-from stocksignal.screens import screen_tradability, screen_trend
+from stocksignal.models import Quote, Signal
+from stocksignal.screens import screen_breakout, screen_tradability, screen_trend
 
 log = logging.getLogger(__name__)
 
-# Screens are listed here in the order they run. The first entry is the hard
-# gate: if it fails, the rest are skipped, because there is no point scoring the
-# trend on something you cannot trade.
+# HARD_GATE must pass before anything else runs, because there is no point
+# scoring a setup on something you cannot trade.
+#
+# SCORING_SCREENS are alternative setups, not conditions the same trade must
+# satisfy at once: a ticker needs to clear the hard gate and clear at least
+# one of them. A trend read and a breakout are two different reasons to take
+# a trade, so a ticker in a clean uptrend with no breakout today, or one
+# breaking out before its trend has confirmed, both still qualify. Requiring
+# all of them would mean a signal only ever fires on the rare ticker doing
+# everything at once.
 HARD_GATE = screen_tradability
-SCORING_SCREENS = (screen_trend,)
+SCORING_SCREENS = (screen_trend, screen_breakout)
 
 
 @dataclass(frozen=True)
@@ -56,7 +63,11 @@ def build_quote(ticker: str, df: pd.DataFrame, cfg: Config, shares_float: float 
 
 
 def scan_ticker(ticker: str, source: PriceSource, cfg: Config = DEFAULT_CONFIG) -> Signal | None:
-    """Run every screen against one ticker. Returns None if it fails a hard gate."""
+    """Run every screen against one ticker.
+
+    Returns None if it fails the hard gate, or if it clears none of the
+    scoring screens at all.
+    """
     df = source.history(ticker, days=max(250, cfg.min_history_days))
     quote = build_quote(ticker, df, cfg, source.shares_float(ticker))
 
@@ -64,24 +75,23 @@ def scan_ticker(ticker: str, source: PriceSource, cfg: Config = DEFAULT_CONFIG) 
     if not gate.passed:
         return None
 
-    results: list[ScreenResult] = [gate]
-    for screen in SCORING_SCREENS:
-        results.append(screen(df, quote, cfg))
-
-    if not all(r.passed for r in results):
+    scoring_results = [screen(df, quote, cfg) for screen in SCORING_SCREENS]
+    if not any(r.passed for r in scoring_results):
         return None
 
-    # Total score weights the scoring screens; the gate contributes a small
-    # liquidity tiebreak so that two equally strong trends rank by tradability.
-    trend_score = sum(r.score for r in results if r.name != gate.name)
-    total = round(trend_score + gate.score * 0.1, 4)
+    # Total score sums whichever setups actually fired; a failed scoring
+    # screen contributes 0 by convention, so this needs no filtering. The gate
+    # contributes a small liquidity tiebreak so that two equally strong setups
+    # rank by tradability.
+    setup_score = sum(r.score for r in scoring_results)
+    total = round(setup_score + gate.score * 0.1, 4)
 
     return Signal(
         ticker=quote.ticker,
         as_of=quote.as_of,
         close=quote.close,
         score=total,
-        results=tuple(results),
+        results=tuple([gate, *scoring_results]),
     )
 
 
@@ -103,21 +113,22 @@ def scan(tickers: list[str], source: PriceSource, cfg: Config = DEFAULT_CONFIG) 
                 rejected.append((quote.ticker, gate.reasons[0] if gate.reasons else "failed gate"))
                 continue
 
-            results = [gate] + [s(df, quote, cfg) for s in SCORING_SCREENS]
-            failed = [r for r in results if not r.passed]
-            if failed:
-                first = failed[0]
-                rejected.append((quote.ticker, first.reasons[0] if first.reasons else first.name))
+            scoring_results = [s(df, quote, cfg) for s in SCORING_SCREENS]
+            if not any(r.passed for r in scoring_results):
+                reason = "; ".join(
+                    f"{r.name}: {r.reasons[0]}" for r in scoring_results if r.reasons
+                )
+                rejected.append((quote.ticker, reason or "no scoring screen passed"))
                 continue
 
-            trend_score = sum(r.score for r in results if r.name != gate.name)
+            setup_score = sum(r.score for r in scoring_results)
             signals.append(
                 Signal(
                     ticker=quote.ticker,
                     as_of=quote.as_of,
                     close=quote.close,
-                    score=round(trend_score + gate.score * 0.1, 4),
-                    results=tuple(results),
+                    score=round(setup_score + gate.score * 0.1, 4),
+                    results=tuple([gate, *scoring_results]),
                 )
             )
         except DataError as exc:
