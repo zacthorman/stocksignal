@@ -28,6 +28,23 @@ class DataError(RuntimeError):
     """Raised when a source cannot produce usable bars for a ticker."""
 
 
+def last_business_day(day: pd.Timestamp) -> pd.Timestamp:
+    """The given day, rolled back to Friday if it lands on a weekend.
+
+    This exists because of a bug that only fires at weekends. `pd.bdate_range` given
+    a Saturday or Sunday as `end` returns one row fewer than `periods` asked for, so
+    a synthetic history built on a Sunday came out 119 rows long while the arrays
+    beside it were 120, and pandas refused to build the frame. Midweek it was fine.
+
+    Kept as its own function purely so it can be tested without pretending it is a
+    different day, which is the only honest way to test date-dependent behaviour.
+    """
+    normalised = day.normalize()
+    if normalised.weekday() >= 5:
+        return normalised - pd.offsets.BDay(1)
+    return normalised
+
+
 def validate_bars(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
     """Fail loudly and early on malformed data.
 
@@ -84,8 +101,9 @@ class SyntheticSource:
 
     def history(self, ticker: str, days: int = 250) -> pd.DataFrame:
         rng = self._rng(ticker)
-        # Business days ending today, so the "latest" bar is always the last row.
-        idx = pd.bdate_range(end=pd.Timestamp.today().normalize(), periods=days)
+        # Business days ending on the most recent trading day, so the "latest" bar is
+        # always the last row.
+        idx = pd.bdate_range(end=last_business_day(pd.Timestamp.today()), periods=days)
         shocks = rng.normal(loc=self.drift, scale=0.018, size=days)
         close = self.start_price * np.exp(np.cumsum(shocks))
         intraday = np.abs(rng.normal(0, 0.008, size=days))

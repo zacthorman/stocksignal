@@ -46,6 +46,30 @@ class Config:
         Gap between the two SMAs, as a percentage of the slow SMA, at which the
         trend counts as strong. The rulebook says the wider the gap, the
         stronger the move, so this becomes the score's ceiling.
+    level_swing_lookback:
+        How many bars either side a bar must beat to count as a swing point.
+        Bigger means fewer, more significant pivots.
+    level_tolerance_pct:
+        How far apart two swing points can be and still be the same level, as a
+        percentage of price. A percentage rather than an absolute amount because
+        a 1.50 band is a 7.5% zone on a 20 dollar stock and a 0.4% hairline on a
+        400 dollar one, and those are not the same claim.
+    level_min_touches:
+        The rulebook's three-confirmation rule. Fewer touches than this and it is
+        a coincidence, not a level.
+    level_lookback_days:
+        Only swing points inside this many sessions count as touches. Three
+        touches spread over two years is not evidence about where price is
+        respected now. Roughly one trading year by default.
+    level_fresh_days:
+        A level last touched within this many sessions scores a full 1.0 for
+        recency. Beyond it the score decays in a straight line to 0.0 at
+        `level_lookback_days`, so a stale level survives but ranks below a fresh
+        one rather than being thrown away.
+    level_break_lookback:
+        A level that price crossed within this many sessions is flagged as
+        flipped. A flip is news; price living above an old ceiling for six months
+        is not.
     """
 
     sma_fast: int = 10
@@ -56,6 +80,12 @@ class Config:
     min_history_days: int = 60
     min_sma_gap_pct: float = 0.5
     sma_gap_strong_pct: float = 5.0
+    level_swing_lookback: int = 5
+    level_tolerance_pct: float = 1.0
+    level_min_touches: int = 3
+    level_lookback_days: int = 252
+    level_fresh_days: int = 21
+    level_break_lookback: int = 5
 
     # Tickers scanned when no watchlist file is given.
     default_watchlist: tuple[str, ...] = field(
@@ -71,6 +101,14 @@ class Config:
             raise ValueError("min_history_days must cover at least one full slow SMA window")
         if self.min_sma_gap_pct > self.sma_gap_strong_pct:
             raise ValueError("min_sma_gap_pct cannot exceed sma_gap_strong_pct")
+        if self.level_tolerance_pct <= 0:
+            raise ValueError("level_tolerance_pct must be positive, or nothing ever clusters")
+        if self.level_min_touches < 2:
+            raise ValueError("level_min_touches must be at least 2, one price is not a level")
+        if self.level_fresh_days > self.level_lookback_days:
+            raise ValueError("level_fresh_days cannot exceed level_lookback_days")
+        if self.level_swing_lookback < 1:
+            raise ValueError("level_swing_lookback must be at least 1")
 
 
 DEFAULT_CONFIG = Config()

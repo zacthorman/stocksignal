@@ -30,6 +30,7 @@ src/stocksignal/
   models.py       Quote, ScreenResult, Signal
   data.py         PriceSource protocol, SyntheticSource, YFinanceSource
   indicators.py   pure maths on a frame, no I/O
+  levels.py       support and resistance: cluster swing points, three-touch rule, flips
   screens/        one module per rule from the rulebook
   scanner.py      order of operations, nothing else
   digest.py       rendering, terminal and markdown
