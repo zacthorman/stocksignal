@@ -88,9 +88,7 @@ def log_signals(signals: Iterable[Signal], db_path: Path | str = "signals.db") -
 
 def recent(limit: int = 20, db_path: Path | str = "signals.db") -> list[sqlite3.Row]:
     with connect(db_path) as conn:
-        return conn.execute(
-            "SELECT * FROM signals ORDER BY id DESC LIMIT ?", (limit,)
-        ).fetchall()
+        return conn.execute("SELECT * FROM signals ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
 
 
 def signals_on(day: date, db_path: Path | str = "signals.db") -> list[sqlite3.Row]:

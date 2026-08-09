@@ -85,9 +85,7 @@ def scan_ticker(ticker: str, source: PriceSource, cfg: Config = DEFAULT_CONFIG) 
     )
 
 
-def scan(
-    tickers: list[str], source: PriceSource, cfg: Config = DEFAULT_CONFIG
-) -> ScanReport:
+def scan(tickers: list[str], source: PriceSource, cfg: Config = DEFAULT_CONFIG) -> ScanReport:
     """Scan a watchlist. One bad ticker never takes down the run."""
     signals: list[Signal] = []
     rejected: list[tuple[str, str]] = []
