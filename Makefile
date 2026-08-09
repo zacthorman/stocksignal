@@ -28,10 +28,10 @@ fmt:  ## Fix what can be fixed automatically
 	ruff format src tests
 
 scan:  ## Offline scan of the default watchlist
-	stocksignal scan --watchlist data/watchlist.txt
+	PYTHONPATH=src python -m stocksignal.cli scan --watchlist data/watchlist.txt
 
 live:  ## Real market data, saved and logged
-	stocksignal scan --live --watchlist data/watchlist.txt --save --log
+	PYTHONPATH=src python -m stocksignal.cli scan --live --watchlist data/watchlist.txt --save --log
 
 clean:  ## Remove caches and build junk
 	rm -rf .pytest_cache .ruff_cache htmlcov .coverage dist build cache out
