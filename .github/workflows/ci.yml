@@ -1,4 +1,9 @@
-# Continuous integration: every push runs the same checks you run locally.
+# Continuous integration: every push to main runs lint, the test suite and an
+# offline smoke test of the CLI, on two Python versions.
+#
+# It is close to "make lint && make test" but not identical, and the difference
+# is deliberate: CI also runs the offline CLI smoke test at the bottom, which
+# has no local equivalent.
 #
 # Why bother on a solo project? Two reasons. It proves the repo works on a
 # machine that is not yours, which catches the "works because of something I
@@ -11,12 +16,14 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Lets a run be started by hand from the Actions tab. Added because push
-  # events have not been triggering runs on this repo: Actions itself is
-  # enabled and working (workflow_dispatch runs complete fine), but two
-  # separate pushes to main, including the very first commit, have not
-  # started a run on their own. Cause not yet known. Until it is, this is
-  # the working fallback.
+  # Lets a run be started by hand from the Actions tab.
+  #
+  # Originally added as a workaround: for the first few days of this repo's
+  # life, pushes to main did not start runs at all, while manual dispatch
+  # worked fine. That cleared itself on 2026-08-09 with no change on this side,
+  # which points at a new-account restriction on the GitHub end rather than
+  # anything in this file. Kept because re-running a job by hand is useful in
+  # its own right, not because the trigger is still broken.
   workflow_dispatch:
 
 jobs:
@@ -61,7 +68,14 @@ jobs:
         run: uv pip install -e ".[dev]"
 
       - name: Lint
-        run: ruff check src tests
+        # Both halves of "make lint". The format check was missing here, so a
+        # badly formatted file could pass CI and then fail the moment you ran
+        # make lint locally. A check that is weaker than the local one is worse
+        # than no check, because it teaches you to trust a green tick that has
+        # not looked at everything.
+        run: |
+          ruff check src tests
+          ruff format --check src tests
 
       - name: Test
         run: pytest --cov=stocksignal --cov-report=term-missing
