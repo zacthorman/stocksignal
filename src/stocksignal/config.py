@@ -76,26 +76,38 @@ class Config:
         trend counts as strong. The rulebook says the wider the gap, the
         stronger the move, so this becomes the score's ceiling.
 
-        MEASURED 2026-08-10 by `scripts/calibrate.py`, over 8,859 qualifying
-        bars across the 19-ticker watchlist and roughly six years of history.
-        Qualifying means the bars the trend screen would actually be scoring:
-        fast above slow, close above both. Measuring across all bars instead
-        would describe a population these numbers are never applied to.
+        MEASURED 2026-08-10 by `scripts/calibrate.py`, over 89,859 qualifying
+        bars across the 256-ticker screened watchlist and roughly six years of
+        history. Qualifying means the bars the trend screen would actually be
+        scoring: fast above slow, close above both. Measuring across all bars
+        instead would describe a population these numbers are never applied to.
 
-            p5   1.46      p50  11.50      p90  38.95
-            p10  2.79      p75  20.70      p99  85.74
+            p5   1.74      p50  21.16      p90  67.92
+            p10  3.61      p75  40.16      p99 170.17
 
         `min_sma_gap_pct` sits at roughly the 10th percentile. The floor exists
-        to reject a fast average sitting a hair above a slow one, and 2.8 is a
-        hair where the 25th percentile at 6.4 would have been throwing away
+        to reject a fast average sitting a hair above a slow one, and 3.6 is a
+        hair where the 25th percentile at 9.8 would have been throwing away
         real trends. `sma_gap_strong_pct` sits at the 90th, so about one
         qualifying bar in ten earns a full 1.0. Both percentile choices are
         conventions, not findings.
 
-        The two previous values, 2.0 and 20.0, were guesses made before any
-        data was available. The measurement says 2.0 sat near the 7th
-        percentile and barely filtered anything, while 20.0 sat near the 74th,
-        so a quarter of all qualifying bars were scoring maximum strength.
+        CALIBRATION IS UNIVERSE-SPECIFIC, WHICH IS THE REAL LESSON HERE. The
+        first measurement was taken against the old 19-ticker watchlist of index
+        funds and megacaps and produced 2.8 and 39.0. Screening the whole market
+        for beta above 2 replaced that with 256 names selected precisely for
+        moving harder than the market, and the same percentiles moved to 3.6 and
+        67.9. Nothing about the strategy changed; only the population did. Under
+        the old ceiling a large share of the new universe pinned at maximum
+        strength and the score stopped ranking anything.
+
+        So these two numbers go stale every time the watchlist is rebuilt, and
+        rebuilding is meant to be monthly. Rerun `scripts/calibrate.py` whenever
+        `build_watchlist.py` runs, or use `gap_scoring="relative"`, which ranks
+        each reading against the ticker's own history and therefore does not
+        care what else is in the universe.
+
+        Values before any data existed at all were 2.0 and 20.0, both guesses.
 
         KNOWN LIMITATION, and it is a real one. With a 180-period slow average
         the gap is driven mostly by how volatile the stock is, not by how good
@@ -203,8 +215,8 @@ class Config:
     min_float: float = 20_000_000
     avg_volume_window: int = 20
     min_history_days: int = 200
-    min_sma_gap_pct: float = 2.8
-    sma_gap_strong_pct: float = 39.0
+    min_sma_gap_pct: float = 3.6
+    sma_gap_strong_pct: float = 67.9
     gap_scoring: str = "absolute"
     gap_relative_lookback: int = 500
     gap_relative_min_samples: int = 40

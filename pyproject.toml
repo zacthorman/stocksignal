@@ -15,6 +15,11 @@ dependencies = [
 live = [
     "yfinance>=0.2.40",
 ]
+# Alpaca needs nothing but an HTTP client. Declared explicitly rather than
+# leaning on the copy yfinance happens to pull in, so `alpaca` works on its own.
+alpaca = [
+    "requests>=2.31",
+]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",

@@ -65,10 +65,34 @@ class Signal:
 
     @property
     def reasons(self) -> list[str]:
+        """Why this signal fired. Only screens that actually passed.
+
+        This used to concatenate every screen's reasons regardless of outcome,
+        which read badly on a real digest: because the scoring screens are
+        alternatives rather than requirements, a ticker firing on trend alone
+        dragged the breakout screen's four rejection notes along with it. NVDA
+        appeared as a ranked signal underneath "volume too low", "ignition bar
+        too small", "wick disqualifier" and "closed red". Half the digest was
+        explaining things that had not happened.
+
+        The failures are still available on `not_firing` for anyone who wants
+        them, they just no longer masquerade as the reasoning behind a pass.
+        """
         out: list[str] = []
         for r in self.results:
-            out.extend(r.reasons)
+            if r.passed:
+                out.extend(r.reasons)
         return out
+
+    @property
+    def not_firing(self) -> list[str]:
+        """Names of the scoring screens this ticker did not clear.
+
+        Worth keeping and worth keeping short. "This is a trend setup, not a
+        breakout" is useful context for a human deciding what to do. The full
+        paragraph of why the breakout failed is not.
+        """
+        return [r.name for r in self.results if not r.passed]
 
     @property
     def passed_screens(self) -> list[str]:

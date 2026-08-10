@@ -66,6 +66,53 @@ def load_benchmark(source: PriceSource, cfg: Config) -> pd.Series | None:
         return None
 
 
+def prefetch(
+    tickers: list[str], source: PriceSource, cfg: Config
+) -> dict[str, pd.DataFrame] | None:
+    """Pull every ticker in one go, if the source knows how. None if it does not.
+
+    `PriceSource` only promises `history`, one ticker at a time. Some providers
+    can do far better: Alpaca's bars endpoint takes a list of symbols and
+    paginates, so 256 tickers cost a handful of requests instead of 256. Sources
+    advertise that by having a `histories` method, and the ones that cannot are
+    unaffected.
+
+    A failed batch returns None rather than raising, so the scan drops back to
+    fetching one at a time. Slower is a much better outcome than a whole
+    watchlist lost to one bad response.
+    """
+    batch = getattr(source, "histories", None)
+    if batch is None:
+        return None
+    try:
+        frames = batch(tickers, days=cfg.required_history)
+    except Exception as exc:  # noqa: BLE001 - fall back rather than fail the run
+        log.warning("batch fetch failed, falling back to one at a time: %s", exc)
+        return None
+    log.info("batch fetched %d of %d tickers", len(frames), len(tickers))
+    return frames
+
+
+def take_frame(
+    ticker: str,
+    frames: dict[str, pd.DataFrame] | None,
+    source: PriceSource,
+    cfg: Config,
+) -> pd.DataFrame:
+    """One ticker's bars, from the batch if there was one.
+
+    A symbol missing from a successful batch is a symbol the provider had no
+    data for, so it raises rather than quietly refetching. Retrying it one at a
+    time would spend a request to be told the same thing.
+    """
+    if frames is None:
+        return source.history(ticker, days=cfg.required_history)
+    df = frames.get(ticker.upper())
+    if df is None:
+        raise DataError(f"{ticker}: no rows in the batch response")
+    return df
+
+
 def build_quote(
     ticker: str,
     df: pd.DataFrame,
@@ -137,10 +184,11 @@ def scan(tickers: list[str], source: PriceSource, cfg: Config = DEFAULT_CONFIG) 
     # and pulling SPY four hundred times to answer the same question four
     # hundred times is how you get rate limited by a free provider.
     benchmark = load_benchmark(source, cfg)
+    frames = prefetch(tickers, source, cfg)
 
     for ticker in tickers:
         try:
-            df = source.history(ticker, days=cfg.required_history)
+            df = take_frame(ticker, frames, source, cfg)
             quote = build_quote(ticker, df, cfg, source.shares_float(ticker), benchmark)
             as_of = quote.as_of
 

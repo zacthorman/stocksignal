@@ -27,12 +27,19 @@ def render_terminal(report: ScanReport, console: Console | None = None) -> None:
         console.print(f"[yellow]No candidates passed on {report.as_of.isoformat()}.[/yellow]")
     else:
         for i, sig in enumerate(report.signals, start=1):
+            why = list(sig.reasons)
+            # One dim line rather than the failed screen's full argument. The
+            # useful part is "this is a trend setup, not a breakout"; the
+            # paragraph explaining why the breakout did not fire belongs in the
+            # saved markdown, not in a table you scan in five seconds.
+            if sig.not_firing:
+                why.append(f"[dim](no {', '.join(sig.not_firing)} setup)[/dim]")
             table.add_row(
                 str(i),
                 sig.ticker,
                 f"{sig.close:,.2f}",
                 f"{sig.score:.2f}",
-                "\n".join(sig.reasons),
+                "\n".join(why),
             )
         console.print(table)
 
@@ -67,6 +74,8 @@ def render_markdown(report: ScanReport) -> str:
             lines.append(f"### {i}. {sig.ticker} at {sig.close:,.2f} (score {sig.score:.2f})")
             lines.append("")
             lines += [f"- {r}" for r in sig.reasons]
+            if sig.not_firing:
+                lines.append(f"- _Did not fire on: {', '.join(sig.not_firing)}._")
             lines.append("")
     else:
         lines += ["No candidates passed today.", ""]

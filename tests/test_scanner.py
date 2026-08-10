@@ -13,6 +13,7 @@ import pytest
 from helpers import make_bars
 from stocksignal.config import Config
 from stocksignal.data import DataError, SyntheticSource, last_business_day, validate_bars
+from stocksignal.indicators import beta
 from stocksignal.scanner import build_quote, load_benchmark, scan, scan_ticker
 
 
@@ -111,6 +112,72 @@ class TestBenchmarkAndBeta:
         assert "beta" in report.rejected[0][1]
 
 
+class BatchSource(FakeSource):
+    """A source that can serve many tickers per call, the way Alpaca does."""
+
+    def __init__(self, frames, floats=None, fail_batch=False):
+        super().__init__(frames, floats)
+        self.batch_calls = 0
+        self.fail_batch = fail_batch
+
+    def histories(self, tickers: list[str], days: int = 250) -> dict[str, pd.DataFrame]:
+        self.batch_calls += 1
+        if self.fail_batch:
+            raise DataError("provider had a moment")
+        return {t.upper(): self.frames[t] for t in tickers if t in self.frames}
+
+
+class TestBatchFetching:
+    def test_a_batch_source_is_asked_once_rather_than_per_ticker(self, cfg):
+        frames = {t: make_bars([100 + i * 1.5 for i in range(80)]) for t in ("AAA", "BBB", "CCC")}
+        src = BatchSource(frames)
+        scan(["AAA", "BBB", "CCC"], src, cfg)
+        assert src.batch_calls == 1
+        # Only the benchmark should have gone through the one-at-a-time path.
+        assert [c for c in src.calls if c != cfg.beta_benchmark] == []
+
+    def test_a_source_without_batching_still_works(self, cfg):
+        frames = {t: make_bars([100 + i * 1.5 for i in range(80)]) for t in ("AAA", "BBB")}
+        report = scan(["AAA", "BBB"], FakeSource(frames), cfg)
+        assert len(report.signals) == 2
+
+    def test_a_failed_batch_falls_back_instead_of_losing_the_run(self, cfg):
+        # Slower is a far better outcome than an empty digest.
+        frames = {t: make_bars([100 + i * 1.5 for i in range(80)]) for t in ("AAA", "BBB")}
+        src = BatchSource(frames, fail_batch=True)
+        report = scan(["AAA", "BBB"], src, cfg)
+        assert len(report.signals) == 2
+        assert src.batch_calls == 1
+
+    def test_a_symbol_missing_from_a_good_batch_is_an_error_not_a_refetch(self, cfg):
+        frames = {"AAA": make_bars([100 + i * 1.5 for i in range(80)])}
+        src = BatchSource(frames)
+        report = scan(["AAA", "GONE"], src, cfg)
+        assert [s.ticker for s in report.signals] == ["AAA"]
+        assert report.errors and report.errors[0][0] == "GONE"
+
+
+class TestSignalReasons:
+    def test_reasons_come_only_from_screens_that_passed(self, cfg):
+        # A clean uptrend with no breakout fires on trend alone. The breakout
+        # screen's complaints must not read as the reasoning behind the pass.
+        src = FakeSource({"UP": make_bars([100 + i * 1.5 for i in range(80)])})
+        sig = scan_ticker("UP", src, cfg)
+        assert sig is not None
+        failed = [r for r in sig.results if not r.passed]
+        assert failed, "this fixture is only meaningful while one screen fails"
+        for result in failed:
+            for reason in result.reasons:
+                assert reason not in sig.reasons
+
+    def test_the_screens_that_did_not_fire_are_still_named(self, cfg):
+        src = FakeSource({"UP": make_bars([100 + i * 1.5 for i in range(80)])})
+        sig = scan_ticker("UP", src, cfg)
+        assert sig is not None
+        assert "breakout" in sig.not_firing
+        assert "trend" not in sig.not_firing
+
+
 class TestScanTicker:
     def test_uptrend_produces_a_signal(self, cfg):
         src = FakeSource({"UP": make_bars([100 + i * 1.5 for i in range(80)])})
@@ -181,6 +248,55 @@ class TestSyntheticSource:
         assert len(df) == 120
         assert (df["high"] >= df["low"]).all()
         assert df.index.is_monotonic_increasing
+
+
+class TestSyntheticMarketFactor:
+    """Synthetic tickers share a market, because otherwise beta is meaningless.
+
+    Independent random walks give every ticker a beta near zero, which made the
+    offline scan reject its entire universe the moment the beta gate went in.
+    These tests exist so nobody "simplifies" the market factor back out.
+    """
+
+    def test_the_benchmark_is_the_market_so_its_beta_is_exactly_one(self):
+        # Not a detail. Beta is measured against the benchmark, so if the
+        # benchmark has a beta of its own, every other reading is scaled by it.
+        src = SyntheticSource()
+        assert src.beta_for(src.benchmark) == 1.0
+
+    def test_a_ticker_measures_close_to_its_declared_beta(self):
+        src = SyntheticSource(seed=11)
+        bench = src.history("SPY", days=400)["close"]
+        for ticker in ("AAA", "MMM", "ZZZ", "NVDA"):
+            measured = beta(src.history(ticker, days=400)["close"], bench)
+            assert measured is not None
+            assert measured == pytest.approx(src.beta_for(ticker), rel=0.25), ticker
+
+    def test_the_betas_spread_rather_than_bunching(self):
+        src = SyntheticSource()
+        betas = [src.beta_for(t) for t in ("AAPL", "NVDA", "MARA", "KO", "SPY", "XLF", "TSLA")]
+        assert max(betas) - min(betas) > 1.0, "a smoke test needs passers and failers"
+
+    def test_beta_is_stable_for_a_given_ticker(self):
+        assert SyntheticSource().beta_for("NVDA") == SyntheticSource().beta_for("NVDA")
+
+    def test_tickers_are_correlated_with_each_other(self):
+        src = SyntheticSource(seed=3)
+        a = src.history("AAA", days=300)["close"].pct_change().dropna()
+        b = src.history("BBB", days=300)["close"].pct_change().dropna()
+        assert a.corr(b) > 0.3, "shared market factor should show up as correlation"
+
+    def test_an_offline_scan_now_produces_some_signals_and_some_rejections(self):
+        # The regression this whole change exists to prevent: `make scan`
+        # returning an empty digest every single time.
+        cfg = Config()
+        tickers = ["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH"]
+        report = scan(tickers, SyntheticSource(seed=5), cfg)
+        assert report.scanned == len(tickers)
+        assert report.signals or report.rejected
+        betas = [SyntheticSource(seed=5).beta_for(t) for t in tickers]
+        assert any(b >= cfg.min_beta for b in betas)
+        assert any(b < cfg.min_beta for b in betas)
 
 
 class TestValidateBars:

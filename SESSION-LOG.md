@@ -4,6 +4,167 @@ A running record of what got done, what was learned, and what the next session o
 
 ---
 
+## Session 3, Sunday 9 August 2026
+
+> Written up on 10 August, after the fact, reconstructed from the diff, the
+> commit and the test scaffold rather than from notes taken at the time. The
+> factual half is verifiable from the code. The three understanding questions at
+> the bottom are deliberately left blank, because they are the half that only
+> works if you answer them yourself.
+
+**Where it started:** `levels.py` finished, the hardest screen in the rulebook still unbuilt.
+**Where it ended:** `screens/breakout.py`, 20 tests, registered and firing in the scanner.
+
+### The decision the prompt demanded before any code
+
+The build plan's prompt refuses to let you start: "this screen has five separate
+conditions. Propose how you want to combine them into one score and wait for me
+to agree." What got agreed:
+
+**Four hard gates and one bonus.**
+
+1. A three-touch resistance level, broken within `level_break_lookback` (gate)
+2. A volume spike on the breaking bar against the average before it (gate)
+3. The ignition bar test, which is two sub-checks: bigger body than the baby
+   bar, and big in absolute terms against its own close (gate)
+4. The baby bar's wick disqualifier (gate)
+5. Follow-through, where a red second candle fails it (gate)
+
+Dip-and-reject is the bonus. It never gates, because the rulebook itself says
+the pattern "does not always appear", and a gate on something optional would
+mean the screen almost never fires.
+
+**Score is a weighted sum of three continuous readings, not of five.** The gates
+are pass or fail; only volume strength, ignition strength and level recency vary
+once everything has already qualified. Each is normalised 0 at its own floor to
+1.0 at a "strong" ceiling, the same shape `trend.py` uses for its SMA gap, so a
+very strong ignition bar can offset a merely adequate volume spike. The
+dip-and-reject bonus is added flat afterwards rather than being a fourth weighted
+term, because it is a bonus on top of a setup that already qualified, not a
+fourth thing the setup has to be good at.
+
+The three weights are deliberately equal at one third each. There is no evidence
+yet that any of the three matters more than the others, and session 4 is what
+earns the right to move them apart.
+
+### What the tests found that the design did not
+
+**The flip check silently failed when the chart was the wrong length.**
+`classify_levels` detects a broken level by comparing against an "earlier"
+reference bar. On a short hand-built chart that reference landed exactly on one
+of the 100.0 resistance touches, and the strict `<` in the flip comparison then
+returned false: the level had plainly been broken, and the screen reported it
+had not.
+
+The fix is `buffer_bars` in `make_breakout_chart`, a run of flat bars between the
+struggle and the baby bar so the reference always lands in dead space. It turned
+out to be useful twice over, because varying it is also how the tests age a
+level: more buffer means more sessions between the last confirmed touch and
+today, without touching the baby, ignition or follow-through bars at all. That is
+what `test_a_fresher_break_scores_higher_than_a_stale_one` runs on.
+
+This is the same class of thing as session 2's `_collapse_runs`. Not a bug in the
+rule, a bug in the assumption that a rule which reads correctly on a real chart
+reads correctly on a nine-bar hand-built one.
+
+**Follow-through had to become skippable rather than failable.** If the breakout
+fires on the most recent bar there is no second candle yet. Failing that would
+mean the freshest breakouts, the only ones still actionable, are exactly the ones
+the screen rejects. It now passes with "no follow-through bar yet, breakout is
+too recent to judge", which shows up in the real digest.
+
+**Two failure reasons where one would have done.** A level that was never broken
+and a level that broke 191 sessions ago are different situations and now say so
+separately. Worth it: in the first live scan over 256 tickers, those two reasons
+account for most breakout rejections, and being able to tell them apart is what
+shows the 5-session window is doing the work rather than the three-touch rule.
+
+### The test scaffold, and the numbers that were worked by hand
+
+Every chart shares one shape: a three-touch struggle at resistance 100 built by
+`zigzag`, the same builder proven in `test_levels.py`, then flat buffer bars,
+then baby, ignition and follow-through. Each test overrides exactly the one bar
+carrying the rule under test. A failing test then points at a rule, not at a
+chart shape.
+
+The default bars, chosen so each gate sits clearly on one side of its floor with
+enough headroom that a small config change cannot flip a test by accident:
+
+| Bar | OHLC | Body | Wick | Reading |
+| --- | --- | --- | --- | --- |
+| Baby | 97.0 / 99.5 / 96.5 / 99.0 | 2.0 | 1.0 of a 3.0 range | 33% wick, well under the 60% disqualifier |
+| Ignition | 99.0 / 109.0 / 98.5 / 108.0 | 9.0 | 1.5 | 4.5x the baby body against a 3.0x strong ratio, and 8.3% of its own close against a 1.5% floor |
+| Follow | 108.0 / 111.0 / 107.5 / 110.0 | green | | closes above its open |
+
+Volume is 1.0m on the baby and 2.0m on the ignition, so the spike reads 2.0x
+against a 1.5x floor and a 3.0x ceiling: comfortably passing, deliberately not
+maxed, so `test_a_stronger_volume_spike_scores_higher` has room to move.
+
+### What was built
+
+| File | What |
+| --- | --- |
+| `src/stocksignal/screens/breakout.py` | new. `screen_breakout`, four gates, three-part score, dip-and-reject bonus |
+| `src/stocksignal/screens/__init__.py` | registered |
+| `src/stocksignal/scanner.py` | added to `SCORING_SCREENS` |
+| `tests/test_breakout.py` | new, 20 tests across 8 classes, one class per rule |
+
+Commit `c946bfe`, "Add breakout screen: resistance break, volume spike, ignition
+bar, follow-through". Coverage on `breakout.py` is 98%; the two uncovered lines
+are a stale-break branch and a guard in `_normalise` that config validation
+already makes unreachable.
+
+### How it behaved on real data, a day later
+
+First live scan over the screened 256-ticker universe on 10 August: the breakout
+screen fired three times. ERO, SSRM and HMY. SSRM hit the complete pattern
+including the retest, "price dipped back to the 28.74 level and got rejected
+before continuing, the rulebook's preferred pattern", which is exactly pages 75
+and 76 of the course.
+
+One in 256, and it found the textbook case. That is the behaviour you want from a
+screen that is supposed to be rare.
+
+### Open items
+
+1. **The retest may be ranked too low.** Course pages 75 and 76 treat the
+   post-breakout pushback holding as *the* tell for a quality breakout, where
+   this screen treats it as a flat bonus on top. Not a defect, a design question,
+   and session 4 is the place to settle it with evidence rather than by argument.
+2. **`level_break_lookback` at 5 sessions may be too tight.** Across 256 real
+   tickers the commonest rejection is a resistance that broke 60 to 260 sessions
+   ago. That may be correct, since an old break is not a trade, or the window may
+   be starving the screen. The backtest can tell you.
+3. **The three score weights are still equal and still unearned.** Unchanged from
+   the day they were written.
+
+### What you should understand afterwards
+
+Left blank on purpose. Answer these in your own words before session 4, and if
+you cannot, that is the signal to go back and read the file rather than the
+signal to skip it.
+
+**Why is the dip-and-reject a bonus rather than a gate, and what would it cost
+you to make it a gate?**
+
+_(your answer)_
+
+**How would you explain the ignition bar test to someone who does not trade?**
+
+_(your answer)_
+
+**Why does a screen with five conditions need five tests rather than one?**
+
+_(your answer)_
+
+### Next session opens with
+
+**Session 4 of BUILD-PLAN.md: the backtest.** Read section D of
+`02 Projects/Trading Bot/Trading Strategy & Screens.md` first, which lists the
+lookahead and survivorship traps already identified, before pasting the prompt.
+
+---
+
 ## Session 2, Sunday 9 August 2026
 
 **Where it started:** a repo that would not run, for a reason nobody had noticed.

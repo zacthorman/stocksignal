@@ -15,7 +15,7 @@ from rich.console import Console
 
 from stocksignal import __version__, signal_log
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR, Config
-from stocksignal.data import get_source
+from stocksignal.data import PROVIDERS, DataError, get_source
 from stocksignal.digest import render_markdown, render_terminal
 from stocksignal.scanner import scan as run_scan
 
@@ -24,10 +24,23 @@ console = Console()
 
 
 def _load_watchlist(path: Path | None, cfg: Config) -> list[str]:
+    """Read a watchlist file: one ticker a line, `#` starts a comment.
+
+    The comment may be inline, not just at the start of a line, because
+    `scripts/build_watchlist.py` writes the beta, price and volume that earned
+    each symbol its place next to the symbol. Stripping only whole-line comments
+    would turn `NVDA  # beta 2.4` into a ticker named "NVDA  # BETA 2.4" and the
+    scan would report it as a data error rather than as a parsing mistake, which
+    is the kind of bug you chase for an hour.
+    """
     if path is None:
         return list(cfg.default_watchlist)
-    lines = path.read_text().splitlines()
-    return [ln.strip().upper() for ln in lines if ln.strip() and not ln.startswith("#")]
+    out: list[str] = []
+    for line in path.read_text().splitlines():
+        symbol = line.split("#", 1)[0].strip().upper()
+        if symbol:
+            out.append(symbol)
+    return out
 
 
 @app.command()
@@ -37,6 +50,12 @@ def scan(
     ),
     tickers: str | None = typer.Option(None, "--tickers", "-t", help="Comma separated tickers."),
     offline: bool = typer.Option(True, "--offline/--live", help="Synthetic data, or real bars."),
+    source_name: str | None = typer.Option(
+        None,
+        "--source",
+        "-s",
+        help="synthetic, yfinance or alpaca. Overrides --offline/--live.",
+    ),
     save: bool = typer.Option(False, "--save", help="Write the digest to out/ as markdown."),
     log: bool = typer.Option(False, "--log", help="Append passing signals to signals.db."),
     fast: int = typer.Option(DEFAULT_CONFIG.sma_fast, help="Fast SMA period."),
@@ -59,15 +78,26 @@ def scan(
         console.print("[red]No tickers to scan.[/red]")
         raise typer.Exit(code=1)
 
-    if offline:
+    if source_name is not None and source_name not in PROVIDERS:
+        console.print(f"[red]Unknown source {source_name!r}. Choose one of: {', '.join(PROVIDERS)}")
+        raise typer.Exit(code=1)
+
+    resolved = source_name or ("synthetic" if offline else "yfinance")
+    if resolved == "synthetic":
         # Note the backslash: rich reads square brackets as markup, so the
         # extras name has to be escaped or it vanishes from the output.
         console.print(
             "[dim]offline mode: synthetic data. Pass --live for real bars "
             r"(needs: uv pip install -e '.\[live]').[/dim]"
         )
+    else:
+        console.print(f"[dim]source: {resolved}[/dim]")
 
-    source = get_source(offline=offline)
+    try:
+        source = get_source(provider=resolved)
+    except DataError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
     report = run_scan(symbols, source, cfg)
     render_terminal(report, console)
 

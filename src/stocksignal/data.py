@@ -15,6 +15,7 @@ rewrite through the middle.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
@@ -84,12 +85,61 @@ class SyntheticSource:
     Useful for three things: running the tool before you have any credentials,
     writing tests that cannot flake, and deliberately constructing a ticker that
     should pass or fail a screen so you can prove the screen works.
+
+    EVERY TICKER SHARES A MARKET FACTOR. This used to generate each ticker as an
+    independent random walk, which is not a simplification of an equity market so
+    much as a contradiction of one. Real stocks move together, and beta is the
+    measurement of how much. Independent walks give every ticker a beta near
+    zero, so once the beta gate went in, an offline scan rejected the entire
+    universe and `make scan` printed nothing at all, forever.
+
+    The tempting fix was to disable the beta gate for synthetic runs. That would
+    have left the newest code in the project as the one path the offline smoke
+    test never touched. Modelling the thing properly is barely more work:
+
+        ticker return = beta x market return + idiosyncratic noise
+
+    with each ticker's beta derived from its own name, so it stays reproducible
+    while spreading across `BETA_RANGE`. An offline scan now gives a realistic
+    mix of names that clear the beta floor and names that do not, which is what
+    a smoke test is supposed to look like.
+
+    The market factor is drawn from the seed alone rather than from any ticker,
+    so it is the same series for every symbol in a run. That is what makes the
+    correlation real rather than decorative.
+
+    One caveat worth knowing. The market series is generated per call at the
+    requested length, so asking for 100 days and 250 days produces different
+    market paths. Within a single scan every ticker uses the same `days`, so
+    they stay mutually consistent, which is all that matters here.
+
+    THE DEFAULT SEED IS CHOSEN, NOT ARBITRARY. Because every ticker now rides one
+    market factor, that factor's direction decides the whole run: on a seed whose
+    market drifts down, no ticker is above its averages and the digest is empty
+    again for a completely different reason. Seed 7 was one of those. 23 gives a
+    market that rises overall, so a demo watchlist splits roughly evenly between
+    signals and rejections, and the rejections come from both the beta gate and
+    the trend screen. That is what makes `make scan` worth running.
+
+    It is a presentation choice about fake data and nothing more. No real
+    decision should ever rest on it, and any seed can be passed explicitly.
     """
 
-    def __init__(self, seed: int = 7, start_price: float = 100.0, drift: float = 0.0004):
+    # Spread wide enough that some tickers clear a beta floor of 2 and some do
+    # not, because a smoke test where everything passes tests nothing.
+    BETA_RANGE = (0.4, 4.0)
+
+    def __init__(
+        self,
+        seed: int = 23,
+        start_price: float = 100.0,
+        drift: float = 0.0004,
+        benchmark: str = "SPY",
+    ):
         self.seed = seed
         self.start_price = start_price
         self.drift = drift
+        self.benchmark = benchmark.upper()
 
     def _rng(self, ticker: str) -> np.random.Generator:
         # Fold the ticker into the seed so different tickers differ, but any
@@ -99,12 +149,53 @@ class SyntheticSource:
         )
         return np.random.default_rng(blended)
 
+    def _market_returns(self, days: int) -> np.ndarray:
+        """The one series every ticker is a leveraged, noisy version of."""
+        rng = np.random.default_rng(self.seed % (2**32))
+        return rng.normal(loc=self.drift, scale=0.011, size=days)
+
+    def beta_for(self, ticker: str) -> float:
+        """This ticker's beta, fixed by its name so it never moves between runs.
+
+        The benchmark is the market by definition, so it gets exactly 1.0. An
+        earlier version treated it like any other symbol and handed it 0.48,
+        which quietly inflated every measured beta in the synthetic world by
+        about a quarter: beta is measured *against* the benchmark, so if the
+        benchmark is not the market, nothing else can be right either.
+
+        A SHA-256 digest rather than a weighted character sum. The character
+        sum was close enough to linear that similar strings landed on similar
+        betas, so AAA through HHH all came out between 2.4 and 3.0 and an
+        offline scan had no rejections to show. Python's own `hash` is not an
+        option here: it is salted per process, so the same ticker would get a
+        different beta on every run.
+        """
+        if ticker.upper() == self.benchmark:
+            return 1.0
+        low, high = self.BETA_RANGE
+        digest = int.from_bytes(hashlib.sha256(ticker.upper().encode()).digest()[:4], "big")
+        return low + (digest % 10_000) / 9_999 * (high - low)
+
     def history(self, ticker: str, days: int = 250) -> pd.DataFrame:
         rng = self._rng(ticker)
         # Business days ending on the most recent trading day, so the "latest" bar is
         # always the last row.
         idx = pd.bdate_range(end=last_business_day(pd.Timestamp.today()), periods=days)
-        shocks = rng.normal(loc=self.drift, scale=0.018, size=days)
+
+        market = self._market_returns(days)
+        beta = self.beta_for(ticker)
+        # The benchmark is the market itself, with no story of its own. Giving it
+        # idiosyncratic noise would put variance in the denominator of every beta
+        # calculation and drag all of them below their true value.
+        if ticker.upper() == self.benchmark:
+            shocks = market
+        else:
+            # Noise scaled by beta, so a high-beta name is not merely a magnified
+            # index. Real volatile stocks have more of their own story too, not
+            # just more of the market's.
+            idiosyncratic = rng.normal(loc=0.0, scale=0.008 * beta, size=days)
+            shocks = beta * market + idiosyncratic
+
         close = self.start_price * np.exp(np.cumsum(shocks))
         intraday = np.abs(rng.normal(0, 0.008, size=days))
         df = pd.DataFrame(
@@ -187,6 +278,35 @@ class YFinanceSource:
         return float(value) if value else None
 
 
-def get_source(offline: bool = True, cache_dir: Path | None = None) -> PriceSource:
-    """Pick a source. Offline is the default so the tool always works."""
-    return SyntheticSource() if offline else YFinanceSource(cache_dir=cache_dir)
+PROVIDERS = ("synthetic", "yfinance", "alpaca")
+
+
+def get_source(
+    offline: bool = True,
+    cache_dir: Path | None = None,
+    provider: str | None = None,
+) -> PriceSource:
+    """Pick a source. Offline is the default so the tool always works.
+
+    `provider` names one explicitly and wins when given. `offline` is kept as
+    the older two-way switch so existing callers and tests are unaffected:
+    True means synthetic, False means yfinance.
+
+    Alpaca is imported inside the branch rather than at module scope, because it
+    needs `requests` from the `alpaca` extra and this module has to keep
+    importing cleanly on a bare install. A missing extra should be an error when
+    you ask for that provider, not when you import the package.
+    """
+    if provider is None:
+        provider = "synthetic" if offline else "yfinance"
+
+    if provider == "synthetic":
+        return SyntheticSource()
+    if provider == "yfinance":
+        return YFinanceSource(cache_dir=cache_dir)
+    if provider == "alpaca":
+        from stocksignal.sources import AlpacaSource
+
+        return AlpacaSource()
+
+    raise DataError(f"unknown provider {provider!r}, expected one of {', '.join(PROVIDERS)}")
