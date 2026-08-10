@@ -32,7 +32,10 @@ def make_bars(closes: list[float], volume: float = 1_000_000) -> pd.DataFrame:
 
 
 def quote_from(
-    df: pd.DataFrame, ticker: str = "TEST", shares_float: float | None = 50_000_000
+    df: pd.DataFrame,
+    ticker: str = "TEST",
+    shares_float: float | None = 50_000_000,
+    beta: float | None = None,
 ) -> Quote:
     last = df.iloc[-1]
     stamp = df.index[-1]
@@ -43,4 +46,5 @@ def quote_from(
         avg_volume=float(df["volume"].tail(10).mean()),
         latest_volume=float(last["volume"]),
         shares_float=shares_float,
+        beta=beta,
     )

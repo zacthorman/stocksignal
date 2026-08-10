@@ -8,8 +8,10 @@ import pytest
 
 from stocksignal.indicators import (
     average_volume,
+    beta,
     body_and_wick,
     pct_gap,
+    rsi,
     sma,
     swing_points,
     true_range,
@@ -98,6 +100,100 @@ class TestBodyAndWick:
         body, wick = body_and_wick(row)
         assert body == pytest.approx(0.0)
         assert wick == pytest.approx(4.0)
+
+
+class TestRSI:
+    def test_a_series_that_only_rises_pins_at_100(self):
+        s = pd.Series([100.0 + i for i in range(30)])
+        # No down days at all, so average loss is zero and the ratio is infinite.
+        assert rsi(s, 14).iloc[-1] == pytest.approx(100.0)
+
+    def test_a_series_that_only_falls_pins_at_0(self):
+        s = pd.Series([200.0 - i for i in range(30)])
+        assert rsi(s, 14).iloc[-1] == pytest.approx(0.0)
+
+    def test_a_flat_series_is_neutral_not_a_division_by_zero(self):
+        s = pd.Series([100.0] * 30)
+        assert rsi(s, 14).iloc[-1] == pytest.approx(50.0)
+
+    def test_equal_sized_up_and_down_days_hover_around_50(self):
+        # Alternating +2 / -2. Average gain and average loss are equal in the
+        # long run, so RSI sits at 50, but Wilder's smoothing weights the most
+        # recent bar, so it oscillates a couple of points either side depending
+        # on whether the last bar was up or down. Asserting exactly 50 here
+        # would be asserting that the smoothing does not work.
+        s = pd.Series([100.0 + (2.0 if i % 2 else 0.0) for i in range(40)])
+        settled = rsi(s, 14).dropna()
+        assert settled.min() > 45.0
+        assert settled.max() < 55.0
+
+    def test_the_first_period_values_are_nan(self):
+        s = pd.Series([100.0 + i for i in range(30)])
+        result = rsi(s, 14)
+        assert result.iloc[:14].isna().all()
+        assert result.notna().sum() == len(s) - 14
+
+    def test_too_short_a_series_is_all_nan_rather_than_an_error(self):
+        assert rsi(pd.Series([100.0, 101.0, 102.0]), 14).isna().all()
+
+    def test_rejects_a_period_below_two(self):
+        with pytest.raises(ValueError):
+            rsi(pd.Series([1.0, 2.0]), 1)
+
+    def test_an_oversold_selloff_reads_below_thirty(self):
+        # A long calm stretch, then a sharp sustained drop. This is the shape
+        # the checklist calls a "good deal", so it has to land under the line.
+        calm = [100.0 + (0.1 if i % 2 else -0.1) for i in range(40)]
+        selloff = [100.0 - i * 3.0 for i in range(1, 15)]
+        result = rsi(pd.Series(calm + selloff), 14).iloc[-1]
+        assert result < 30.0
+
+
+class TestBeta:
+    def _pair(self, asset_moves, bench_moves):
+        idx = pd.bdate_range(end="2026-08-05", periods=len(asset_moves) + 1)
+        asset = pd.Series(np.cumprod([100.0] + [1 + m for m in asset_moves]), index=idx)
+        bench = pd.Series(np.cumprod([100.0] + [1 + m for m in bench_moves]), index=idx)
+        return asset, bench
+
+    def test_a_stock_that_moves_exactly_with_the_market_is_one(self):
+        moves = [0.01, -0.02, 0.03, -0.01, 0.02] * 4
+        asset, bench = self._pair(moves, moves)
+        assert beta(asset, bench, window=252) == pytest.approx(1.0)
+
+    def test_a_stock_that_moves_twice_as_hard_is_two(self):
+        bench_moves = [0.01, -0.02, 0.03, -0.01, 0.02] * 4
+        asset_moves = [m * 2 for m in bench_moves]
+        asset, bench = self._pair(asset_moves, bench_moves)
+        assert beta(asset, bench, window=252) == pytest.approx(2.0, rel=0.05)
+
+    def test_a_stock_that_moves_against_the_market_is_negative(self):
+        bench_moves = [0.01, -0.02, 0.03, -0.01, 0.02] * 4
+        asset_moves = [-m for m in bench_moves]
+        asset, bench = self._pair(asset_moves, bench_moves)
+        assert beta(asset, bench, window=252) < 0
+
+    def test_a_motionless_benchmark_is_unknown_not_infinity(self):
+        asset, bench = self._pair([0.01, -0.02, 0.03] * 4, [0.0] * 12)
+        assert beta(asset, bench, window=252) is None
+
+    def test_no_overlapping_sessions_is_unknown(self):
+        a = pd.Series([100.0, 101.0], index=pd.bdate_range("2020-01-01", periods=2))
+        b = pd.Series([100.0, 101.0], index=pd.bdate_range("2024-01-01", periods=2))
+        assert beta(a, b) is None
+
+    def test_only_the_window_is_measured(self):
+        # Twice as volatile for the recent stretch, flat-tracking before it.
+        # A window of 10 must see only the recent behaviour.
+        bench_moves = [0.01, -0.01] * 20
+        asset_moves = [0.01, -0.01] * 15 + [0.03, -0.03] * 5
+        asset, bench = self._pair(asset_moves, bench_moves)
+        assert beta(asset, bench, window=10) == pytest.approx(3.0, rel=0.05)
+
+    def test_rejects_a_window_below_two(self):
+        asset, bench = self._pair([0.01] * 5, [0.01] * 5)
+        with pytest.raises(ValueError):
+            beta(asset, bench, window=1)
 
 
 def test_no_indicator_mutates_its_input():

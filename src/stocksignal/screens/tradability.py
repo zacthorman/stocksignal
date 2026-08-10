@@ -1,11 +1,24 @@
 """Screen 1: can I actually get in and out of this thing?
 
-From the rulebook:
-  * Only trade stocks with at least 200k volume, otherwise entry and exit are hard.
+This is the course's own scan filter (page 142), which is three numbers:
+
+  * Price at least 15 dollars. Cheaper than that and the moves turn sporadic,
+    which is survivable intraday and not survivable when you hold for a week.
+  * Volume at least 100k, or exiting a swing position inside a week is the
+    problem rather than the thesis.
+  * Beta at least 2, because swing setups want something that moves more than
+    the market does.
+
+Plus the rulebook's own rule, which the course scan does not cover:
+
   * Do not trade low-float stocks. Always check the float.
 
 This is a hard gate, not a score. Anything that fails here never reaches the
 digest, no matter how pretty the chart looks.
+
+Beta and float are both handled as "unknown is a warning, not a rejection".
+Dropping a candidate because a data provider had a gap is a silent, invisible
+failure, and the digest exists precisely to make judgement calls visible.
 """
 
 from __future__ import annotations
@@ -25,6 +38,11 @@ def screen_tradability(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenRes
     if len(df) < cfg.min_history_days:
         failures.append(f"only {len(df)} sessions of history, need {cfg.min_history_days}")
 
+    if quote.close < cfg.min_price:
+        failures.append(f"price {quote.close:,.2f} is below the {cfg.min_price:,.2f} swing floor")
+    else:
+        reasons.append(f"price {quote.close:,.2f} clears the {cfg.min_price:,.2f} swing floor")
+
     if quote.avg_volume < cfg.min_avg_volume:
         failures.append(
             f"avg volume {quote.avg_volume:,.0f} is below the {cfg.min_avg_volume:,.0f} floor"
@@ -33,6 +51,16 @@ def screen_tradability(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenRes
         reasons.append(
             f"avg volume {quote.avg_volume:,.0f} clears the {cfg.min_avg_volume:,.0f} floor"
         )
+
+    if quote.beta is None:
+        reasons.append("beta unknown, no benchmark series supplied")
+    elif quote.beta < cfg.min_beta:
+        failures.append(
+            f"beta {quote.beta:.2f} is below the {cfg.min_beta:.2f} floor "
+            "(moves too much like the market for a swing)"
+        )
+    else:
+        reasons.append(f"beta {quote.beta:.2f} clears the {cfg.min_beta:.2f} floor")
 
     if quote.shares_float is None:
         # Unknown float is a warning, not a rejection. The rulebook says always

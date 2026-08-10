@@ -16,7 +16,7 @@ import pandas as pd
 
 from stocksignal.config import DEFAULT_CONFIG, Config
 from stocksignal.data import DataError, PriceSource
-from stocksignal.indicators import average_volume
+from stocksignal.indicators import average_volume, beta
 from stocksignal.models import Quote, Signal
 from stocksignal.screens import screen_breakout, screen_tradability, screen_trend
 
@@ -50,7 +50,29 @@ class ScanReport:
         return len(self.signals) + len(self.rejected) + len(self.errors)
 
 
-def build_quote(ticker: str, df: pd.DataFrame, cfg: Config, shares_float: float | None) -> Quote:
+def load_benchmark(source: PriceSource, cfg: Config) -> pd.Series | None:
+    """Closing prices for the beta benchmark, fetched once for a whole scan.
+
+    Returns None rather than raising. A provider hiccup on the benchmark should
+    cost you the beta reading and nothing else, because the alternative is that
+    one failed request takes down a scan of four hundred tickers. Beta then
+    reads as unknown, which the tradability gate already treats as a warning
+    rather than a rejection.
+    """
+    try:
+        return source.history(cfg.beta_benchmark, days=cfg.required_history)["close"]
+    except Exception as exc:  # noqa: BLE001 - benchmark is enrichment, never fatal
+        log.warning("benchmark %s unavailable, beta will read unknown: %s", cfg.beta_benchmark, exc)
+        return None
+
+
+def build_quote(
+    ticker: str,
+    df: pd.DataFrame,
+    cfg: Config,
+    shares_float: float | None,
+    benchmark: pd.Series | None = None,
+) -> Quote:
     last = df.iloc[-1]
     return Quote(
         ticker=ticker.upper(),
@@ -59,17 +81,26 @@ def build_quote(ticker: str, df: pd.DataFrame, cfg: Config, shares_float: float 
         avg_volume=average_volume(df["volume"], cfg.avg_volume_window),
         latest_volume=float(last["volume"]),
         shares_float=shares_float,
+        beta=None if benchmark is None else beta(df["close"], benchmark, cfg.beta_window),
     )
 
 
-def scan_ticker(ticker: str, source: PriceSource, cfg: Config = DEFAULT_CONFIG) -> Signal | None:
+def scan_ticker(
+    ticker: str,
+    source: PriceSource,
+    cfg: Config = DEFAULT_CONFIG,
+    benchmark: pd.Series | None = None,
+) -> Signal | None:
     """Run every screen against one ticker.
 
     Returns None if it fails the hard gate, or if it clears none of the
     scoring screens at all.
+
+    `benchmark` is optional so a caller checking a single ticker does not pay
+    for a second fetch it may not need. Omit it and beta reads as unknown.
     """
-    df = source.history(ticker, days=max(250, cfg.min_history_days))
-    quote = build_quote(ticker, df, cfg, source.shares_float(ticker))
+    df = source.history(ticker, days=cfg.required_history)
+    quote = build_quote(ticker, df, cfg, source.shares_float(ticker), benchmark)
 
     gate = HARD_GATE(df, quote, cfg)
     if not gate.passed:
@@ -102,10 +133,15 @@ def scan(tickers: list[str], source: PriceSource, cfg: Config = DEFAULT_CONFIG) 
     errors: list[tuple[str, str]] = []
     as_of = date.today()
 
+    # Fetched once, before the loop. Beta needs a benchmark series per ticker,
+    # and pulling SPY four hundred times to answer the same question four
+    # hundred times is how you get rate limited by a free provider.
+    benchmark = load_benchmark(source, cfg)
+
     for ticker in tickers:
         try:
-            df = source.history(ticker, days=max(250, cfg.min_history_days))
-            quote = build_quote(ticker, df, cfg, source.shares_float(ticker))
+            df = source.history(ticker, days=cfg.required_history)
+            quote = build_quote(ticker, df, cfg, source.shares_float(ticker), benchmark)
             as_of = quote.as_of
 
             gate = HARD_GATE(df, quote, cfg)

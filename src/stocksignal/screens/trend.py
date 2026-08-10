@@ -8,10 +8,18 @@ From the rulebook:
 Three separate conditions, all required. The score is the gap width, normalised
 so that a gap at or beyond `sma_gap_strong_pct` scores a full 1.0.
 
-OPEN QUESTION carried from the strategy notes: the real periods for the red and
-blue lines on your charting setup are still unconfirmed. `Config.sma_fast` and
-`Config.sma_slow` default to 10 and 20 as a placeholder. Change them in one
-place the moment you know, and rerun the tests.
+The periods are settled: 9 and 180, read off page 44 of the course on
+2026-08-10. See `Config.sma_fast`.
+
+STILL OPEN, and deliberately not changed here. The course's entry trigger is
+CONFIRMATION, defined on pages 45 and 115 as "the first candlestick holding
+above the short-term SMA line". That is an event on the day price crosses, and
+this screen instead asks whether price is above the line at all, which is a
+state that stays true for as long as the run lasts. The difference is not
+cosmetic: one fires once per move, the other fires every day of it, and they
+produce very different signal counts and very different backtests. Picking
+between them is a decision, so it is left for session 4 to settle with evidence
+rather than smuggled in as a refactor.
 """
 
 from __future__ import annotations
@@ -59,10 +67,56 @@ def screen_trend(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenResult:
     if failures:
         return ScreenResult(name=NAME, passed=False, score=0.0, reasons=tuple(failures))
 
-    strength = min(gap / cfg.sma_gap_strong_pct, 1.0) if cfg.sma_gap_strong_pct > 0 else 0.0
-    label = "strong" if strength >= 1.0 else "modest" if strength >= 0.4 else "weak"
+    strength, note = _score_gap(df, cfg, gap)
     reasons = (
         f"close {close:.2f} is above both averages ({fast:.2f} / {slow:.2f})",
-        f"SMA gap {gap:.2f}% reads as a {label} uptrend",
+        note,
     )
     return ScreenResult(name=NAME, passed=True, score=strength, reasons=reasons)
+
+
+def qualifying_gap_history(df: pd.DataFrame, cfg: Config) -> pd.Series:
+    """Every past gap reading on a bar this screen would have been scoring.
+
+    Relative scoring compares today against the stock's own past, and the only
+    honest comparison set is bars that cleared the same conditions today did.
+    Including downtrends would drag the distribution negative and flatter any
+    uptrend into looking exceptional.
+    """
+    fast = sma(df["close"], cfg.sma_fast)
+    slow = sma(df["close"], cfg.sma_slow)
+    close = df["close"]
+    qualifies = (fast > slow) & (close > fast) & (close > slow)
+    gaps = ((fast - slow) / slow * 100.0)[qualifies].dropna()
+    return gaps.tail(cfg.gap_relative_lookback)
+
+
+def _score_gap(df: pd.DataFrame, cfg: Config, gap: float) -> tuple[float, str]:
+    """Turn today's gap into a 0 to 1 score, plus the sentence explaining it."""
+    if cfg.gap_scoring == "relative":
+        history = qualifying_gap_history(df, cfg)
+        if len(history) >= cfg.gap_relative_min_samples:
+            strength = float((history < gap).mean())
+            label = "strong" if strength >= 0.9 else "modest" if strength >= 0.5 else "weak"
+            return strength, (
+                f"SMA gap {gap:.2f}% is wider than {strength:.0%} of this ticker's own "
+                f"{len(history)} past uptrend readings, a {label} trend for this stock"
+            )
+        # Not enough of its own history to rank against, so fall back rather
+        # than quote a percentile computed from a handful of points.
+        strength = _absolute(gap, cfg)
+        return strength, (
+            f"SMA gap {gap:.2f}% scored against the fixed {cfg.sma_gap_strong_pct:.1f}% ceiling: "
+            f"only {len(history)} past readings, under the {cfg.gap_relative_min_samples} "
+            "needed to rank it against itself"
+        )
+
+    strength = _absolute(gap, cfg)
+    label = "strong" if strength >= 1.0 else "modest" if strength >= 0.4 else "weak"
+    return strength, f"SMA gap {gap:.2f}% reads as a {label} uptrend"
+
+
+def _absolute(gap: float, cfg: Config) -> float:
+    if cfg.sma_gap_strong_pct <= 0:
+        return 0.0
+    return min(gap / cfg.sma_gap_strong_pct, 1.0)

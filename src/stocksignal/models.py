@@ -22,6 +22,11 @@ class Quote:
     avg_volume: float
     latest_volume: float
     shares_float: float | None = None
+    beta: float | None = None
+    """Volatility against the benchmark. None means it could not be measured,
+    which is treated as unknown rather than as zero, exactly as `shares_float`
+    is. Computing it needs a benchmark series the scanner does not currently
+    fetch, so today this is None everywhere outside tests."""
 
     @property
     def volume_ratio(self) -> float:

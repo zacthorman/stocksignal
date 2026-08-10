@@ -17,8 +17,23 @@ from stocksignal.config import Config
 
 @pytest.fixture
 def cfg() -> Config:
-    """Short windows so fixtures stay small and fast."""
-    return Config(sma_fast=5, sma_slow=10, min_history_days=20, avg_volume_window=10)
+    """Short windows so fixtures stay small and fast.
+
+    The gap thresholds are pinned here for the same reason the periods are. The
+    production defaults belong to a 9 against a 180, which separate far wider
+    than the 5 and 10 used here, so leaving them at their real values would mean
+    these hand-built 80-bar frames were being judged against a yardstick built
+    for a different pair. Pinning them keeps each test measuring the rule it was
+    written to measure.
+    """
+    return Config(
+        sma_fast=5,
+        sma_slow=10,
+        min_history_days=20,
+        avg_volume_window=10,
+        min_sma_gap_pct=0.5,
+        sma_gap_strong_pct=5.0,
+    )
 
 
 @pytest.fixture
