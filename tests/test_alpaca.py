@@ -144,10 +144,34 @@ class TestFrameShape:
 
 
 class TestFailureModes:
-    def test_missing_credentials_say_which_variables_to_set(self):
+    def test_missing_credentials_say_which_variables_to_set(self, monkeypatch):
+        # Both belt and braces here. The explicit "" is what the code contract
+        # promises, and clearing the environment means this test cannot depend
+        # on whether the developer running it happens to have a key exported.
+        monkeypatch.delenv("ALPACA_API_KEY_ID", raising=False)
+        monkeypatch.delenv("ALPACA_API_SECRET_KEY", raising=False)
         source = AlpacaSource(key_id="", secret_key="", fetch=lambda *a: {})
         with pytest.raises(DataError, match="ALPACA_API_KEY_ID"):
             source.history("AAPL")
+
+    def test_an_explicit_empty_key_beats_the_environment(self, monkeypatch):
+        # The bug this exists to prevent: `key_id or os.environ.get(...)` made
+        # an explicit "" fall through to the shell, so a source built with no
+        # credentials quietly used whatever the developer had exported. The
+        # suite then passed in CI and failed on the one machine that had a key.
+        monkeypatch.setenv("ALPACA_API_KEY_ID", "PK-real-key-from-the-shell")
+        monkeypatch.setenv("ALPACA_API_SECRET_KEY", "real-secret")
+        source = AlpacaSource(key_id="", secret_key="", fetch=lambda *a: {})
+        assert source.key_id == ""
+        with pytest.raises(DataError, match="ALPACA_API_KEY_ID"):
+            source.history("AAPL")
+
+    def test_omitting_the_key_entirely_does_read_the_environment(self, monkeypatch):
+        monkeypatch.setenv("ALPACA_API_KEY_ID", "PK-from-env")
+        monkeypatch.setenv("ALPACA_API_SECRET_KEY", "secret-from-env")
+        source = AlpacaSource(fetch=lambda *a: {})
+        assert source.key_id == "PK-from-env"
+        assert source.secret_key == "secret-from-env"
 
     def test_credentials_travel_in_the_headers(self, creds):
         rec = Recorder([{"bars": {"AAPL": [bar("2026-08-03")]}, "next_page_token": None}])

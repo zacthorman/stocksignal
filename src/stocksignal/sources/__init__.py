@@ -6,5 +6,6 @@ interesting file and the providers stay interchangeable.
 """
 
 from stocksignal.sources.alpaca import AlpacaSource
+from stocksignal.sources.hybrid import HybridSource
 
-__all__ = ["AlpacaSource"]
+__all__ = ["AlpacaSource", "HybridSource"]

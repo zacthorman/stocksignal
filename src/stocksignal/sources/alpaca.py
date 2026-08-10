@@ -92,8 +92,20 @@ class AlpacaSource:
         drop_partial_bars: bool = True,
         clock: Callable[[], datetime] = lambda: datetime.now(MARKET_TZ),
     ):
-        self.key_id = key_id or os.environ.get("ALPACA_API_KEY_ID", "")
-        self.secret_key = secret_key or os.environ.get("ALPACA_API_SECRET_KEY", "")
+        # `None` means "not supplied, read the environment". An empty string
+        # means "explicitly no credentials" and is honoured as such.
+        #
+        # This was `key_id or os.environ.get(...)`, which collapses those two
+        # cases: passing "" fell through to the environment, so a source built
+        # deliberately without credentials silently picked up whatever was
+        # exported in the shell. It made the no-credentials test pass on a
+        # machine with no key set and fail on one with a key set, which is the
+        # worst way round, since the machine that fails is the developer's and
+        # the machine that passes is CI.
+        self.key_id = key_id if key_id is not None else os.environ.get("ALPACA_API_KEY_ID", "")
+        self.secret_key = (
+            secret_key if secret_key is not None else os.environ.get("ALPACA_API_SECRET_KEY", "")
+        )
         self.feed = feed
         self._fetch = fetch
         self.drop_partial_bars = drop_partial_bars

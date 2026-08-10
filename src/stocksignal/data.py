@@ -285,6 +285,7 @@ def get_source(
     offline: bool = True,
     cache_dir: Path | None = None,
     provider: str | None = None,
+    with_fundamentals: bool = True,
 ) -> PriceSource:
     """Pick a source. Offline is the default so the tool always works.
 
@@ -305,8 +306,14 @@ def get_source(
     if provider == "yfinance":
         return YFinanceSource(cache_dir=cache_dir)
     if provider == "alpaca":
-        from stocksignal.sources import AlpacaSource
+        from stocksignal.sources import AlpacaSource, HybridSource
 
-        return AlpacaSource()
+        alpaca = AlpacaSource()
+        if not with_fundamentals:
+            return alpaca
+        # Alpaca has no float, so the rulebook's low-float rule would silently
+        # stop being enforced. yfinance is kept alongside purely for that one
+        # field, cached for a month, because float moves a few times a year.
+        return HybridSource(bars=alpaca, fundamentals=YFinanceSource(cache_dir=cache_dir))
 
     raise DataError(f"unknown provider {provider!r}, expected one of {', '.join(PROVIDERS)}")
