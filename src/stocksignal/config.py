@@ -115,6 +115,59 @@ class Config:
         index fund in every regime, so a single absolute percentage applied
         across all tickers scores volatility and calls it trend strength. See
         `gap_scoring` for the alternative.
+    max_entry_rsi:
+        Gate 3 of the entry checklist, page 115: "Is this a good deal?" Below
+        fair value on RSI is an okay deal, oversold is a good deal. Set this and
+        no entry is taken unless RSI is at or under it. None means the gate is
+        off, which is how every backtest so far has run.
+
+        This is the gate that makes the strategy directionally different rather
+        than merely stricter. Everything else in the rulebook buys strength:
+        above both averages, breaking a level, an ignition bar. RSI oversold
+        inside an uptrend buys WEAKNESS INSIDE STRENGTH, which is what pages 75
+        and 76 mean by taking the pushback rather than the breakout candle. The
+        first backtest measured strength alone and found no edge over a random
+        pick. That is not evidence about this, because in one important respect
+        this is the opposite trade.
+
+        Two values worth testing and no more, because every extra variant spends
+        significance: `rsi_oversold` for the course's "good deal", or 50 for
+        "below fair value".
+    rsi_lookback:
+        How many sessions back the RSI gate is allowed to look for its reading.
+
+        THIS EXISTS BECAUSE THE FIRST VERSION WAS WRONG. It required the RSI
+        condition on the signal bar itself, which produced exactly zero trades
+        across six years at a threshold of 30, and that is not a fact about the
+        market. A bar crossing up through the 9-day average is by definition
+        showing strength, so its RSI sits around 50 to 70. Oversold describes
+        the opposite kind of bar. Demanding both at once asks for a candle that
+        cannot exist.
+
+        The course never meant them simultaneously. Pages 75 and 76 describe a
+        SEQUENCE: the pushback takes it oversold, then it turns and holds, and
+        the turn is the entry. So the gate now asks whether RSI dipped to or
+        below the ceiling at any point in the last `rsi_lookback` sessions, with
+        confirmation as the trigger. Weakness recently, strength today.
+    trend_entry:
+        What counts as a trend signal, and it is the difference between two
+        strategies rather than a tuning knob.
+
+        "state" fires on every session price is above both averages with the
+        fast above the slow. That is what the scaffold shipped, and it means a
+        name in a three-month uptrend signals sixty times.
+
+        "confirmation" fires only on the session the condition first becomes
+        true, which is the course's actual rule: page 115 defines CONFIRMATION
+        as "the first candlestick holding above the short-term SMA line". One
+        signal per move rather than one per day.
+
+        The first out-of-sample backtest measured "state" and found no edge over
+        a random pick from the same universe. That is a result about the state
+        version only. 1,658 trades from a screen that fires daily is largely the
+        same moves counted again and again, which is precisely how a real effect
+        gets buried inside its own noise. "confirmation" is what the rulebook
+        says and what has never been measured.
     gap_scoring:
         How the trend score is computed once a ticker has cleared the floor.
 
@@ -217,6 +270,9 @@ class Config:
     min_history_days: int = 200
     min_sma_gap_pct: float = 3.6
     sma_gap_strong_pct: float = 67.9
+    trend_entry: str = "state"
+    max_entry_rsi: float | None = None
+    rsi_lookback: int = 10
     gap_scoring: str = "absolute"
     gap_relative_lookback: int = 500
     gap_relative_min_samples: int = 40
@@ -279,6 +335,12 @@ class Config:
             raise ValueError("rsi_period must be at least 2")
         if not 0 < self.rsi_oversold < self.rsi_overbought < 100:
             raise ValueError("need 0 < rsi_oversold < rsi_overbought < 100")
+        if self.max_entry_rsi is not None and not 0 < self.max_entry_rsi < 100:
+            raise ValueError("max_entry_rsi must sit between 0 and 100, or be None")
+        if self.trend_entry not in {"state", "confirmation"}:
+            raise ValueError(
+                f"trend_entry must be 'state' or 'confirmation', got {self.trend_entry!r}"
+            )
         if self.gap_scoring not in {"absolute", "relative"}:
             raise ValueError(
                 f"gap_scoring must be 'absolute' or 'relative', got {self.gap_scoring!r}"

@@ -8,12 +8,15 @@ renderer. If you ever find real logic creeping in here, that logic belongs in
 from __future__ import annotations
 
 import logging
+from datetime import date, datetime
 from pathlib import Path
 
 import typer
 from rich.console import Console
 
 from stocksignal import __version__, signal_log
+from stocksignal.backtest import render as render_backtest
+from stocksignal.backtest import run as run_backtest
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR, Config
 from stocksignal.data import PROVIDERS, DataError, get_source
 from stocksignal.digest import render_markdown, render_terminal
@@ -21,6 +24,7 @@ from stocksignal.scanner import scan as run_scan
 
 app = typer.Typer(add_completion=False, help="Mechanical stock and ETF screener.")
 console = Console()
+log = logging.getLogger(__name__)
 
 
 def _load_watchlist(path: Path | None, cfg: Config) -> list[str]:
@@ -130,6 +134,126 @@ def history(limit: int = typer.Option(20, "--limit", "-n")) -> None:
 def version() -> None:
     """Print the version."""
     console.print(f"stocksignal {__version__}")
+
+
+@app.command()
+def backtest(
+    from_: str = typer.Option("2020-01-01", "--from", help="First simulated session."),
+    to: str | None = typer.Option(None, "--to", help="Last simulated session, default today."),
+    fit_end: str = typer.Option(
+        "2023-12-31", "--fit-end", help="Last date any threshold was calibrated on."
+    ),
+    cost: float = typer.Option(0.2, "--cost", help="Round-trip cost in percent."),
+    entry: str = typer.Option(
+        "state",
+        "--entry",
+        help="state = fires every day the condition holds. confirmation = the "
+        "course's rule, fires only on the day it first becomes true.",
+    ),
+    max_rsi: float | None = typer.Option(
+        None, "--max-rsi", help="Gate 3: only enter at or below this RSI. Try 30, or 50."
+    ),
+    replicates: int = typer.Option(
+        200,
+        "--replicates",
+        help="Random controls behind the percentile. 0 skips the test, which you "
+        "should only do if you are not going to quote the result.",
+    ),
+    source_name: str = typer.Option("alpaca", "--source", "-s"),
+    pool: Path = typer.Option(Path("data/watchlist.txt"), "--pool", help="Candidate universe."),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Walk a historical window forward and measure what the screens earned.
+
+    `--pool` is the CANDIDATE list, not the traded list. The universe is rebuilt
+    at every simulated session from bars dated on or before it, so price, volume
+    and beta are all causal. What is not causal is which tickers are candidates
+    at all: that file was screened on today's beta. The random arm is drawn from
+    the same pool for exactly that reason, so it carries the identical bias and
+    the screens-versus-random comparison survives it. The benchmark comparison
+    does not, and the output says so.
+
+    Read the IS IT LUCK block, not the means. Two arms differing by a point and a
+    half tells you nothing on its own; the percentile tells you whether that
+    difference is larger than the difference you get from picking names out of a
+    hat, which is the only version of the question worth asking.
+    """
+    logging.basicConfig(level=logging.DEBUG if verbose else logging.WARNING)
+    try:
+        cfg = Config(trend_entry=entry, max_entry_rsi=max_rsi)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    if source_name not in PROVIDERS:
+        console.print(f"[red]Unknown source {source_name!r}.[/red]")
+        raise typer.Exit(code=1)
+
+    start = datetime.strptime(from_, "%Y-%m-%d").date()
+    finish = datetime.strptime(to, "%Y-%m-%d").date() if to else date.today()
+    split = datetime.strptime(fit_end, "%Y-%m-%d").date() if fit_end else None
+
+    try:
+        tickers = _load_watchlist(pool, cfg)
+    except OSError as exc:
+        # A missing pool file is a typo, not a crash. Printing a traceback for it
+        # buries the one line that says which path was wrong.
+        console.print(f"[red]Cannot read {pool}: {exc.strerror}.[/red]")
+        console.print("[dim]Build one with: python scripts/build_watchlist.py[/dim]")
+        raise typer.Exit(code=1) from exc
+    if not tickers:
+        console.print(f"[red]No candidates in {pool}.[/red]")
+        raise typer.Exit(code=1)
+
+    # Enough history to warm a 180-period average before the first simulated
+    # session, plus the window itself, plus slack for holidays.
+    sessions = int((finish - start).days * 252 / 365) + cfg.required_history + 40
+    console.print(
+        f"[dim]{len(tickers)} candidates, {sessions} sessions of history from {source_name}[/dim]"
+    )
+
+    source = get_source(provider=source_name)
+    try:
+        benchmark = source.history(cfg.beta_benchmark, days=sessions)
+    except DataError as exc:
+        console.print(f"[red]benchmark {cfg.beta_benchmark}: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    batch = getattr(source, "histories", None)
+    if batch is not None:
+        frames = batch(tickers, days=sessions)
+    else:
+        frames = {}
+        for ticker in tickers:
+            try:
+                frames[ticker.upper()] = source.history(ticker, days=sessions)
+            except DataError as exc:
+                log.warning("skipping %s: %s", ticker, exc)
+
+    usable = {t: df for t, df in frames.items() if len(df) > cfg.required_history}
+    console.print(f"[dim]{len(usable)} of {len(tickers)} have enough history to simulate[/dim]\n")
+    if not usable:
+        console.print("[red]Nothing has enough history. Widen the window.[/red]")
+        raise typer.Exit(code=1)
+
+    report = run_backtest(
+        usable,
+        benchmark,
+        cfg,
+        start=start,
+        end=finish,
+        fit_end=split,
+        cost_pct=cost,
+        replicates=replicates,
+    )
+    gate = f", RSI gate at {cfg.max_entry_rsi:g}" if cfg.max_entry_rsi else ", no RSI gate"
+    console.print(f"[dim]entry rule: {cfg.trend_entry}{gate}[/dim]\n")
+    console.print(render_backtest(report))
+    console.print(
+        "\n[dim]Candidate pool came from a screen run today, so which tickers are "
+        "eligible at all still carries selection bias. The random arm shares it; "
+        f"{cfg.beta_benchmark} does not.[/dim]"
+    )
 
 
 if __name__ == "__main__":

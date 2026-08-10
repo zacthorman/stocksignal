@@ -4,6 +4,105 @@ A running record of what got done, what was learned, and what the next session o
 
 ---
 
+## Session 4, Monday 10 August 2026
+
+**Where it started:** three unmeasured screens and a hope.
+**Where it ended:** a rigorous null result, and a clearer question.
+
+### The result
+
+Out of sample, 2024-01-01 to 2026-08-10, 0.2% round-trip costs, entry at the
+session-after open. Universe rebuilt every simulated session from bars dated on
+or before it.
+
+| entry rule | horizon | screens | random from universe | SPY |
+| --- | --- | --- | --- | --- |
+| state | 20d | +4.24% | +3.60% | +1.22% |
+| confirmation | 5d | +0.51% | +0.92% | +0.21% |
+| confirmation | 10d | +1.09% | +1.77% | +0.58% |
+| confirmation | 20d | +4.02% | +4.01% | +1.22% |
+
+**With the course's actual rule, the screens lose to a random pick from the same
+universe at 5 and 10 days and tie at 20.** Hit rate is below random at all three
+horizons. The in-sample block says the same thing, so both periods agree.
+
+The `state` version appeared to beat random out of sample by 0.5 to 0.6pp, but
+lost to it in sample by a similar margin. Same magnitude, opposite sign,
+different window: that is what noise looks like, not an edge.
+
+### What actually produced the returns
+
+A random pick from the universe made 4.01% at 20 days against SPY's 1.22%. Nearly
+the entire apparent outperformance came from *being in a basket of beta-above-2
+tech during a period when that ran*, not from screening. And that is the most
+survivorship-contaminated number in the table, because the universe was built
+from today's survivors.
+
+SPY also won on every risk measure: 69.3% hit rate against 48.8%, worst trade
+-11.1% against -52.6%.
+
+### What this does and does not prove
+
+It does NOT refute the course. Page 115 lists four entry gates. This repo
+implements roughly one and a half of them: gate 4 (above the long-term SMA) plus
+a gap floor. Gate 1 (more upside than downside against the nearest levels) and
+gate 3 (the RSI good-deal check) do not exist in the code. `rsi` was written
+today and nothing calls it.
+
+So the finding is narrower and more useful than "the method fails": **one gate,
+tested in isolation, has no edge.** Which is roughly what you would expect,
+because in the course that gate is not a trigger at all. It is a permission slip.
+
+It DOES mean the current build has no demonstrated edge, and the honesty gate in
+the project overview applies to it as it stands.
+
+### The thing that makes the next test genuinely different
+
+The screens as built buy STRENGTH: price above both averages, or the day it
+first gets there. The course says buy WEAKNESS INSIDE STRENGTH, pages 75, 76 and
+115 together: an uptrend for permission, then oversold on RSI, then the pushback
+holding. Those are close to opposite trades. The untested version is not a
+gentler variant of what failed; in one important respect it is the reverse.
+
+### Built
+
+| File | What |
+| --- | --- |
+| `src/stocksignal/backtest.py` | new. Panel, three arms, next-open fills, per-period split |
+| `src/stocksignal/cli.py` | `backtest` command, `--entry state|confirmation` |
+| `src/stocksignal/config.py` | `trend_entry` switch |
+| `tests/test_backtest.py` | new, 21 tests, `TestLookahead` first |
+
+211 tests. `backtest.py` at 93% coverage.
+
+### Two mistakes worth recording
+
+**The report claimed a hold-out it was not applying.** The first version printed
+"quote only results after 2023-12-31" and then pooled both periods into one
+table. A caveat that is not enforced is decoration.
+
+**API keys were pasted into a chat twice**, and a 2FA recovery code once. All
+rotated. The lesson stands on its own: credentials belong in the environment and
+a password manager, never in a message.
+
+### Open items
+
+1. **Gates 1 and 3 do not exist.** Neither is a session's work: `rsi` is written
+   and `levels.py` already computes distance to the nearest level.
+2. **The breakout screen has never been backtested.** Doing it needs causal level
+   detection per simulated date, not the full-history shortcut.
+3. **One regime.** 2024 to 2026 was kind to speculative tech. There is no bear
+   market in the hold-out.
+4. **Survivorship is still in there**, and unfixable without point-in-time data.
+
+### Next session opens with
+
+A decision rather than a task: implement gates 1 and 3 and test the conjunction,
+or accept the honesty gate on the current build. Whichever, the result above goes
+in the README as it stands.
+
+---
+
 ## Session 3, Sunday 9 August 2026
 
 > Written up on 10 August, after the fact, reconstructed from the diff, the
