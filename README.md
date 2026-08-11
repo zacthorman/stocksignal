@@ -145,6 +145,24 @@ The trimmed mean in this harness was built to ask whether an apparent edge is
 really a few outsized winners. This is the first time the answer has been yes,
 and the first time that question has changed the reading of a result.
 
+**And it is worse than that: the whole result is one quarter.**
+
+| Period | Screens P&L | Trades | Mean/trade | Random |
+| --- | --- | --- | --- | --- |
+| 2024Q1 – 2025Q4 | +63 pts | 118 | **+0.54%** | **+0.61%** |
+| 2026Q1 | +161 pts | 13 | | |
+| **2026Q2** | **+679 pts** | 38 | | +128 pts |
+
+For the first two years of the hold-out the screen slightly *under*performed a
+random pick. 2026Q2 alone supplied 75% of all P&L; 2026Q1 and Q2 together, 93%.
+The top 10 trades out of 175 account for the entire total, and one of them
+(MXL, +329%) gapped 59% on news eleven sessions after entry — the screen was
+holding when it happened, it did not predict it.
+
+An edge you can trade shows up across regimes. This one is a single favourable
+quarter at the very end of the sample, which is the classic shape of a result
+that does not survive contact with new data.
+
 Per the pre-registration, **no further breakout variants get run against this
 snapshot.** A 5.18% mean invites exactly one more slice to find the subset that
 produces the tail, which is how a backtest gets talked into saying yes. It joins
@@ -180,6 +198,45 @@ certain that floor sits inside the noise.
 The course teaches these two rules in different chapters and never puts them
 side by side. A human reading a chart resolves the tension without noticing they
 have done it. Code cannot, which is how the conflict surfaced.
+
+### Gate 1 and gate 3 cannot both fire
+
+The second instance of the same pattern, found on 11 August while walking
+through the entry sequence as the notes describe it: RSI drops under 30, wait
+for price to hold above the 180 SMA, then the fast SMA, then look for the
+ignition bar, then check reward:risk.
+
+| Stage added | Signals surviving, 267 tickers, five years |
+| --- | --- |
+| Price above both SMAs, first bar it becomes true | 4,144 |
+| ...and RSI dipped to 30 or below in the last 10 sessions | **67** |
+| ...and reward:risk ≥ 2:1 | **0** |
+| ...and an ignition bar completes on that bar | **0** |
+
+Zero. Not few — none, in five years, across the whole universe.
+
+At those 67 bars the median room up to the next resistance is 8.1% and the
+median room down to the next support is 39.5%. Reward:risk is about **0.2 where
+the gate demands 2.0**, and 65 of the 67 have no measurable ratio at all because
+no three-touch level exists on one side.
+
+The mechanism is permanent, not incidental. A selloff deep enough to push RSI
+under 30 drives price through every support on the way down. By the time price
+recovers far enough to close back above the 180 SMA, the nearest floor with three
+historical touches is a long way below and the old ceilings are close overhead.
+**Gate 3 says buy after a crash. Gate 1 says buy near a floor. After a crash you
+are not near a floor.**
+
+Note what this rules out. The ignition bar is not a gate anywhere in this
+codebase — `trend.py` never mentions it, and the breakout screen only scores it
+— which is a real gap, but it cannot be the reason the results are weak, because
+the chain is already empty before the ignition bar is consulted.
+
+The live question is instead **what counts as support after a selloff.** Three
+historical touches puts it 40% below; an eye marks the recent bounce low 5%
+below. Different rules, different reward:risk, and the choice between them is a
+change to the rulebook that has to be pre-registered rather than tuned until
+signals appear.
 
 ### The checklist is not additive, and gate 3 subtracts
 

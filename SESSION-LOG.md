@@ -145,11 +145,57 @@ the other way.
    at by accident — the cache expiry and the watchlist provenance are still the
    open items they were.
 
+### Two findings from talking it through afterwards
+
+Both came out of Zac describing how he actually reads a chart, and both are
+measurements rather than opinions.
+
+**The breakout result is one quarter.** 2026Q2 supplied 75% of all P&L, 2026Q1
+and Q2 together 93%. Over the first two years of the hold-out — 118 trades — the
+screen returned +0.54% a trade against the control's +0.61%, so it slightly
+underperformed. The top 10 of 175 trades account for the entire total, and the
+biggest (MXL, +329%) gapped 59% on news eleven sessions after entry. Bars
+checked; it is real data, not a split artefact. This belongs next to the
+percentile, because "underpowered" understates it: a result concentrated in the
+last four months of the sample is the shape of something that will not repeat.
+
+**Gates 1 and 3 cannot both fire.** The entry sequence as the notes describe it —
+RSI under 30, then hold above the 180 SMA, then the fast SMA, then the ignition
+bar, then reward:risk — produces 4,144 signals at the SMA stage, 67 after the
+RSI condition, and **zero** after reward:risk. Median reward:risk at those 67
+bars is 0.2 against a required 2.0, and 65 of 67 have no measurable ratio at all.
+
+The mechanism: a selloff deep enough for RSI under 30 drives price through every
+support, so by the time it closes back above the 180 SMA the nearest three-touch
+floor is ~40% below and the old ceilings are ~8% above. Gate 3 says buy after a
+crash, gate 1 says buy near a floor, and after a crash you are not near a floor.
+
+Same shape as session 4's gate-1-versus-the-stop finding, which makes two
+independent pairs of rules in this rulebook that are each sensible alone and
+impossible together. That is now a pattern worth expecting rather than a
+coincidence.
+
+It also settles where the code falls short, which was not where it looked. The
+ignition bar is not a gate anywhere — `trend.py` never mentions it and the
+breakout screen only scores it — but the chain is empty before the ignition bar
+is reached, so it cannot explain the weak results. **What counts as support after
+a selloff** is the live question: three touches puts it 40% below, an eye puts it
+at the bounce low. Written up in the workspace notes under section E.
+
+Recorded but NOT acted on. Changing the level definition is a change to the
+rulebook and needs pre-registering, not tuning until signals appear.
+
 ### Next session opens with
 
 Nothing, deliberately. The daily scan is being left alone until the **25 August
 review**, so that the next thing built is aimed at a real complaint rather than a
 guess. A scheduled task will open that review.
+
+Two candidates now sit ahead of the scorecard, both from the conversation above:
+settling the support definition, and building a control arm that randomises
+DATES rather than names — because the current design holds dates fixed by
+construction and is therefore blind to any timing edge, which is exactly what an
+RSI rule is.
 
 If something gets built anyway, the **0-100 scorecard from page 115** is the one
 item that makes the digest more useful without making any new claim about whether
