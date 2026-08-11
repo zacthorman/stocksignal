@@ -241,39 +241,48 @@ def _recency(last_touch: pd.Timestamp, df: pd.DataFrame, cfg: Config) -> float:
 
 
 def nearest_levels(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
-    """Nearest swing high above and swing low below the close, at every bar.
+    """Nearest level above and below the close, at every bar, causally.
 
     This is gate 1 of the entry checklist, page 115: "more upward potential than
-    downward — distance to the next resistance versus distance to the next
-    support". Everything else in `levels.py` answers "where are the levels";
+    downward". Everything else in `levels.py` answers "where are the levels";
     this answers "how much room is there, right now, on a day I could have
-    traded".
+    traded". It also supplies the hard stop and the target for the backtest's
+    exit rules, so it is the single highest-leverage function in the project.
 
-    CAUSALITY IS THE ENTIRE DIFFICULTY, and it is not solved by truncation here.
+    THE THREE-TOUCH RULE APPLIES HERE, and the first version skipped it. It used
+    raw single swing points, on the argument that gate 1 asks for "the next
+    place price turned" and that requiring three touches would return nothing
+    for most bars. A fidelity audit against the course put that straight: the
+    rulebook is not ambiguous. Three confirmations makes it the level, and a
+    one-touch swing low is not "a previous support level" in the sense page 234
+    means when it tells you where to put a stop you cannot argue yourself out
+    of. The practical consequence was large rather than academic — single swing
+    points sit much closer to price, so stops came out around 3.2% wide against
+    a universe of beta-2 names, which is inside ordinary daily noise, and three
+    trades in four were shaken out before the idea had a chance to be right.
 
-    `swing_points` uses a centred window: a swing high at bar i is only a swing
-    high once bars i+1 to i+lookback have printed lower. Everywhere else in this
-    project that is handled by truncating the frame, because those callers are
-    handed one slice and asked one question. This function is handed the whole
-    history and asked the question at every bar, so truncation is not available
-    and the shift has to be explicit: a swing at bar i enters the pool at bar
-    i + lookback and not one bar sooner. Get that wrong by a single bar and the
-    backtest knows where price turned before it turned, which is the most
-    flattering bug available in this domain and the hardest to notice, because
-    the equity curve merely looks good rather than impossible.
+    HIGHS AND LOWS POOL TOGETHER, matching `find_levels` and the module
+    docstring. Nothing is born a support or a resistance; a level is a price the
+    market has respected, and which side of it price sits on today decides what
+    to call it. The first version kept two separate pools, which quietly made
+    the flip rule inexpressible: a broken ceiling could never become a floor.
 
-    RAW SWING POINTS, not the three-touch levels `find_levels` builds. The gate
-    asks for the next place price turned, which is what a trader reads off a
-    chart when deciding whether there is room. Requiring three touches would be
-    a different and much stricter claim, would return nothing for most bars, and
-    would answer a question the rulebook does not ask here. `find_levels` stays
-    the right tool for the breakout screen, where "the level" genuinely means a
-    level rather than a turn.
+    CAUSALITY IS NOT SOLVED BY TRUNCATION HERE. `swing_points` uses a centred
+    window, so a swing at bar i is only knowable once bar i + lookback has
+    printed. Elsewhere that is handled by truncating the frame, because those
+    callers ask one question of one slice. This function is handed the whole
+    history and asked at every bar, so the shift is explicit: a swing enters the
+    pool at i + lookback and not one bar sooner, and a level exists only from
+    the bar its THIRD touch was confirmed. Get either wrong and the backtest
+    knows where price turned before it turned.
+
+    Set `cfg.level_source = "swings"` for the old single-touch behaviour. It is
+    kept only so the two can be compared, and it does not match the rulebook.
 
     Returns `resistance`, `support`, `upside_pct`, `downside_pct` and
-    `reward_risk`, all NaN wherever no qualifying level exists on that side.
-    NaN rather than a default: no known ceiling above is not the same as an
-    infinite one, and a screen that treats the two alike will buy tops.
+    `reward_risk`, NaN wherever no qualifying level exists on that side. NaN
+    rather than a default: no known ceiling above is not the same as an infinite
+    one, and a screen that treats the two alike will buy tops.
     """
     swing = cfg.level_swing_lookback
     horizon = cfg.level_lookback_days
@@ -284,62 +293,62 @@ def nearest_levels(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
     highs, lows = swing_points(df["high"], df["low"], swing)
     at = {stamp: i for i, stamp in enumerate(index)}
 
-    # Bar at which each swing becomes knowable, keyed by that bar.
-    pending: dict[int, list[tuple[float, int, bool]]] = {}
-    for stamp, price in highs.items():
-        origin = at[stamp]
-        known = origin + swing
-        if known < n:
-            pending.setdefault(known, []).append((float(price), origin, True))
-    for stamp, price in lows.items():
-        origin = at[stamp]
-        known = origin + swing
-        if known < n:
-            pending.setdefault(known, []).append((float(price), origin, False))
+    pending: dict[int, list[float]] = {}
+    # `_collapse_runs` is not optional, and leaving it out was a real bug.
+    # `swing_points` compares with `==`, so across a flat stretch every bar ties
+    # the rolling max AND the rolling min, and each one contributes a touch to
+    # both pools. A single four-bar plateau therefore arrived as eight touches
+    # and cleared the three-confirmation rule on its own. The rulebook means
+    # three separate OCCASIONS, which is exactly what `find_levels` enforces on
+    # the digest side, so the two paths disagreed about what a level was.
+    for series, take_highest in ((highs, True), (lows, False)):
+        for stamp, price in _collapse_runs(series, index, take_highest):
+            origin = at[stamp]
+            known = origin + swing
+            if known < n:
+                pending.setdefault(known, []).append(float(price))
 
     resistance = np.full(n, np.nan)
     support = np.full(n, np.nan)
 
-    # Insertion order is origin order, so expiry is always from the front.
-    live_highs: deque[tuple[float, int]] = deque()
-    live_lows: deque[tuple[float, int]] = deque()
-    sorted_highs = np.empty(0)
-    sorted_lows = np.empty(0)
-    highs_dirty = lows_dirty = False
+    live: deque[tuple[float, int]] = deque()  # (price, origin), origin-ordered
+    levels = np.empty(0)
+    dirty = False
+    pooled = cfg.level_source == "touches"
 
     for t in range(n):
-        for price, origin, is_high in pending.get(t, ()):
-            if is_high:
-                live_highs.append((price, origin))
-                highs_dirty = True
-            else:
-                live_lows.append((price, origin))
-                lows_dirty = True
-
+        for price in pending.get(t, ()):
+            live.append((price, t - swing))
+            dirty = True
         cutoff = t - horizon
-        while live_highs and live_highs[0][1] <= cutoff:
-            live_highs.popleft()
-            highs_dirty = True
-        while live_lows and live_lows[0][1] <= cutoff:
-            live_lows.popleft()
-            lows_dirty = True
+        while live and live[0][1] <= cutoff:
+            live.popleft()
+            dirty = True
 
-        if highs_dirty:
-            sorted_highs = np.sort(np.fromiter((p for p, _ in live_highs), float, len(live_highs)))
-            highs_dirty = False
-        if lows_dirty:
-            sorted_lows = np.sort(np.fromiter((p for p, _ in live_lows), float, len(live_lows)))
-            lows_dirty = False
+        if dirty:
+            if pooled:
+                touches = sorted((price for price, _ in live))
+                clusters = _cluster_prices(touches, cfg.level_tolerance_pct)
+                levels = np.asarray(
+                    [
+                        sum(group) / len(group)
+                        for group in clusters
+                        if len(group) >= cfg.level_min_touches
+                    ]
+                )
+            else:
+                levels = np.sort(np.fromiter((p for p, _ in live), float, len(live)))
+            dirty = False
 
         price_now = close[t]
-        if not np.isfinite(price_now):
+        if not np.isfinite(price_now) or not len(levels):
             continue
-        above = np.searchsorted(sorted_highs, price_now, side="right")
-        if above < len(sorted_highs):
-            resistance[t] = sorted_highs[above]
-        below = np.searchsorted(sorted_lows, price_now, side="left")
+        above = np.searchsorted(levels, price_now, side="right")
+        if above < len(levels):
+            resistance[t] = levels[above]
+        below = np.searchsorted(levels, price_now, side="left")
         if below > 0:
-            support[t] = sorted_lows[below - 1]
+            support[t] = levels[below - 1]
 
     with np.errstate(invalid="ignore", divide="ignore"):
         upside = (resistance - close) / close * 100.0
@@ -356,3 +365,27 @@ def nearest_levels(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
         },
         index=index,
     )
+
+
+def _cluster_prices(prices: list[float], tolerance_pct: float) -> list[list[float]]:
+    """`_cluster_by_price` without the timestamps, for the per-bar hot path.
+
+    Same rule, and it has to stay the same rule: extend while each price is
+    within tolerance of the cluster's RUNNING MEAN, not its first member, so a
+    chain each 0.9% above the last cannot walk a "one percent" level ten percent
+    up the chart.
+    """
+    if not prices:
+        return []
+    clusters: list[list[float]] = [[prices[0]]]
+    total = prices[0]
+    for price in prices[1:]:
+        current = clusters[-1]
+        mean = total / len(current)
+        if mean > 0 and abs(price - mean) / mean * 100.0 <= tolerance_pct:
+            current.append(price)
+            total += price
+        else:
+            clusters.append([price])
+            total = price
+    return clusters

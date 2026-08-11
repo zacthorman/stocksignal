@@ -4,102 +4,193 @@ A running record of what got done, what was learned, and what the next session o
 
 ---
 
-## Session 4, Monday 10 August 2026
+## Session 4, Monday 10 to Tuesday 11 August 2026
 
 **Where it started:** three unmeasured screens and a hope.
-**Where it ended:** a rigorous null result, and a clearer question.
+**Where it ended:** one candidate the data cannot certify, one rule of the
+rulebook that contradicts another, and a backtest that has been attacked six
+times.
+
+This entry replaces an earlier version written mid-session that reported a
+"rigorous null result". That conclusion was wrong and the reason it was wrong is
+the most useful thing in this log. See **The error that mattered most**.
 
 ### The result
 
-Out of sample, 2024-01-01 to 2026-08-10, 0.2% round-trip costs, entry at the
-session-after open. Universe rebuilt every simulated session from bars dated on
-or before it.
+Out of sample, 2024-01-01 onward, 0.2% round-trip costs, entry at the
+session-after open, universe rebuilt every simulated session from bars dated on
+or before it. Every figure below is a percentile against 5,000 random controls
+that took the same number of names on the same dates.
 
-| entry rule | horizon | screens | random from universe | SPY |
-| --- | --- | --- | --- | --- |
-| state | 20d | +4.24% | +3.60% | +1.22% |
-| confirmation | 5d | +0.51% | +0.92% | +0.21% |
-| confirmation | 10d | +1.09% | +1.77% | +0.58% |
-| confirmation | 20d | +4.02% | +4.01% | +1.22% |
+| configuration | 20d percentile | screens | control |
+| --- | --- | --- | --- |
+| trend only, state entry | ~50 | — | — |
+| confirmation entry | ~50 | — | — |
+| confirmation + RSI ≤ 30 | 76 | — | — |
+| confirmation + RSI ≤ 50 | 95 | 3.18% | 2.36% |
+| gate 1 at 1:1 | 76 | — | — |
+| **gate 1 at 2:1, held** | **96** | **7.01%** | **2.69%** |
+| confirmation + stops | 86 | 0.49% | 0.26% |
+| **gate 1 at 2:1 + stops** | **10** | **0.22%** | **1.56%** |
 
-**With the course's actual rule, the screens lose to a random pick from the same
-universe at 5 and 10 days and tie at 20.** Hit rate is below random at all three
-horizons. The in-sample block says the same thing, so both periods agree.
+Two rows matter and they are the same screen picking the same names on the same
+dates. Only the exit differs.
 
-The `state` version appeared to beat random out of sample by 0.5 to 0.6pp, but
-lost to it in sample by a similar margin. Same magnitude, opposite sign,
-different window: that is what noise looks like, not an edge.
+**Gate 1 held to a horizon is the one live candidate.** 96th percentile, +4.32
+points, the median improved as well as the mean, and it survived deleting its
+best 5% of trades. A separate control — the same backtest on real bars with the
+time ordering destroyed — put it above all twenty shuffles, p ≈ 0.048.
 
-### What actually produced the returns
+**Gate 1 with the course's own stop is worse than random**, and the mechanism is
+mechanical rather than statistical:
 
-A random pick from the universe made 4.01% at 20 days against SPY's 1.22%. Nearly
-the entire apparent outperformance came from *being in a basket of beta-above-2
-tech during a period when that ran*, not from screening. And that is the most
-survivorship-contaminated number in the table, because the universe was built
-from today's survivors.
+```
+                stopped out    worst trade
+screens             77%           -9.5%
+random control      57%          -20.9%
+```
 
-SPY also won on every risk measure: 69.3% hit rate against 48.8%, worst trade
--11.1% against -52.6%.
+A 2:1 reward-to-risk ratio means a close floor by definition. Putting the stop
+on that floor puts it inside daily noise for a stock chosen for beta above 2, so
+four trades in five are stopped before the idea can be right or wrong. The
+losses are individually smaller — the stop is working — and there are so many
+more of them that the mean dies.
 
-### What this does and does not prove
+**The rule: never place the stop at the support level that earned the setup its
+ratio.** Page 115 and page 234 are in different chapters and the course never
+puts them side by side. A human reading a chart resolves the tension without
+noticing. Code cannot, which is how it surfaced.
 
-It does NOT refute the course. Page 115 lists four entry gates. This repo
-implements roughly one and a half of them: gate 4 (above the long-term SMA) plus
-a gap floor. Gate 1 (more upside than downside against the nearest levels) and
-gate 3 (the RSI good-deal check) do not exist in the code. `rsi` was written
-today and nothing calls it.
+### The error that mattered most, and it was mine
 
-So the finding is narrower and more useful than "the method fails": **one gate,
-tested in isolation, has no edge.** Which is roughly what you would expect,
-because in the course that gate is not a trigger at all. It is a permission slip.
+A Bonferroni bar of 99.7% was declared, results were measured against it, and
+failing it was written up as a finding — **without first checking whether the
+data could reach that bar.**
 
-It DOES mean the current build has no demonstrated edge, and the honesty gate in
-the project overview applies to it as it stands.
+It could not. Working from the spread of the control distribution:
 
-### The thing that makes the next test genuinely different
-
-The screens as built buy STRENGTH: price above both averages, or the day it
-first gets there. The course says buy WEAKNESS INSIDE STRENGTH, pages 75, 76 and
-115 together: an uptrend for permission, then oversold on RSI, then the pushback
-holding. Those are close to opposite trades. The untested version is not a
-gentler variant of what failed; in one important respect it is the reverse.
-
-### Built
-
-| File | What |
+| bar | effect needed per 20-day trade |
 | --- | --- |
-| `src/stocksignal/backtest.py` | new. Panel, three arms, next-open fills, per-period split |
-| `src/stocksignal/cli.py` | `backtest` command, `--entry state|confirmation` |
-| `src/stocksignal/config.py` | `trend_entry` switch |
-| `tests/test_backtest.py` | new, 21 tests, `TestLookahead` first |
+| 95% | 1.15pp |
+| ~98.3% (corrected for correlated tests) | 1.48pp |
+| **99.7% (declared)** | **1.91pp** |
 
-211 tests. `backtest.py` at 93% coverage.
+The observed effect was 1.22pp at the time, 4.32pp against a 6.43pp bar after
+the level rule was fixed. Either way the design had roughly a one-in-six chance
+of certifying the effect it actually measured. **A test that answers "no" five
+times out of six when the answer is yes is not evidence of absence.**
 
-### Two mistakes worth recording
+Failing an unreachable bar is an absent result, not a negative one. The report
+now prints its own minimum detectable effect beside every number, and the
+verdict says UNDERPOWERED in words rather than leaving it to be inferred.
 
-**The report claimed a hold-out it was not applying.** The first version printed
-"quote only results after 2023-12-31" and then pooled both periods into one
-table. A caveat that is not enforced is decoration.
+### Three artefacts, each of which read as a discovery
 
-**API keys were pasted into a chat twice**, and a 2FA recovery code once. All
-rotated. The lesson stands on its own: credentials belong in the environment and
-a password manager, never in a message.
+Not bugs in the ordinary sense. Each produced a plausible, quotable, wrong
+answer, and each was caught by deliberately trying to break the control.
+
+1. **The control drew a flat three names per date** while the screens recorded
+   however many fired. Signal breadth peaks when the market is extended, so the
+   arms were averaged over different date weightings and the comparison measured
+   the weighting. Worked example in `backtest.py`'s docstring.
+2. **Under stops, trend-screened names more often had no resistance above them.**
+   No target means the trailing stop never arms, so their winners ran uncapped
+   while the control's were trimmed. On a feed with no predictive signal in it,
+   that alone put the screens at the 96th percentile.
+3. **The median is unreadable under stops.** Stopped-out trades pile into a lump
+   just below zero and the median sits inside it, so a small change in stop-out
+   frequency moves it enormously. On the same signal-free feed the median beat
+   99–100% of controls. Now printed with a warning; the verdict ignores it.
+
+### Six audits, and what each round still found
+
+Every round found something. That is the point worth carrying forward.
+
+| Round | Found |
+| --- | --- |
+| 1 | Flat control draw (artefact 1); single-seed control reported as evidence |
+| 2 | Trailing stop could undercut the hard stop; a test that tested nothing |
+| 3 | Raw proportion could print 100%, i.e. p = 0; control never thinned; `resolvable` demanded one exceedance rather than ten |
+| 4 | Synthetic feed not signal-free; breakout screen could never fire on it; watchlist cache never expires |
+| 5 | Fidelity: three fabricated citations; levels departing from the three-touch rule; baby bar inverted |
+| 6 | Three-touch rule counting a flat plateau as eight touches; a lookahead in the universe mask; synthetic feed *still* not signal-free via Jensen curvature |
+
+**The three misquotes are the ones to remember.** In three places the code
+quoted the rulebook in the direction that justified what it already did:
+`"bigger than the baby bar before it"` (the words "before it" appear in no
+source, and they invert the course's 3-bar setup), `"the rulebook says the
+pattern does not always appear"` (no such sentence exists anywhere), and the
+`(OPENING)` dropped from page 116's definition of CONFIRMATION. All three are
+corrected and the record of what was wrong is kept in the code.
+
+**The lookahead was mine, introduced on day two.** The universe mask at bar t
+required levels to bracket `open[t+1]` — tomorrow's open, in a mask indexed by
+today. A live scanner running at the close could never reproduce that signal set.
+
+### What was built
+
+- `backtest.py` — walk-forward simulation, three arms, permutation test with the
+  add-one estimator, three statistics per horizon, Bonferroni-corrected bar,
+  minimum-detectable-effect reporting, and a `verdict` that distinguishes
+  underpowered from negative.
+- `levels.nearest_levels` — causal support and resistance at every bar, applying
+  the three-touch rule, with the swing window shifted explicitly rather than by
+  truncation. A test proves it agrees exactly with recomputing on a truncated
+  frame.
+- `exit_returns` — the rulebook's exits: hard stop at previous support frozen at
+  entry, 5% trail after the target, four conservative fill decisions documented.
+- `data.shuffle_returns` — real bars with the time ordering destroyed. The null
+  control that does not have to be proved neutral.
+- 277 tests. Every artefact above is encoded as one, so none can come back
+  silently.
+
+### What this design cannot see
+
+- **Timing.** The control trades the same dates, so an edge in *when* scores 50
+  by construction. This measures which names, never when.
+- **The universe filter itself.** The pool already passed the page-142 screen, so
+  the honest claim is "no incremental edge over the course's own filter".
+- **Survivorship, asymmetrically.** Delisted names are absent. A random control
+  would have drawn some death spirals; the screens structurally cannot pick a
+  stock below both its averages. That flatters the control.
 
 ### Open items
 
-1. **Gates 1 and 3 do not exist.** Neither is a session's work: `rsi` is written
-   and `levels.py` already computes distance to the nearest level.
-2. **The breakout screen has never been backtested.** Doing it needs causal level
-   detection per simulated date, not the full-history shortcut.
-3. **One regime.** 2024 to 2026 was kind to speculative tech. There is no bear
-   market in the hold-out.
-4. **Survivorship is still in there**, and unfixable without point-in-time data.
+1. **CONFIRMATION is tested on the close; page 116 says the open.** "The first
+   candlestick holding *(OPENING)* above the blue SMA line". Every number in this
+   log used the close.
+2. **The breakout screen has never been measured, and it fails the fidelity
+   check.** The baby bar is the bar before the break; the course's 3-bar setup
+   puts it after the ignite bar. The wick disqualifier is a percentage of range;
+   page 80 describes a positional test. It is the centrepiece of the rulebook and
+   the largest remaining gap.
+3. **The candidate pool is not reproducible.** `data/watchlist.txt` is not in the
+   repo, `build_watchlist.py` defaults to a 500-symbol sample, and its cache never
+   expires, so a rebuild across two days can mix as-of dates.
+4. **RSI 14/30/70 is still an assumption**, not confirmed against Thinkorswim.
+5. **The stops universe is about four tickers a day.** Requiring a three-touch
+   level on both sides on top of the page-142 filter is brutal, and at that width
+   the control draws from nearly the same names as the screens.
+
+### What you should understand afterwards
+
+- Why a control that shares the screens' bias is worth more than SPY.
+- Why a single random arm is an illustration and a percentile is evidence.
+- Why setting a bar without a power calculation is worse than setting no bar.
+- Why the median stops being readable the moment you add a stop loss.
 
 ### Next session opens with
 
-A decision rather than a task: implement gates 1 and 3 and test the conjunction,
-or accept the honesty gate on the current build. Whichever, the result above goes
-in the README as it stands.
+**Not more backtesting.** The limit is sample size and this dataset is finite.
+
+The one experiment left is pre-registered rather than exploratory: **gate 1 at
+2:1, held, 20-session mean, family of one, bar 95%, on data from 2026-08
+onwards.** Write it down now, run it in six months, and do not look before then.
+
+Otherwise: Session 5 onwards. The daily scan over the full watchlist, the 0-100
+scorecard from page 115, and Telegram delivery. None of it needs an edge to be
+worth having — 256 candidates down to a handful a day is real work saved — and
+none of it may be sold as one.
 
 ---
 

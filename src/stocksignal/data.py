@@ -194,15 +194,63 @@ class SyntheticSource:
             # index. Real volatile stocks have more of their own story too, not
             # just more of the market's.
             idiosyncratic = rng.normal(loc=0.0, scale=0.008 * beta, size=days)
-            shocks = beta * market + idiosyncratic
+            # DRIFT IS REMOVED FROM THE BETA TERM, and this was a real bug with
+            # consequences well beyond a demo feed. `shocks = beta * market`
+            # multiplies the market's drift by beta too, so expected return rose
+            # with beta: a beta-3.0 name earned about 4.15% over 20 days against
+            # a beta-3.2 name's 4.55%. That is a genuine, exploitable
+            # cross-sectional signal, and any screen tilting towards higher beta
+            # picked it up. It matters because this feed is the CONTROL used to
+            # prove artefacts exist: several findings took the form "the screens
+            # scored highly on data with no signal in it, therefore the score is
+            # an artefact". Every one of those needed the feed to actually be
+            # signal-free, and it was not. Beta now scales volatility only, so
+            # expected return is identical across tickers.
+            # Two corrections, both found by audit, both in the same place.
+            #
+            # First: `beta * market` multiplies the market's drift by beta too,
+            # so expected return rose with beta and any screen tilting towards
+            # high beta harvested a real signal from a feed advertised as having
+            # none. Subtracting the drift before scaling fixes the LOG mean.
+            #
+            # Second, and subtler: fixing the log mean is not enough, because
+            # the backtest judges ARITHMETIC returns. E[exp(X)] = exp(mu +
+            # var/2), so a high-beta name still earns more purely from its own
+            # variance. Measured on the old generator: +1.62% per 20 sessions at
+            # beta 2 against +3.98% at beta 4. That gradient was LARGER than the
+            # real-data effect this project was trying to resolve, and it sat
+            # inside the very feed used to argue results were artefacts.
+            # Subtracting var/2 makes the arithmetic mean flat across beta,
+            # which is what "no cross-sectional signal" has to mean here.
+            variance = beta**2 * (0.011**2 + 0.008**2)
+            shocks = beta * (market - self.drift) + (self.drift - variance / 2) + idiosyncratic
 
         close = self.start_price * np.exp(np.cumsum(shocks))
-        intraday = np.abs(rng.normal(0, 0.008, size=days))
+        # Candle geometry. Three attempts, and the failures are instructive.
+        #
+        # v1: open = close*(1 - intraday/2), high = close*(1+i), low = close*(1-i).
+        #     Every bar green, every wick exactly 75% of range. The breakout
+        #     screen's 60% wick disqualifier could therefore never pass, so
+        #     `screen_breakout` was dead on synthetic data and no test noticed.
+        # v2: an over-clever attempt at variety that left a +0.164% per-bar
+        #     open-to-close drift. Entries are filled at an open and exits at a
+        #     close, so that is roughly +3.4% of free return over a 20-session
+        #     hold, handed to every arm on a feed advertised as signal-free.
+        # v3, below: place the close at a uniform position inside the bar's
+        #     range, then place the open uniformly inside the same range. Both
+        #     are draws from the same distribution, so there is no systematic
+        #     open-to-close edge, wicks vary across the whole 0-100% span, and
+        #     roughly half the bars are red.
+        span = np.abs(rng.normal(0, 0.008, size=days))
+        close_at = rng.uniform(0.0, 1.0, size=days)
+        low = close * (1.0 - span * close_at)
+        high = close * (1.0 + span * (1.0 - close_at))
+        open_ = low + rng.uniform(0.0, 1.0, size=days) * (high - low)
         df = pd.DataFrame(
             {
-                "open": close * (1 - intraday / 2),
-                "high": close * (1 + intraday),
-                "low": close * (1 - intraday),
+                "open": open_,
+                "high": high,
+                "low": low,
                 "close": close,
                 "volume": rng.lognormal(mean=13.2, sigma=0.45, size=days).round(),
             },
@@ -317,3 +365,93 @@ def get_source(
         return HybridSource(bars=alpaca, fundamentals=YFinanceSource(cache_dir=cache_dir))
 
     raise DataError(f"unknown provider {provider!r}, expected one of {', '.join(PROVIDERS)}")
+
+
+def shuffle_order(calendar: pd.DatetimeIndex, seed: int) -> tuple[pd.DatetimeIndex, np.ndarray]:
+    """One shared reordering of the trading calendar, used by every ticker.
+
+    SHARED IS THE POINT, and the first version got it exactly wrong by giving
+    each ticker its own permutation "so cross-sectional correlation is destroyed
+    too". That reasoning was backwards: independent permutations destroy every
+    ticker's correlation with the benchmark, so every beta collapses towards
+    zero and the `beta >= 2` universe filter matches nothing. The run came back
+    with "0 tickers in the universe on an average day" and one solitary trade.
+
+    A POSITION IN THE CALENDAR, not a rank per ticker, and that was the second
+    version's bug. Sorting each ticker's own dates by a shared rank looks
+    equivalent and is not: a ticker missing sixty sessions places the return
+    from a given date at a different position from a ticker that has them all,
+    and the offset drifts as you move through the series. Measured, a ticker
+    identical to another but missing its first hundred sessions came out with a
+    correlation of 0.04 to its twin after shuffling, where 1.0 was the whole
+    objective. Every late listing silently lost its beta and dropped out of the
+    shuffled universe, so the "decisive test" was quietly running on a
+    full-history-only subset.
+
+    Returning the calendar alongside the permutation forces every frame through
+    the same alignment, which is the only way the guarantee holds.
+    """
+    rng = np.random.default_rng(seed)
+    return calendar, rng.permutation(max(len(calendar) - 1, 0))
+
+
+def shuffle_returns(df: pd.DataFrame, order: tuple[pd.DatetimeIndex, np.ndarray]) -> pd.DataFrame:
+    """The same bars, with daily returns reordered by a shared permutation.
+
+    THIS EXISTS BECAUSE THE GENERATED FEED WAS NOT GOOD ENOUGH. `SyntheticSource`
+    was the "there is no signal here" reference against which artefacts were
+    diagnosed, and it kept turning out to have structure of its own: expected
+    return that rose with beta in log space, then again in arithmetic space
+    through pure Jensen curvature, candles that were green every bar, wicks
+    pinned at exactly 75% of range. Each was fixed and another appeared. A
+    generated feed has to be PROVED neutral, and proving it is harder than the
+    thing it was built to check.
+
+    Shuffling sidesteps that. Take the REAL bars and permute the daily returns
+    in time. What survives: each ticker's volatility, the cross-sectional spread
+    of volatility, the price level, the intrabar candle geometry, the trading
+    calendar, and — because the permutation is shared and positional — every
+    ticker's co-movement and therefore its beta. What is destroyed: trends,
+    momentum, support and resistance, every time-series relationship a technical
+    screen claims to read. Anything a screen still scores here is mechanical.
+
+    Frames are reindexed onto the shared calendar first, so a ticker that listed
+    late is defined across the whole window in the shuffled world. That is a
+    deliberate distortion of a world that is already counterfactual: it keeps
+    the universe populated and co-movement exact, which is what the control is
+    for. It does mean the shuffled universe is not the real one, and comparisons
+    belong within a shuffled run rather than against a real one.
+    """
+    calendar, permutation = order
+    if len(calendar) < 3 or not len(permutation):
+        return df.copy()
+
+    aligned = df.reindex(calendar)
+    close = aligned["close"].to_numpy(dtype=float)
+    finite = np.flatnonzero(np.isfinite(close) & (close > 0))
+    if not len(finite):
+        return aligned
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        steps = close[1:] / close[:-1]
+    # A missing or impossible bar becomes a flat day rather than a hole, so the
+    # permutation stays a permutation of the same length for every ticker.
+    steps = np.where(np.isfinite(steps) & (steps > 0), steps, 1.0)
+
+    rebuilt = np.empty(len(calendar))
+    rebuilt[0] = close[finite[0]]
+    rebuilt[1:] = rebuilt[0] * np.cumprod(steps[permutation])
+
+    # Keep each bar's own shape where there was one. Where the ticker had no bar
+    # at all, there is no shape to keep, so the rebuilt close stands alone.
+    out = pd.DataFrame(index=calendar, columns=["open", "high", "low", "close"], dtype=float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        scale = np.where(np.isfinite(close) & (close > 0), rebuilt / close, np.nan)
+    for column in ("open", "high", "low", "close"):
+        shaped = aligned[column].to_numpy(dtype=float) * scale
+        out[column] = np.where(np.isfinite(shaped), shaped, rebuilt)
+
+    volume = aligned["volume"].to_numpy(dtype=float)
+    median_volume = float(np.nanmedian(volume)) if np.isfinite(volume).any() else 0.0
+    out["volume"] = np.where(np.isfinite(volume), volume, median_volume)
+    return out

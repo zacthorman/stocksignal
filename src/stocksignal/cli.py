@@ -19,7 +19,13 @@ from stocksignal.backtest import TESTS_RUN
 from stocksignal.backtest import render as render_backtest
 from stocksignal.backtest import run as run_backtest
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR, Config
-from stocksignal.data import PROVIDERS, DataError, get_source
+from stocksignal.data import (
+    PROVIDERS,
+    DataError,
+    get_source,
+    shuffle_order,
+    shuffle_returns,
+)
 from stocksignal.digest import render_markdown, render_terminal
 from stocksignal.scanner import scan as run_scan
 
@@ -179,6 +185,19 @@ def backtest(
         help="How many variants have been tried against this data. Raises the bar, "
         "because one pass in twelve attempts is what chance produces.",
     ),
+    shuffle_seed: int = typer.Option(
+        1,
+        "--shuffle-seed",
+        help="Which shuffle to use. One permutation is one draw, so run several "
+        "and read the spread rather than trusting a single reordering.",
+    ),
+    shuffle: bool = typer.Option(
+        False,
+        "--shuffle",
+        help="Permute each ticker's daily returns before running. Destroys every "
+        "time-series relationship while keeping volatility, price level and candle "
+        "shape. Anything the screens still score here is mechanical.",
+    ),
     source_name: str = typer.Option("alpaca", "--source", "-s"),
     pool: Path = typer.Option(Path("data/watchlist.txt"), "--pool", help="Candidate universe."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
@@ -260,6 +279,20 @@ def backtest(
     if not usable:
         console.print("[red]Nothing has enough history. Widen the window.[/red]")
         raise typer.Exit(code=1)
+
+    if shuffle:
+        console.print(
+            f"[yellow]SHUFFLED (seed {shuffle_seed}): returns permuted in time. There is "
+            "nothing here to predict, so a high percentile means the edge is mechanical."
+            "\nThe price PATH changes, so the price floor bites differently and the "
+            "universe will be smaller than the real one. Compare within this run, not "
+            "against the real one.[/yellow]\n"
+        )
+        # ONE permutation, shared by every ticker and the benchmark. Per-ticker
+        # permutations destroy every beta and empty the universe.
+        order = shuffle_order(benchmark.index, seed=shuffle_seed)
+        usable = {t: shuffle_returns(df, order) for t, df in usable.items()}
+        benchmark = shuffle_returns(benchmark, order)
 
     report = run_backtest(
         usable,

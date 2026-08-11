@@ -232,9 +232,15 @@ class Config:
         name in a three-month uptrend signals sixty times.
 
         "confirmation" fires only on the session the condition first becomes
-        true, which is the course's actual rule: page 115 defines CONFIRMATION
-        as "the first candlestick holding above the short-term SMA line". One
-        signal per move rather than one per day.
+        true, which is the course's actual rule: page 116 defines CONFIRMATION
+        as "the first candlestick holding (OPENING) above the blue SMA line".
+
+        NOTE THE WORD IN BRACKETS, which this project dropped from the quote and
+        from the code. The course names the OPEN as the thing that has to hold
+        above the line; every implementation here tests the CLOSE. That is a
+        real difference on every confirmation signal, it was never a considered
+        decision, and it is not fixed yet. One signal per move rather than one
+        per day is right; which price defines the signal is not.
 
         The first out-of-sample backtest measured "state" and found no edge over
         a random pick from the same universe. That is a result about the state
@@ -274,6 +280,21 @@ class Config:
         percentage of price. A percentage rather than an absolute amount because
         a 1.50 band is a 7.5% zone on a 20 dollar stock and a 0.4% hairline on a
         400 dollar one, and those are not the same claim.
+    level_source:
+        What counts as a level for gate 1 and for stop placement.
+
+        "touches" applies the rulebook's three-confirmation rule: swing points
+        are clustered and only a cluster with `level_min_touches` members counts.
+        This is the course's definition and the default.
+
+        "swings" uses raw single swing points. That is what shipped first, and a
+        fidelity audit against the course found it was a silent departure rather
+        than an interpretation: a one-touch swing low is not "a previous support
+        level" in the sense page 234 means. It also had teeth. Single swing
+        points sit far closer to price, so stops measured about 3.2% wide on a
+        universe of beta-2 names, which is inside ordinary daily noise, and the
+        hit rate collapsed to 22%. The setting is kept only so the two can be
+        compared directly.
     level_min_touches:
         The rulebook's three-confirmation rule. Fewer touches than this and it is
         a coincidence, not a level.
@@ -302,7 +323,11 @@ class Config:
         an absolute claim, not just "bigger than a small baby bar".
     breakout_ignition_strong_ratio:
         The igniting bar's body divided by the baby bar's body must exceed 1.0
-        to pass at all (the rulebook's "bigger than the baby bar before it").
+        to pass at all. The words "bigger than the baby bar BEFORE IT" were
+        quoted here from the rulebook and the rulebook does not contain them:
+        "before it" was added, and it inverts the course's 3-bar setup, where
+        the baby bar is the small bar that TESTS the ignition bar afterwards.
+        See the note at the top of `screens/breakout.py`.
         The ignition component of the score ramps from 0 at a ratio of 1.0 to
         1.0 at this ratio.
     breakout_baby_max_wick_pct:
@@ -355,6 +380,7 @@ class Config:
     gap_relative_lookback: int = 500
     gap_relative_min_samples: int = 40
     level_swing_lookback: int = 5
+    level_source: str = "touches"
     level_tolerance_pct: float = 1.0
     level_min_touches: int = 3
     level_lookback_days: int = 252
@@ -393,6 +419,10 @@ class Config:
             raise ValueError("level_fresh_days cannot exceed level_lookback_days")
         if self.min_reward_risk is not None and self.min_reward_risk <= 0:
             raise ValueError("min_reward_risk must be positive, or None to disable gate 1")
+        if self.level_source not in ("touches", "swings"):
+            raise ValueError(
+                f"level_source must be 'touches' or 'swings', got {self.level_source!r}"
+            )
         if self.exit_rule not in ("hold", "stops"):
             raise ValueError(f"exit_rule must be 'hold' or 'stops', got {self.exit_rule!r}")
         if not 0 < self.trail_pct < 100:

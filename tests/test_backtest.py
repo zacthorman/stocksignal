@@ -15,7 +15,7 @@ import pytest
 from helpers import make_bars, quote_from
 from stocksignal import backtest as bt
 from stocksignal.config import Config
-from stocksignal.data import SyntheticSource
+from stocksignal.data import SyntheticSource, shuffle_order, shuffle_returns
 from stocksignal.levels import nearest_levels
 from stocksignal.screens import screen_trend
 
@@ -642,24 +642,37 @@ class TestGate1RewardRisk:
             checked += 1
         assert checked > 15, "this test is only meaningful if it actually checked things"
 
-    def test_a_swing_is_invisible_until_its_window_completes(self, cfg):
-        # A swing high at bar i needs bars i+1..i+lookback to print lower before
-        # anyone can call it a high. Asserted on the bar, not inferred.
+    def test_a_level_appears_only_when_its_third_touch_is_confirmed(self, cfg):
+        # Two things at once, both causal. A swing at bar i needs bars i+1..i+5
+        # to print lower before anyone can call it a high, AND under the
+        # rulebook's three-confirmation rule the LEVEL does not exist until the
+        # third of those swings has itself been confirmed.
         #
-        # The baseline is a strictly rising ramp rather than a flat line, which
-        # matters: `swing_points` compares with `==`, so on a plateau every bar
-        # ties the rolling max and every bar registers as a swing. A flat
-        # fixture would have tested the fixture.
-        peak = 40
+        # The baseline is a rising ramp rather than a flat line: `swing_points`
+        # compares with `==`, so on a plateau every bar ties the rolling max and
+        # every bar registers as a swing. A flat fixture would test the fixture.
         closes = [100.0 + 0.5 * i for i in range(90)]
-        closes[peak] = 200.0
+        for peak in (20, 40, 60):
+            closes[peak] = 200.0
         df = make_bars(closes)
         levels = nearest_levels(df, cfg)
         swing = cfg.level_swing_lookback
 
-        seen_early = levels["resistance"].iloc[peak : peak + swing]
-        assert seen_early.isna().all(), "the peak was visible before its confirming bars printed"
-        assert levels["resistance"].iloc[peak + swing] == pytest.approx(200.0 * 1.01)
+        # Two touches is a coincidence, not a level.
+        assert levels["resistance"].iloc[: 60 + swing].isna().all(), (
+            "a level formed before its third touch was confirmed"
+        )
+        assert levels["resistance"].iloc[60 + swing] == pytest.approx(200.0 * 1.01)
+
+    def test_one_lonely_swing_is_not_a_level(self, cfg):
+        closes = [100.0 + 0.5 * i for i in range(90)]
+        closes[40] = 200.0
+        df = make_bars(closes)
+        assert nearest_levels(df, cfg)["resistance"].isna().all()
+        # ...unless you ask for the old single-touch behaviour, which is kept
+        # only so the two can be compared.
+        loose = nearest_levels(df, Config(level_source="swings"))
+        assert loose["resistance"].iloc[45] == pytest.approx(200.0 * 1.01)
 
     def test_no_ceiling_above_fails_the_gate_rather_than_passing_it(self):
         # NaN means "I cannot see a level", not "there is no level". A gate that
@@ -682,19 +695,42 @@ class TestGate1RewardRisk:
         assert list(strict[:, 0]) == [False, False, False, True]
 
     def test_the_ratio_is_upside_over_downside_from_todays_close(self, cfg):
-        # Worked by hand so the arithmetic cannot drift. One peak at 110 (bar 5,
-        # confirmed by bar 10), one trough at 90 (bar 15, confirmed by bar 20),
-        # then a monotonic climb to a close of 100 that forms no further swings.
-        closes = [100.0, 102.0, 104.0, 106.0, 108.0, 110.0, 108.0, 106.0, 104.0, 102.0, 100.0]
-        closes += [98.0, 96.0, 94.0, 92.0, 90.0]
-        closes += [91.0, 92.0, 93.0, 94.0, 95.0, 96.0, 97.0, 98.0, 99.0, 100.0]
-        df = make_bars(closes)
-        row = nearest_levels(df, cfg).iloc[-1]
-        assert row["resistance"] == pytest.approx(110.0 * 1.01), "nearest swing HIGH above"
-        assert row["support"] == pytest.approx(90.0 * 0.99), "nearest swing LOW below"
+        # Worked by hand so the arithmetic cannot drift. Three peaks at 110 and
+        # three troughs at 90, spaced far enough apart to be separate swings,
+        # then a climb to a close of 100 that forms no further ones.
+        anchors = [(0, 100.0), (6, 110.0), (18, 90.0), (30, 110.0)]
+        anchors += [(42, 90.0), (54, 110.0), (66, 90.0), (80, 100.0)]
+        closes = list(
+            np.interp(
+                np.arange(81),
+                [bar for bar, _ in anchors],
+                [price for _, price in anchors],
+            )
+        )
+        row = nearest_levels(make_bars(closes), cfg).iloc[-1]
+        assert row["resistance"] == pytest.approx(110.0 * 1.01), "the three-touch ceiling"
+        assert row["support"] == pytest.approx(90.0 * 0.99), "the three-touch floor"
         assert row["upside_pct"] == pytest.approx(11.1)
         assert row["downside_pct"] == pytest.approx(10.9)
         assert row["reward_risk"] == pytest.approx(11.1 / 10.9)
+
+    def test_highs_and_lows_pool_so_a_broken_ceiling_can_become_a_floor(self, cfg):
+        # The flip rule, page 14: "if a stock breaks a resistance level it now
+        # becomes support". That is only expressible if nothing is born a
+        # support or a resistance. The first version kept two separate pools
+        # keyed on swing highs and swing lows, which made the rule impossible.
+        anchors = [(0, 100.0), (6, 110.0), (18, 90.0), (30, 110.0)]
+        anchors += [(42, 90.0), (54, 110.0), (66, 90.0), (85, 125.0)]
+        closes = list(
+            np.interp(
+                np.arange(86),
+                [bar for bar, _ in anchors],
+                [price for _, price in anchors],
+            )
+        )
+        row = nearest_levels(make_bars(closes), cfg).iloc[-1]
+        # Price is now above the old ceiling, so the ceiling reads as the floor.
+        assert row["support"] == pytest.approx(110.0 * 1.01), "the broken ceiling did not flip"
 
     def test_the_gate_only_ever_removes_signals(self, cfg):
         frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=700)
@@ -710,8 +746,11 @@ class TestGate1RewardRisk:
 
 
 # Exit mechanics tests care about fills, not about the matched-geometry rule
-# that keeps the ARMS comparable, so they switch that off and say so.
-STOPS_ONLY = Config(exit_rule="stops", exit_requires_levels=False)
+# that keeps the ARMS comparable, so they switch that off and say so. They also
+# use single swing points rather than three-touch levels: the question is what
+# happens WHEN a stop is hit, and three-touch levels are sparse enough on
+# synthetic data that most bars would have no stop to hit at all.
+STOPS_ONLY = Config(exit_rule="stops", exit_requires_levels=False, level_source="swings")
 
 
 class TestExitRules:
@@ -859,7 +898,7 @@ class TestExitRules:
         # The claim the whole exercise rests on. Not "stops make money" — only
         # that they bound what a loser costs, which is what the rulebook says
         # they are for.
-        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=700)
+        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=1200)
         cfg = STOPS_ONLY
         panel = bt.build_panel(frames, bench, cfg)
         held = bt.forward_returns(panel, 20, 0.2)
@@ -943,26 +982,37 @@ class TestTheArmsGetTheSameGeometry:
         )
 
     def test_with_matched_geometry_a_signal_free_feed_lands_mid_pack(self):
-        # The end-to-end proof that the correction worked. Synthetic data has no
-        # predictive structure, so under stops the screens must be ordinary.
-        # This is the assertion that would have caught the artefact.
-        frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=1100)
-        index = next(iter(frames.values())).index
-        report = bt.run(
-            frames,
-            bench,
-            Config(trend_entry="confirmation", exit_rule="stops"),
-            start=index[400].date(),
-            end=index[-30].date(),
-            fit_end=index[700].date(),
-            replicates=120,
-        )
-        null = report.null_test
-        assert null is not None and null.screen_trades > 30
-        for horizon in bt.HORIZONS:
-            assert null.beats_pct[horizon]["mean"] < 95.0, (
-                f"{horizon}-session: screens beat the control on a feed with no signal"
+        # The end-to-end proof that the correction worked: on data with no
+        # predictive structure the screens must come out ordinary.
+        #
+        # AVERAGED OVER SEVERAL DRAWS, and the first version of this test was
+        # wrong for exactly the reason the project spent a day learning. It ran
+        # ONE feed and asserted the percentile was under 95. That statistic is
+        # enormously noisy at these trade counts: twenty shuffles of real data
+        # produced percentiles spanning 0 to 95 with a mean of 50. A single
+        # reading tells you almost nothing, and asserting on one would fail
+        # roughly one run in twenty for no reason at all. So: several feeds,
+        # every horizon, and the assertion is on the average.
+        readings: list[float] = []
+        for seed in (23, 41, 67):
+            frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=1200, seed=seed)
+            index = next(iter(frames.values())).index
+            report = bt.run(
+                frames,
+                bench,
+                Config(trend_entry="confirmation", exit_rule="stops"),
+                start=index[400].date(),
+                end=index[-30].date(),
+                replicates=60,
             )
+            null = report.null_test
+            assert null is not None
+            readings.extend(null.beats_pct[h]["mean"] for h in bt.HORIZONS)
+
+        average = float(np.mean(readings))
+        assert 20.0 < average < 80.0, (
+            f"screens averaged the {average:.0f}th percentile on feeds with no signal in them"
+        )
 
 
 class TestTheMedianIsNotEvidenceUnderStops:
@@ -1078,3 +1128,179 @@ class TestTheEstimatorAndTheControlsConstraints:
         assert not builder._null(family=15, replicates=200).resolvable
         assert not builder._null(family=15, replicates=2000).resolvable
         assert builder._null(family=15, replicates=5000).resolvable
+
+
+class TestShuffledReturnsAreARealNull:
+    """The control that does not have to be proved neutral.
+
+    Three artefacts were traced to `SyntheticSource` having structure it was
+    advertised as not having. Shuffling real bars sidesteps the problem: it
+    keeps volatility, price level and candle shape, and destroys every
+    time-series relationship a technical screen reads.
+    """
+
+    def test_the_bars_keep_their_shape_and_lose_their_order(self):
+        frames, _ = synth(["AAA"], days=600)
+        original = frames["AAA"]
+        shuffled = shuffle_returns(original, shuffle_order(original.index, seed=3))
+
+        assert list(shuffled.index) == list(original.index)
+        assert shuffled["close"].iloc[0] == pytest.approx(original["close"].iloc[0])
+        # Same set of daily moves, different order.
+        before = np.sort(original["close"].to_numpy()[1:] / original["close"].to_numpy()[:-1])
+        after = np.sort(shuffled["close"].to_numpy()[1:] / shuffled["close"].to_numpy()[:-1])
+        assert np.allclose(before, after)
+        assert not np.allclose(original["close"].to_numpy(), shuffled["close"].to_numpy()), (
+            "the order survived"
+        )
+
+    def test_every_bar_stays_internally_consistent(self):
+        frames, _ = synth(["AAA", "BBB"], days=400)
+        order = shuffle_order(next(iter(frames.values())).index, seed=11)
+        for name, df in frames.items():
+            out = shuffle_returns(df, order)
+            assert (out["high"] >= out[["open", "close"]].max(axis=1) - 1e-9).all(), name
+            assert (out["low"] <= out[["open", "close"]].min(axis=1) + 1e-9).all(), name
+            assert (out["close"] > 0).all(), name
+            # Candle proportions are the bar's own, only the level moved.
+            ratio = out["high"] / out["close"]
+            assert np.allclose(ratio, df["high"] / df["close"])
+
+    def test_the_trend_screen_finds_far_less_to_like(self):
+        # The point of the control. Shuffling destroys persistence, so a screen
+        # built on moving-average structure should fire markedly less often.
+        frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=900)
+        cfg = Config(trend_entry="confirmation")
+        real = bt.trend_mask(bt.build_panel(frames, bench, cfg), cfg)[0].sum()
+        order = shuffle_order(bench.index, seed=4)
+        shuffled = {t: shuffle_returns(df, order) for t, df in frames.items()}
+        fake = bt.trend_mask(bt.build_panel(shuffled, shuffle_returns(bench, order), cfg), cfg)[
+            0
+        ].sum()
+        assert real > 0 and fake >= 0
+        assert fake < real, "shuffling left the trend structure intact"
+
+    def test_it_is_deterministic_for_a_given_seed(self):
+        frames, _ = synth(["AAA"], days=300)
+        index = frames["AAA"].index
+        a = shuffle_returns(frames["AAA"], shuffle_order(index, seed=5))
+        b = shuffle_returns(frames["AAA"], shuffle_order(index, seed=5))
+        c = shuffle_returns(frames["AAA"], shuffle_order(index, seed=6))
+        assert np.allclose(a["close"], b["close"])
+        assert not np.allclose(a["close"], c["close"])
+
+    def test_a_short_frame_is_aligned_onto_the_shared_calendar(self):
+        # The contract changed when the permutation became positional: every
+        # frame is reindexed onto the shared calendar first, because that is the
+        # only way two tickers can carry the same date's return at the same
+        # position. A late lister is therefore defined across the whole window
+        # in the shuffled world, which is a deliberate distortion of a world
+        # that is already counterfactual.
+        frames, _ = synth(["AAA"], days=300)
+        order = shuffle_order(frames["AAA"].index, seed=1)
+        late = frames["AAA"].iloc[150:]
+        out = shuffle_returns(late, order)
+        assert len(out) == 300
+        assert out["close"].notna().all()
+        assert (out["high"] >= out[["open", "close"]].max(axis=1) - 1e-9).all()
+
+    def test_a_degenerate_calendar_is_returned_unchanged(self):
+        frames, _ = synth(["AAA"], days=300)
+        tiny = frames["AAA"].iloc[:2]
+        out = shuffle_returns(tiny, shuffle_order(tiny.index, seed=1))
+        assert np.allclose(out["close"], tiny["close"])
+
+    def test_a_late_lister_keeps_its_co_movement(self):
+        # The bug this replaced: placement by rank within each ticker's OWN
+        # index meant a ticker missing sessions placed a given date's return at
+        # a different position from one that had them all, and the offset
+        # drifted. A twin missing its first hundred sessions correlated 0.04
+        # with its full-history counterpart. Beta collapsed and every late
+        # listing fell out of the shuffled universe.
+        frames, bench = synth(["AAA"], days=600)
+        order = shuffle_order(bench.index, seed=3)
+        full = shuffle_returns(frames["AAA"], order)["close"].pct_change()
+        late = shuffle_returns(frames["AAA"].iloc[150:], order)["close"].pct_change()
+        paired = pd.concat([full, late], axis=1).dropna()
+        paired = paired[paired.index >= frames["AAA"].index[150]]
+        assert paired.corr().iloc[0, 1] > 0.7
+
+    def test_beta_and_therefore_the_universe_survive_the_shuffle(self):
+        # THE regression test. Per-ticker permutations destroy every ticker's
+        # correlation with the benchmark, so every beta collapses towards zero
+        # and the `beta >= 2` universe filter matches nothing. The first version
+        # did exactly that and produced "0 tickers in the universe" and one
+        # trade across six years.
+        cfg = Config()
+        frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=900)
+        order = shuffle_order(bench.index, seed=9)
+        shuffled = {t: shuffle_returns(df, order) for t, df in frames.items()}
+
+        before = bt.universe_mask(bt.build_panel(frames, bench, cfg), cfg)
+        after = bt.universe_mask(bt.build_panel(shuffled, shuffle_returns(bench, order), cfg), cfg)
+        assert before.sum() > 0, "this fixture proves nothing with an empty universe"
+        assert after.sum() > 0.5 * before.sum(), (
+            "the shuffle emptied the universe, so beta did not survive it"
+        )
+
+
+class TestTheControlCanActuallyBeFilled:
+    """Count matching is the property the whole design rests on.
+
+    Under stops a trade needs a stop below and a target above. Gate 1 cannot
+    fire without both, so the requirement never binds on the screens — but the
+    control was drawing from the whole universe and having most of its picks
+    discarded afterwards. A real run came back with 66 screen trades against 6
+    controls, which is not a control, it is a rounding error with a name.
+    """
+
+    def test_both_arms_get_the_same_number_of_trades_under_stops(self):
+        frames, bench = synth([a + b for a in "ABCDEFGHIJKL" for b in "XYZ"], days=1800)
+        index = next(iter(frames.values())).index
+        report = bt.run(
+            frames,
+            bench,
+            Config(trend_entry="confirmation", min_reward_risk=2.0, exit_rule="stops"),
+            start=index[400].date(),
+            end=index[-30].date(),
+            replicates=0,
+        )
+        counts: dict[str, int] = {}
+        for trade in report.trades:
+            counts[trade.arm] = counts.get(trade.arm, 0) + 1
+        assert counts.get("screens", 0) > 8, "this fixture proves nothing without trades"
+        drawn = counts.get("random from universe", 0)
+        assert drawn >= 0.8 * counts["screens"], (
+            f"{counts['screens']} screen trades but only {drawn} controls: the control "
+            "is being filtered after the draw instead of before it"
+        )
+
+    def test_the_restriction_does_not_apply_when_holding_to_the_horizon(self):
+        # Without stops there is no geometry requirement, so the universe must
+        # not be narrowed and earlier results must not silently change.
+        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=900)
+        cfg = Config(trend_entry="confirmation")
+        panel = bt.build_panel(frames, bench, cfg)
+        plain = bt.universe_mask(panel, cfg)
+        index = next(iter(frames.values())).index
+        report = bt.run(
+            frames, bench, cfg, start=index[400].date(), end=index[-30].date(), replicates=0
+        )
+        assert plain.sum() > 0 and report.universe_days > 0
+
+
+class TestTheVerdictDoesNotMisdiagnose:
+    """Resolution and power are different failures and must not print alike."""
+
+    def test_clearing_the_bar_without_enough_controls_says_so(self):
+        builder = TestTheNullTest()
+        null = builder._null(mean=99.9, median=99.9, trimmed=99.9, family=18, replicates=1000)
+        assert not null.resolvable
+        said = bt.verdict(null, 20)
+        assert "cannot" in said and "resolve" in said
+        assert "short of the" not in said, "a result past the bar was called short of it"
+
+    def test_a_genuinely_short_result_is_still_called_short(self):
+        builder = TestTheNullTest()
+        null = builder._null(mean=90.0, median=90.0, trimmed=90.0, family=18, replicates=5000)
+        assert "cannot" not in bt.verdict(null, 20)

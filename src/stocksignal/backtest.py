@@ -104,9 +104,18 @@ STATS = ("mean", "median", "trimmed")
 # How many percentile tests this project has already run against this data.
 # Every variant tried costs significance whether or not it is reported, and the
 # count only goes up, so it lives here where forgetting to raise it is visible.
-#   state, confirmation, confirmation+RSI30, confirmation+RSI50, gate 1,
-#   x 3 horizons each.
-TESTS_RUN = 15
+#   state; confirmation; confirmation+RSI30; confirmation+RSI50; gate 1 at 1:1;
+#   gate 1 at 2:1; confirmation+stops; gate 1 at 2:1 + stops. Eight
+#   configurations, three horizons each. Shuffled runs are controls rather than
+#   hypotheses and are deliberately not counted.
+#
+# Bonferroni assumes these are independent and they are emphatically not: the
+# variants nest inside one another and the three horizons are the same trades
+# measured at three lengths. An independent review put the effective count near
+# 9. The number is left at the blunt end deliberately, but see `power` below,
+# because a bar this high on this much data is not a strict standard, it is an
+# unreachable one, and that is a different failure.
+TESTS_RUN = 24
 ALPHA = 0.05  # The bar before correction: beat 95% of controls.
 
 
@@ -207,6 +216,39 @@ class NullTest:
     #: expressibility rather than resolution; the first version asked for one and
     #: would have called a decision on a single lucky draw.
     MIN_EXCEEDANCES = 10
+
+    def detectable_effect(self, horizon: int, stat: str = "mean") -> float:
+        """The effect this run needed before the bar was reachable, per trade.
+
+        Precisely: the critical value, which is the effect that clears the bar
+        about HALF the time. Calling it "the smallest edge this run could have
+        certified" was too generous by roughly a third — an effect certified
+        reliably, at the usual 80%, has to be about 1.3 times this number,
+        because the screens' own mean is noisy with much the same spread.
+
+        THIS IS THE NUMBER THAT WAS MISSING, and leaving it out was the worst
+        methodological error in the project. A bar was set at 99.7%, results
+        were measured against it, and failing it was reported as a finding —
+        without anyone first asking whether the data could clear that bar at all.
+
+        It could not. Working from the observed spread of the control
+        distribution, the declared bar demands roughly 1.9 points per 20-day
+        trade, which annualises to something like 25-30% of pure selection
+        alpha. Essentially nothing legitimate clears that. Against the effect
+        actually measured, the design had about one chance in six of returning
+        a pass. A test that says "no" five times out of six when the answer is
+        yes has not found evidence of absence; it has failed to be an
+        experiment.
+
+        Reported next to every result from now on, so the reader can see what
+        the run was capable of noticing before reading what it noticed.
+        """
+        spread = self.random_p95[horizon][stat] - self.random_p05[horizon][stat]
+        if not np.isfinite(spread) or spread <= 0:
+            return float("nan")
+        sigma = spread / 3.29  # p95 - p05 spans 3.29 standard deviations.
+        z = _z_for(self.corrected_bar)
+        return float(z * sigma)
 
     @property
     def resolvable(self) -> bool:
@@ -936,6 +978,32 @@ def run(
 
     window = (panel.dates >= pd.Timestamp(start)) & (panel.dates <= pd.Timestamp(end))
     universe = universe_mask(panel, cfg) & window[:, None]
+
+    if cfg.exit_rule == "stops" and cfg.exit_requires_levels:
+        # A trade needs a stop below and a target above to be taken at all, so
+        # bars that have neither are not part of the eligible universe FOR
+        # EITHER ARM. Leaving that out broke the comparison in a way that took a
+        # real run to notice: gate 1 cannot fire without both levels, so the
+        # requirement never bound on the screens, while the control drew freely
+        # from the whole universe and then had most of its picks thrown away
+        # afterwards. The result was 66 screen trades against 6 controls, which
+        # is not a control. Intersecting here keeps the per-date counts
+        # matchable, which is the property the whole design rests on.
+        # FINITENESS ONLY, tested at bar t. The first version also required the
+        # levels to bracket `open[t + 1]`, which put TOMORROW'S OPEN inside a
+        # mask indexed by today — a signal set the live scanner could never
+        # reproduce, because at T's close that open does not exist yet. Worse
+        # under confirmation entry: an overnight gap through the stop could
+        # switch a name out of the universe for one bar and hand the same move a
+        # second, fresher-looking transition.
+        #
+        # It is also unnecessary. `nearest_levels` returns the nearest level
+        # strictly above and strictly below the CLOSE, so a finite pair already
+        # brackets bar t. The two conditions differ only when the open gaps
+        # through a level overnight, and `exit_returns` handles that case on its
+        # own, symmetrically, for every arm.
+        universe = universe & np.isfinite(panel.support) & np.isfinite(panel.resistance)
+
     signals, strength = trend_mask(panel, cfg, universe=universe)
 
     picks = [(int(t), int(i), float(strength[t, i])) for t, i in np.argwhere(signals)]
@@ -1017,6 +1085,19 @@ def run(
     )
 
 
+def _z_for(percentile: float) -> float:
+    """Normal quantile, good enough for a power statement and dependency-free.
+
+    Abramowitz and Stegun 26.2.23. This is reporting the order of magnitude of
+    a detectable effect, not pricing an option.
+    """
+    p = min(max((100.0 - percentile) / 100.0, 1e-9), 0.5)
+    t = float(np.sqrt(-2.0 * np.log(p)))
+    return t - (2.515517 + 0.802853 * t + 0.010328 * t * t) / (
+        1.0 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t
+    )
+
+
 def verdict(null: NullTest, horizon: int) -> str:
     """Plain English for a percentile, so nobody has to interpret it hopefully.
 
@@ -1033,6 +1114,12 @@ def verdict(null: NullTest, horizon: int) -> str:
     n = null.screen_trades
     if n < 30:
         return f"beats {mean_pct:.0f}% of controls, but {n} trades decides nothing either way"
+
+    # Failing a bar the data could never have cleared is not a negative result,
+    # it is an absent one, and the two must not print the same way.
+    floor = null.detectable_effect(horizon)
+    observed = null.screens[horizon]["mean"] - null.random_median[horizon]["mean"]
+    underpowered = np.isfinite(floor) and np.isfinite(observed) and 0.0 < observed < floor
 
     trimmed_pct = beats.get("trimmed", float("nan"))
     median_pct = beats.get("median", float("nan"))
@@ -1058,6 +1145,22 @@ def verdict(null: NullTest, horizon: int) -> str:
             f"beats {mean_pct:.0f}% of controls, clearing even the "
             f"{null.corrected_bar:.1f}% bar for {null.family_size} tests. Take this seriously"
         )
+    if mean_pct >= null.corrected_bar and not null.resolvable:
+        # Checked BEFORE the power branch. A result that clears the bar but
+        # cannot be resolved at it is a resolution problem, not a power problem,
+        # and the first version printed "short of the bar" about a number that
+        # was not short of the bar.
+        return (
+            f"beats {mean_pct:.1f}% of controls, at or past the "
+            f"{null.corrected_bar:.1f}% bar — but {null.replicates} controls cannot "
+            "resolve a difference there. Rerun with more before believing it"
+        )
+    if mean_pct >= 95.0 and underpowered:
+        return (
+            f"beats {mean_pct:.0f}% of controls, short of the {null.corrected_bar:.1f}% "
+            f"bar — but that bar demands {floor:.2f} points per trade and the effect is "
+            f"{observed:+.2f}. The design cannot resolve this. Underpowered, not negative"
+        )
     if mean_pct >= 95.0:
         if not null.resolvable:
             return (
@@ -1068,6 +1171,12 @@ def verdict(null: NullTest, horizon: int) -> str:
         return (
             f"beats {mean_pct:.0f}% of controls, short of the {null.corrected_bar:.1f}% "
             f"that {null.family_size} tests demand. Promising, not proven"
+        )
+    if mean_pct >= 80.0 and underpowered:
+        return (
+            f"beats {mean_pct:.0f}% of controls, short of the bar — but the bar needed "
+            f"{floor:.2f} points and only {observed:+.2f} was on offer. UNDERPOWERED, "
+            "not negative: this run could not have certified this effect either way"
         )
     if mean_pct >= 80.0:
         return f"beats {mean_pct:.0f}% of controls. Suggestive, short of the bar, do not trade it"
@@ -1108,6 +1217,13 @@ def _null_lines(null: NullTest) -> list[str]:
         out.append(
             f"     best 5% of trades supply {null.tail_lift[horizon]:.2f} points of that mean"
         )
+        floor = null.detectable_effect(horizon)
+        observed = null.screens[horizon]["mean"] - null.random_median[horizon]["mean"]
+        if np.isfinite(floor):
+            out.append(
+                f"     could only have certified an edge of {floor:.2f} points or more; "
+                f"observed {observed:+.2f}"
+            )
         out.append(f"     {verdict(null, horizon)}")
         out.append("")
     if null.exit_rule == "stops":

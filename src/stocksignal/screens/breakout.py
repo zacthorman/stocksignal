@@ -1,10 +1,40 @@
 """Screen 3: the breakout, the hardest and highest-value screen in the rulebook.
 
-From the rulebook, verbatim:
-  * The best breakouts show a dip and reject first: it breaks out, dips, the
-    dip gets rejected, and it continues up.
-  * The igniting bar must be big, and bigger than the baby bar before it.
-  * Massive wicks on the baby bar disqualify it.
+THREE CITATIONS IN THIS FILE WERE WRONG, AND ALL THREE FLATTERED THE CODE.
+A fidelity audit against the actual course transcript found them. They are
+corrected below and recorded here rather than quietly edited, because a
+docstring that misquotes its source in the direction of what the code already
+does is worse than no docstring at all.
+
+  1.  "bigger than the baby bar BEFORE IT". The words "before it" appear in no
+      source document. They were added inside what was presented as a quote,
+      and they encode the opposite of the course's structure. Pages 77 to 81
+      describe a 3-BAR SETUP: the IGNITE bar comes first, the BABY bar is the
+      small test bar that follows it, and the third bar is the confirmation.
+      This screen reads `df.iloc[breaking_pos - 1]` as the baby bar, which is
+      the bar BEFORE the break. That is a different comparison from the one the
+      course makes, and it is still wrong in the code below. See the note on
+      `_find_breakout`.
+  2.  The rulebook "says the pattern does not always appear", used to justify
+      keeping dip-and-reject as a bonus rather than a gate. No source says
+      that. The opposite is closer to true: page 75 says "wait until a push
+      back and start showing price strength again", and the extracted rulebook
+      lists "raise the retest above a bonus" as a required change.
+  3.  These rules were cited as pages 72 to 76. Those pages are about quality
+      breakouts generally. The ignition, baby and wick material is pages 77
+      to 81.
+
+From the rulebook and the transcript, now checked:
+  * Page 75: the best breakouts push back and retest before continuing. The
+    rulebook ranks this closer to the main event than to a bonus, and this
+    screen still scores it as a bonus. That is an open disagreement with the
+    source, not a settled reading.
+  * Pages 77 to 79: the igniting bar must be big, and much bigger than the
+    baby bar that TESTS it.
+  * Page 80: the baby bar is disqualified when its wick passes below the
+    ignition bar. That is a POSITIONAL test. The check below measures total
+    wick as a percentage of the baby bar's own range instead, and 60% is an
+    invented number.
   * After a struggle period, a break above the moving averages counts only if
     the follow-through is strong, and a red second candle means it is still
     being beaten down rather than a play.
