@@ -89,6 +89,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
+from stocksignal.breakout_path import breakout_signals
 from stocksignal.config import Config
 from stocksignal.indicators import rsi, sma
 from stocksignal.levels import nearest_levels
@@ -105,9 +106,14 @@ STATS = ("mean", "median", "trimmed")
 # Every variant tried costs significance whether or not it is reported, and the
 # count only goes up, so it lives here where forgetting to raise it is visible.
 #   state; confirmation; confirmation+RSI30; confirmation+RSI50; gate 1 at 1:1;
-#   gate 1 at 2:1; confirmation+stops; gate 1 at 2:1 + stops. Eight
+#   gate 1 at 2:1; confirmation+stops; gate 1 at 2:1 + stops; breakout. Nine
 #   configurations, three horizons each. Shuffled runs are controls rather than
 #   hypotheses and are deliberately not counted.
+#
+# The breakout entry was added on 11 August 2026 and raised this from 24 to 27
+# BEFORE its first run, not after. That ordering is the only thing that makes
+# the number mean anything: a family size chosen once the result is known is not
+# a correction, it is a negotiation.
 #
 # Bonferroni assumes these are independent and they are emphatically not: the
 # variants nest inside one another and the three horizons are the same trades
@@ -115,7 +121,7 @@ STATS = ("mean", "median", "trimmed")
 # 9. The number is left at the blunt end deliberately, but see `power` below,
 # because a bar this high on this much data is not a strict standard, it is an
 # unreachable one, and that is a different failure.
-TESTS_RUN = 24
+TESTS_RUN = 27
 ALPHA = 0.05  # The bar before correction: beat 95% of controls.
 
 
@@ -472,6 +478,45 @@ def trend_mask(
         previous = np.vstack([np.zeros((1, live.shape[1]), dtype=bool), live[:-1]])
         live = live & ~previous
     return live, np.where(passes, strength, 0.0)
+
+
+def breakout_mask(
+    frames: dict[str, pd.DataFrame],
+    panel: Panel,
+    cfg: Config,
+    universe: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """The breakout screen at every bar, in the same shape `trend_mask` returns.
+
+    The screen is path-dependent, so there is no vectorised form of it and this
+    is a per-ticker sweep rather than a handful of array operations. See
+    `breakout_path` for why, and for the equivalence test that keeps it honest.
+
+    EVALUATED ON EACH TICKER'S OWN BARS, then reindexed onto the panel calendar.
+    Running it on the calendar-aligned arrays instead would insert NaN rows on
+    every session a ticker did not trade, and a screen that counts bars —
+    "broken within 5 sessions", "the baby bar after the ignition" — would count
+    those holes. The live scanner sees the ticker's own history with no holes in
+    it, so the backtest has to as well.
+    """
+    n_dates, n_tickers = panel.close.shape
+    signals = np.zeros((n_dates, n_tickers), dtype=bool)
+    strength = np.zeros((n_dates, n_tickers), dtype=float)
+
+    for i, ticker in enumerate(panel.tickers):
+        df = frames[ticker]
+        passed, score = breakout_signals(df, cfg)
+        # Only bars the panel calendar actually contains. A ticker trading on a
+        # session the benchmark did not is dropped rather than shifted onto a
+        # neighbouring date, which would move a signal to a day it was not known.
+        rows = panel.dates.get_indexer(df.index)
+        live = rows >= 0
+        signals[rows[live], i] = passed[live]
+        strength[rows[live], i] = np.nan_to_num(score[live])
+
+    if universe is not None:
+        signals = signals & universe
+    return signals, strength
 
 
 def forward_return(
@@ -940,6 +985,7 @@ def run(
     replicates: int = REPLICATES,
     family_size: int = TESTS_RUN,
     seed: int = 7,
+    screen: str = "trend",
 ) -> BacktestReport:
     """Walk the window forward and measure what each arm would have earned.
 
@@ -955,8 +1001,21 @@ def run(
     pull back, confirm again ten sessions later is two trades a trader takes and
     the course describes, not one trade counted twice.
     """
+    if screen not in ("trend", "breakout"):
+        raise ValueError(f"unknown screen {screen!r}, expected 'trend' or 'breakout'")
+
     if min_gap_sessions is None:
-        min_gap_sessions = 0 if cfg.trend_entry == "confirmation" else max(HORIZONS)
+        if screen == "breakout":
+            # The breakout screen fires on a state, like trend entry does, and
+            # for a bounded reason: `level_break_lookback` is 5, so one break can
+            # keep qualifying for up to five consecutive sessions. Those are the
+            # same move seen five times, and at a 20-session horizon they overlap
+            # almost completely. Thinned at the longest horizon so recorded
+            # trades on one ticker never overlap, and the control is thinned the
+            # same way so the comparison stays like for like.
+            min_gap_sessions = max(HORIZONS)
+        else:
+            min_gap_sessions = 0 if cfg.trend_entry == "confirmation" else max(HORIZONS)
 
     missing = [t for t, df in frames.items() if df["close"].isna().any()]
     if missing:
@@ -1004,7 +1063,10 @@ def run(
         # own, symmetrically, for every arm.
         universe = universe & np.isfinite(panel.support) & np.isfinite(panel.resistance)
 
-    signals, strength = trend_mask(panel, cfg, universe=universe)
+    if screen == "breakout":
+        signals, strength = breakout_mask(frames, panel, cfg, universe=universe)
+    else:
+        signals, strength = trend_mask(panel, cfg, universe=universe)
 
     picks = [(int(t), int(i), float(strength[t, i])) for t, i in np.argwhere(signals)]
     picks = _thin(picks, min_gap_sessions)

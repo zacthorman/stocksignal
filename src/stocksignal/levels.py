@@ -138,6 +138,38 @@ def _recent_touches(df: pd.DataFrame, cfg: Config) -> list[tuple[pd.Timestamp, f
     return pooled
 
 
+def swing_runs(
+    series: pd.Series, index: pd.DatetimeIndex
+) -> list[tuple[list[int], list[float]]]:
+    """Maximal runs of adjacent swing bars, as (bar positions, prices).
+
+    Split out from `_collapse_runs` so the backtest can have the runs themselves
+    rather than only their collapsed representatives. `breakout_path` needs them
+    because truncating the frame takes a PREFIX of each run, and the touch a
+    partially-printed run contributes is the extremum of that prefix rather than
+    of the whole thing. Collapsing here and handing back one point would throw
+    away exactly the information it needs to reproduce that.
+    """
+    if series.empty:
+        return []
+
+    positions = index.get_indexer(series.index)
+    out: list[tuple[list[int], list[float]]] = []
+    run_positions: list[int] = []
+    run_prices: list[float] = []
+    previous = None
+
+    for position, (_, price) in zip(positions, series.items(), strict=True):
+        if previous is not None and position != previous + 1:
+            out.append((run_positions, run_prices))
+            run_positions, run_prices = [], []
+        run_positions.append(int(position))
+        run_prices.append(float(price))
+        previous = position
+    out.append((run_positions, run_prices))
+    return out
+
+
 def _collapse_runs(
     series: pd.Series, index: pd.DatetimeIndex, take_highest: bool
 ) -> list[tuple[pd.Timestamp, float]]:
@@ -152,27 +184,15 @@ def _collapse_runs(
     consecutive bars collapses to one touch: the highest bar of the run for swing
     highs, the lowest for swing lows.
     """
-    if series.empty:
-        return []
-
-    positions = index.get_indexer(series.index)
-    out: list[tuple[pd.Timestamp, float]] = []
-    run: list[tuple[pd.Timestamp, float]] = []
-    previous = None
-
-    for position, (stamp, price) in zip(positions, series.items(), strict=True):
-        if previous is not None and position != previous + 1:
-            out.append(_pick(run, take_highest))
-            run = []
-        run.append((stamp, float(price)))
-        previous = position
-    out.append(_pick(run, take_highest))
-    return out
-
-
-def _pick(run: list[tuple[pd.Timestamp, float]], take_highest: bool) -> tuple[pd.Timestamp, float]:
     chooser = max if take_highest else min
-    return chooser(run, key=lambda pair: pair[1])
+    out: list[tuple[pd.Timestamp, float]] = []
+    for positions, prices in swing_runs(series, index):
+        # `max`/`min` over indices returns the FIRST extreme on a tie, which is
+        # what picking over (stamp, price) pairs did, so a flat run still
+        # collapses to its earliest bar.
+        best = chooser(range(len(prices)), key=lambda k: prices[k])  # noqa: B023
+        out.append((index[positions[best]], prices[best]))
+    return out
 
 
 def _cluster_by_price(
