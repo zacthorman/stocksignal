@@ -24,7 +24,7 @@ Rules for this file:
 ## 1. The breakout screen, three-touch level with a held retest
 
 **Registered:** 11 August 2026, before the first measured run.
-**Status:** registered, not yet run.
+**Status:** run on 11 August 2026. Result below. Closed — no further variants.
 
 ### The hypothesis
 
@@ -116,15 +116,73 @@ uncorrected percentile.
 
 ### Result
 
-Not yet run. This section is filled in after the run and not before.
-
-The command, fixed here so the run cannot be quietly re-specified:
+Run 11 August 2026. Full report in `out/breakout-backtest.txt`. The command, as
+registered:
 
 ```
 python scripts/measure_from_cache.py --screen breakout \
     --from 2021-09-01 --to 2026-08-10 --fit-end 2023-12-31 \
     --replicates 6000 --out out/breakout-backtest.txt
 ```
+
+178 out-of-sample trades across 93 names. 246 survived thinning and 192 fell out
+of sample; 178 of those had a next open to buy at and a horizon that finished
+before the data did.
+
+**The declared bar was not cleared, and the run could not have cleared it.**
+
+| Horizon | Screens mean | Controls | Beats | Detectable effect | Observed |
+|---|---|---|---|---|---|
+| 5 | +0.58% | +0.48% | 56% | 2.13 pts | +0.10 |
+| 10 | +2.49% | +1.63% | 79% | 3.02 pts | +0.86 |
+| 20 | +5.18% | +3.54% | 83% | 4.68 pts | +1.65 |
+
+Underpowered, not negative, in the sense fixed in advance: at every horizon the
+observed effect is a third to a half of what this run could have certified. Same
+shape as gate 1.
+
+**The finding is not in the mean, and this is the part worth reading.** The
+20-session mean of 5.18% against a control's 1.55% is the best-looking number
+this project has produced, and it does not survive being looked at:
+
+| 20 sessions | screens | random |
+|---|---|---|
+| mean | +5.18% | +1.55% |
+| median, the typical trade | **-0.04%** | **+0.31%** |
+| hit rate | **49.7%** | **54.3%** |
+| mean, best 5% of trades removed | +0.13% | -0.20% |
+
+The best 5% of trades supply **5.05 of the 5.18 points**. The typical breakout
+trade loses slightly, and loses by slightly more than a name drawn out of a hat
+would have. The screen wins less often than chance at all three horizons and
+wins bigger when it wins.
+
+That is a right-skewed, lottery-ticket return profile, and the honest thing to
+say about it cuts both ways. It is exactly the shape a breakout strategy is
+supposed to have — you take many small losses waiting for the move that runs —
+so the skew is not evidence against the method. But it is also the shape that a
+mean cannot measure and 178 trades cannot resolve, because everything rests on a
+handful of trades in the tail, and how many of those you got is mostly luck.
+
+The trimmed-mean statistic in this harness was built to ask "is this apparent
+edge really a handful of outsized winners". Here the answer is yes, unambiguously,
+and it is the first time the question has changed the reading.
+
+In sample, for completeness and not to be quoted: the screens LOSE to the control
+badly (-0.35% against +2.65% at 20 sessions on 54 trades). Small sample, fitted
+period, no weight either way — but it is not a result that would look better if
+the hold-out had gone the other way, and it is recorded rather than dropped.
+
+### What this closes
+
+- No further breakout variants against this snapshot, as fixed above. The
+  temptation is real — a 5.18% mean invites one more slice looking for the
+  subset that produces the tail — and that is precisely the move this file
+  exists to prevent.
+- The breakout screen keeps running in the daily digest. Nothing here says it is
+  broken; it says this data cannot tell whether it works.
+- **Added to the February 2027 test.** A tail effect needs either far more trades
+  or a much longer window, and fresh data is the only honest source of either.
 
 ---
 
@@ -136,14 +194,26 @@ python scripts/measure_from_cache.py --screen breakout \
 
 Recorded here so the terms are in one place rather than only in a scheduled task.
 
-- **Configuration:** gate 1 at 2:1, held to the horizon, no stops.
-- **Statistic:** 20-session mean.
-- **Family size 1, bar the 95th percentile.** A family of one is legitimate here
-  and nowhere else in this project, because this test is fixed in advance and run
-  once, on data that did not exist when the threshold was chosen.
+- **Configurations, now two:**
+  1. gate 1 at 2:1, held to the horizon, no stops. Statistic: 20-session mean.
+  2. the breakout screen, held to the horizon. Statistic: 20-session mean AND
+     the 20-session mean with the best 5% of trades removed, because the August
+     run showed the plain mean is entirely tail and the trimmed mean is the one
+     that would distinguish a real edge from a lucky handful.
+- **Family size 2, bar the 97.5th percentile**, up from a family of one at 95%.
+  Adding the breakout screen costs gate 1 some significance and that is the
+  correct price. Recorded here on the day the second test was added rather than
+  in February, so the bar cannot drift once numbers exist.
 - **Data:** sessions after 11 August 2026 only. The snapshot everything else was
   measured on is spent.
-- **Fixed in advance:** if it fails, gate 1 is dropped rather than re-cut.
+- **Fixed in advance:** if gate 1 fails, it is dropped rather than re-cut. If the
+  breakout screen's trimmed mean is not above its control, the tail is luck and
+  the screen becomes a monitor rather than an entry signal.
+- **Known weakness, stated now:** six months of fresh data will produce roughly
+  20 breakout trades, which is nowhere near enough to resolve a tail effect. This
+  test will probably also come back underpowered, and if it does, the answer is
+  to keep waiting rather than to lower the bar. Two years is a more realistic
+  horizon for this particular question than six months.
 
 The whole value of this one is that the terms were set before the data existed.
 Running it early, on any pretext, destroys the only test in the project with a

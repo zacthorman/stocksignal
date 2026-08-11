@@ -81,7 +81,7 @@ affected.
 
 `indicators.py` already ships `swing_points`, `true_range` and `body_and_wick`, which are the raw material for screens 3 and 4. `BUILD-PLAN.md` has the session-by-session route.
 
-## Does any of it work? (session 4, the backtest)
+## Does any of it work? (sessions 4 and 5, the backtest)
 
 The project overview committed to an honesty gate before a line of the backtest
 was written: **if the screens do not beat a tracker after costs, buy the tracker
@@ -92,7 +92,7 @@ to the rules and the parts that are unflattering to the code.
 ### The short version
 
 Six years of daily bars, 252 US equities, walk-forward, next-open fills, costs
-deducted. Eight configurations tested across three horizons. One finding survived, and it is not the
+deducted. Nine configurations tested across three horizons. Two findings survived, and neither is the
 one anyone was looking for.
 
 | What was tested | Result |
@@ -102,9 +102,53 @@ one anyone was looking for.
 | RSI gate at 30, and at 50 | Indistinguishable |
 | **Gate 1 (reward/risk ≥ 2:1), held to horizon** | **96th percentile, +4.32 points, not certifiable** |
 | **Gate 1 with the course's own stop** | **10th percentile — worse than random** |
+| **Breakout screen, held to horizon** | **Mean +5.18% against +1.55% — and 5.05 of those 5.18 points are the best 5% of trades** |
 
-The last two rows are the same screen picking the same names on the same dates.
-Only the exit differs. That is the finding.
+Rows four and five are the same screen picking the same names on the same dates.
+Only the exit differs. That is the first finding.
+
+The last row is the second, and it is a different kind of finding: the best mean
+in the project, attached to a median that is *below* the control's.
+
+### The breakout screen is all tail
+
+Measured in session 5, on pre-registered terms committed before the run — see
+`PRE-REGISTRATION.md`. 178 out-of-sample trades across 93 names.
+
+| 20-session horizon | screens | random |
+| --- | --- | --- |
+| mean | **+5.18%** | +1.55% |
+| median, the typical trade | **-0.04%** | **+0.31%** |
+| hit rate | **49.7%** | **54.3%** |
+| mean, best 5% of trades removed | +0.13% | -0.20% |
+
+Read the first row on its own and this is the only thing in the project that
+looks like an edge: three and a half points a month over picking names out of a
+hat. Read the rest and it dissolves. The typical breakout trade loses money, and
+loses slightly more than a random name would have. The screen wins **less often
+than chance at all three horizons**. Essentially the entire mean is a handful of
+trades in the right tail.
+
+Which cuts both ways, and both halves are worth saying.
+
+It is exactly the shape a breakout strategy is supposed to have. You take many
+small losses waiting for the one that runs, and a strategy like that has a poor
+hit rate and a fat right tail by design. Nothing here refutes the method.
+
+But it is also the shape a mean cannot measure and 178 trades cannot resolve.
+Everything rests on a dozen trades, and how many of those you caught in a
+five-year window is mostly luck. At 20 sessions the run could only have
+certified an edge of 4.68 points; 1.65 was on offer. **Underpowered, not
+negative** — the same verdict as gate 1, reached by a different route.
+
+The trimmed mean in this harness was built to ask whether an apparent edge is
+really a few outsized winners. This is the first time the answer has been yes,
+and the first time that question has changed the reading of a result.
+
+Per the pre-registration, **no further breakout variants get run against this
+snapshot.** A 5.18% mean invites exactly one more slice to find the subset that
+produces the tail, which is how a backtest gets talked into saying yes. It joins
+the February 2027 test on fresh data instead.
 
 ### Gate 1 and the stop rule cancel each other out
 
@@ -285,6 +329,11 @@ stocksignal backtest --from 2020-01-01 --fit-end 2023-12-31 \
 # The null control: real bars, time ordering destroyed. Run several seeds.
 stocksignal backtest --from 2020-01-01 --fit-end "" \
   --entry confirmation --min-rr 2.0 --replicates 2000 --shuffle --shuffle-seed 1
+
+# The breakout screen, on the frozen CSV snapshot rather than a live fetch, so
+# a rerun answers the same question rather than a similar one.
+python scripts/measure_from_cache.py --screen breakout \
+  --from 2021-09-01 --to 2026-08-10 --fit-end 2023-12-31 --replicates 6000
 ```
 
 Every figure above was produced after six rounds of adversarial review. The
@@ -298,6 +347,12 @@ out of a universe already filtered by the course's own rules.
 
 Gate 1 is a real candidate that this dataset cannot certify, and it is actively
 harmful when combined with the stop placement the same course recommends.
+
+The breakout screen has the best mean in the project and the worst reason for
+it. Its typical trade is slightly worse than a random pick and it wins less
+often than chance; what it has is a fat right tail that 178 trades cannot tell
+apart from luck. Also uncertifiable, for the opposite reason to gate 1: not too
+small an effect to see, but an effect concentrated in too few trades to trust.
 
 SPY beat every variant on hit rate and worst trade at every horizon.
 

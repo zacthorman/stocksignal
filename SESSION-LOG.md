@@ -4,6 +4,159 @@ A running record of what got done, what was learned, and what the next session o
 
 ---
 
+## Session 5, Tuesday 11 August 2026
+
+**Where it started:** a breakout screen rebuilt against the course and never
+measured, sitting uncommitted in the tree.
+**Where it ended:** measured, on terms fixed before the run, with the best mean
+in the project and the least trustworthy reason for it. Plus a crash bug in the
+screen that had been silently deleting its own best signals.
+
+### What was built
+
+**`breakout_path.py`, the screen at every bar.** The trend screen is a
+coincidence — four numbers from bar t in the right order — so it vectorises into
+`trend_mask`. The breakout screen is a sequence: a level exists, breaks, is
+pulled back to, is closed above, and the breaking bar has to stay identifiable
+afterwards so its volume and its three-bar setup can be read. None of that
+survives being flattened into column comparisons.
+
+Brute force is `screen_breakout(df.iloc[: t + 1])` at every bar, which measured
+at 41 seconds per ticker, about five hours for the universe, per run. The
+incremental version carries the level set forward instead of rebuilding it and
+does the universe in 8 seconds.
+
+The saving rests on two facts that make it exact rather than approximate.
+Truncating a frame is a prefix filter on swings, because `swing_points` uses a
+centred window and a swing at bar i is unknowable until bar i + lookback prints.
+And a collapsed run of adjacent swing bars is a prefix extremum, so the touch a
+run contributes moves as the run fills in. `nearest_levels` takes the shortcut on
+that second one — it collapses over the full series once — which is harmless
+there and would have been fatal here.
+
+**The equivalence test is the point.** A fast path nobody checks is a second,
+secret strategy: the backtest measures one thing, the digest runs another, and
+the README describes something nobody trades. `tests/test_breakout_path.py`
+asserts the two return identical passes and identical scores, bar for bar.
+Verified against 46,320 bar-by-bar comparisons on 40 real tickers with zero
+mismatches, then pinned in CI on seeded random walks shaped to hit the case most
+likely to diverge — flat runs, where the collapsed representative moves.
+
+**`run(screen=...)` was the only change to the harness**, because signal
+generation was already a seam. The breakout arm reuses the count-matched,
+gap-thinned, permutation-tested control unchanged, which matters: that control
+took an outside review to get right and reimplementing it would have thrown that
+away.
+
+### Two bugs in the screen, found by running it over everything
+
+**A `ZeroDivisionError` on a baby bar with no body.** `_three_bar_setup` divides
+the ignition body by the largest baby body, and a bar closing exactly where it
+opened makes that zero. The snapshot contains 6,380 such bars across 251 of 272
+tickers, so this is an ordinary shape.
+
+Worth recording how it hid, because the mechanism generalises. `scan` catches
+per-ticker exceptions and files them as data errors, so this never looked like a
+bug — it looked like a handful of tickers with bad feeds. **A crash inside a
+`try` that logs and continues is invisible exactly in proportion to how well the
+error handling works.** And the bias pointed the wrong way: a zero-body baby is
+the largest possible ignition-to-baby contrast, so this was discarding precisely
+the setups that would have scored highest.
+
+**A duplicated `_normalise`**, second definition silently shadowing the first.
+Identical apart from clamp order, so no behaviour change, but two definitions of
+one name is a merge waiting to be resolved the wrong way round.
+
+### The measurement
+
+Terms written into `PRE-REGISTRATION.md` and committed **before** the run:
+hypothesis, universe, statistic, decision rule, 6,000 replicates so the corrected
+bar is resolvable at all, and the commitment that no second breakout variant gets
+run against this snapshot whatever comes back. `TESTS_RUN` went 24 to 27 in the
+same commit as the harness, before the run rather than after.
+
+Sample size was counted first with a `--count-only` pass that stops before any
+return is computed, because the power statement needs the sample size and the
+sample size gives away nothing about the answer.
+
+**178 out-of-sample trades across 93 names.**
+
+| 20-session horizon | screens | random |
+| --- | --- | --- |
+| mean | +5.18% | +1.55% |
+| median, the typical trade | -0.04% | +0.31% |
+| hit rate | 49.7% | 54.3% |
+| mean, best 5% removed | +0.13% | -0.20% |
+
+The best 5% of trades supply 5.05 of the 5.18 points. The typical breakout trade
+loses, and loses by more than a random name from the same universe would have.
+The screen wins less often than chance at all three horizons and wins bigger when
+it wins.
+
+Both halves of that are worth holding at once. It is the shape a breakout
+strategy is *supposed* to have — many small losses waiting for the move that
+runs — so the skew is not evidence against the method. It is also the shape a
+mean cannot measure and 178 trades cannot resolve, because everything rests on a
+dozen trades in the tail and how many of those a five-year window caught is
+mostly luck. At 20 sessions the run could only have certified 4.68 points and
+1.65 was on offer: **underpowered, not negative**, same verdict as gate 1 by a
+different route.
+
+The trimmed-mean statistic was built to ask whether an apparent edge is really a
+few outsized winners. First time the answer has been yes, and first time that
+question has changed how a result reads.
+
+In sample the screens lose badly to the control (-0.35% against +2.65% at 20
+sessions, 54 trades). Small, fitted, no weight either way — recorded rather than
+dropped, because it is not a number that would have been left out if it had gone
+the other way.
+
+### What was decided, and what it forecloses
+
+- **No further breakout variants against this snapshot.** A 5.18% mean invites
+  exactly one more slice to find the subset producing the tail. That is the move
+  the pre-registration exists to prevent, and the temptation is the evidence it
+  was needed.
+- **The breakout screen stays in the daily digest.** Nothing here says it is
+  broken. It says this data cannot tell.
+- **Added to the February 2027 test**, which now has a family of two and a bar of
+  97.5% rather than one and 95%. Gate 1 pays for that and it is the right price.
+  Stated in advance: six months of fresh data is roughly 20 breakout trades and
+  will probably also come back underpowered. The answer then is to keep waiting,
+  not to lower the bar. Two years is the realistic horizon for a tail question.
+
+### Open items
+
+1. **The asymmetry in `_three_bar_setup` is real and was deliberately not
+   fixed.** A fat baby found while testing the 3-bar shape returns immediately,
+   so the 4-bar shape never gets tested. It is not obviously intended. It was
+   left alone because `breakout_path` has to match the screen exactly for the
+   equivalence test to mean anything, and fixing it in one place and not the
+   other would put a silent difference between the digest and the backtest.
+   Fix both together or neither.
+2. **`breakout_retest_window` is dead config.** It is 15, but
+   `level_break_lookback` is 5 and the retest has to happen after the break, so
+   the retest never gets more than 5 bars. Either the break window should widen
+   or the retest window should be honest about being 5.
+3. **The measurement bypasses the provider layer.** `scripts/measure_from_cache.py`
+   reads `cache/*_1500d.csv` directly, because `YFinanceSource` expires its cache
+   after 12 hours and a result quoted in the README should not move under you.
+   That is the right property for a measurement and a wrong one to have arrived
+   at by accident — the cache expiry and the watchlist provenance are still the
+   open items they were.
+
+### Next session opens with
+
+Nothing, deliberately. The daily scan is being left alone until the **25 August
+review**, so that the next thing built is aimed at a real complaint rather than a
+guess. A scheduled task will open that review.
+
+If something gets built anyway, the **0-100 scorecard from page 115** is the one
+item that makes the digest more useful without making any new claim about whether
+the signal works.
+
+---
+
 ## Session 4, Monday 10 to Tuesday 11 August 2026
 
 **Where it started:** three unmeasured screens and a hope.
