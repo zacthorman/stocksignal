@@ -137,6 +137,37 @@ The course teaches these two rules in different chapters and never puts them
 side by side. A human reading a chart resolves the tension without noticing they
 have done it. Code cannot, which is how the conflict surfaced.
 
+### The checklist is not additive, and gate 3 subtracts
+
+The entry checklist reads as a checklist: four gates, each one adding
+confidence. Measured, it does not behave like one.
+
+| configuration | trades | screens | control | gap |
+| --- | --- | --- | --- | --- |
+| gate 1 at 2:1 alone | 77 | 7.01% | 2.69% | **+4.32** |
+| gate 1 at 2:1 + RSI ≤ 50 | 58 | 4.88% | 2.87% | **+2.01** |
+
+Adding the RSI gate more than halved the effect while cutting the sample by a
+quarter. RSI on its own was the 95th percentile across 2,006 trades and gate 1
+on its own is the 96th, so if the two were finding independent signal, stacking
+them should sharpen the selection. It dilutes it instead: the RSI gate is
+removing trades gate 1 correctly wanted.
+
+The percentile for the combined run was deliberately not computed. Scaling the
+control spread by the change in sample size puts it in the high 70s, which
+cannot clear a bar that gate 1 alone — with twice the effect and a third more
+trades — already failed. Running it would have spent three more tests against
+the family and raised the bar for every other result here to buy an answer that
+was arithmetically foreclosed. `--replicates 0` exists for exactly that check.
+
+**All four combinations of the two optional gates have now been measured** (neither,
+each alone, both), at more than one threshold each. Gate 1 adds, gate 3
+subtracts, and gates 2 and 4 are the baseline. There is no untested pairing left
+among them that could plausibly surprise. The one component never measured in
+any combination is the breakout screen, which is a different kind of signal
+rather than another filter on the same trend — and which fails the fidelity
+check described above.
+
 ### The one live candidate, and why it is not a claim
 
 Gate 1 at 2:1, held to a 20-session horizon, scored the 96th percentile against

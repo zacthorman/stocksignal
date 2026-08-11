@@ -1,0 +1,120 @@
+# The scan, every weekday, without you.
+#
+# WHEN THIS RUNS, AND WHY NOT AT THE OPEN.
+#
+# GitHub cron is ALWAYS UTC. There is no timezone setting, and it does not know
+# about British Summer Time or US daylight saving, so any fixed cron drifts by
+# an hour against both twice a year. That is the single most common way a
+# scheduled job quietly starts firing at the wrong moment.
+#
+# 12:00 UTC is chosen to be robust to that rather than precise. It is 08:00 in
+# New York during EDT and 07:00 during EST, so it lands comfortably before the
+# 09:30 open in either regime, and it is 13:00 or 12:00 in London. The build
+# plan suggested running shortly after the open; before it is better here. The
+# screens read COMPLETED daily bars, so the newest thing they can see is
+# yesterday's close, and a signal from yesterday's close is acted on at today's
+# open. Firing after the open would hand you a signal for a price that has
+# already gone.
+#
+# Also note GitHub delays scheduled runs under load, sometimes by fifteen
+# minutes or more, and drops them entirely on a busy enough day. This is a
+# convenience, not a trading system, and nothing downstream should assume the
+# message arrived.
+#
+# WHY THIS JOB DOES NOT GO RED WHEN A PROVIDER HICCUPS. A run that fails every
+# time a rate limit lands is a run you learn to ignore, and an ignored alert is
+# worse than no alert because it feels like coverage. Per-ticker failures are
+# collected into the digest and the run exits zero. The job only fails for
+# things that are genuinely your problem: missing credentials, a broken build.
+
+name: Daily scan
+
+on:
+  schedule:
+    #        ┌── minute
+    #        │  ┌── hour (UTC)
+    #        │  │ ┌── day of month
+    #        │  │ │ ┌── month
+    #        │  │ │ │ ┌── day of week, 1-5 = Monday to Friday
+    - cron: "0 12 * * 1-5"
+  # Always keep this. A scheduled job you cannot trigger by hand is a job you
+  # cannot debug, and you will want to run it the first time without waiting
+  # until tomorrow.
+  workflow_dispatch:
+
+# Needed for the commit at the end. Nothing else here writes to the repo, so
+# the token stays as narrow as the job allows.
+permissions:
+  contents: write
+
+# If yesterday's run is somehow still going, let it finish rather than
+# interleaving two commits to the same folder.
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        # Pinned exactly, for the reason documented in ci.yml: this action
+        # publishes floating tags only up to v7.
+        uses: astral-sh/setup-uv@v9.0.0
+
+      - name: Create the venv
+        run: |
+          uv venv --python 3.12
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install the project with live data support
+        run: uv pip install -e ".[live]"
+
+      - name: Run the scan
+        env:
+          # Secrets, never files. Set these in Settings, Secrets and variables,
+          # Actions. They are masked in logs; a config file in the repo would
+          # not be, and this repository is public.
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+          # Optional. Absent means the CLI skips delivery and says so, rather
+          # than failing, so this workflow works before you have made a bot.
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          stocksignal scan \
+            --source alpaca \
+            --watchlist data/watchlist.txt \
+            --save --log --telegram
+
+      - name: File the digest by date
+        # A dated history for free, and it is worth more than it looks: it is
+        # the only record of what the tool CLAIMED at the time, which is what
+        # you need to score the calls later without marking your own homework.
+        #
+        # A scan that found nothing still writes a digest saying so. Silence and
+        # failure must not look the same, on the phone or in the repo.
+        run: |
+          mkdir -p digests
+          if ! ls out/digest-*.md >/dev/null 2>&1; then
+            echo "::error::the scan produced no digest at all, which is a bug rather than a quiet day"
+            exit 1
+          fi
+          cp out/digest-*.md digests/
+
+      - name: Commit it
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add digests/
+          # --quiet exits non-zero with nothing staged, which happens whenever a
+          # run repeats on a day already filed. That is not an error.
+          if git diff --cached --quiet; then
+            echo "digest for today is already filed, nothing to commit"
+          else
+            git commit -m "Digest $(date -u +%Y-%m-%d)"
+            git push
+          fi

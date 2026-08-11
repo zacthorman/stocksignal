@@ -27,6 +27,7 @@ from stocksignal.data import (
     shuffle_returns,
 )
 from stocksignal.digest import render_markdown, render_terminal
+from stocksignal.notify import deliver
 from stocksignal.scanner import scan as run_scan
 
 app = typer.Typer(add_completion=False, help="Mechanical stock and ETF screener.")
@@ -69,6 +70,12 @@ def scan(
     ),
     save: bool = typer.Option(False, "--save", help="Write the digest to out/ as markdown."),
     log: bool = typer.Option(False, "--log", help="Append passing signals to signals.db."),
+    telegram: bool = typer.Option(
+        False,
+        "--telegram",
+        help="Send a phone-sized digest to Telegram. Needs TELEGRAM_BOT_TOKEN and "
+        "TELEGRAM_CHAT_ID in the environment; skips quietly when they are absent.",
+    ),
     fast: int = typer.Option(DEFAULT_CONFIG.sma_fast, help="Fast SMA period."),
     slow: int = typer.Option(DEFAULT_CONFIG.sma_slow, help="Slow SMA period."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
@@ -121,6 +128,14 @@ def scan(
     if log:
         n = signal_log.log_signals(report.signals)
         console.print(f"[green]logged[/green] {n} signal(s) to signals.db")
+
+    if telegram:
+        # Reported, never raised. The scan is the product; the message is a
+        # convenience on top of it, and losing the convenience must not lose
+        # the run or the exit code.
+        outcome = deliver(report)
+        colour = "green" if outcome.sent else "yellow"
+        console.print(f"[{colour}]telegram[/{colour}] {outcome}")
 
 
 @app.command()
