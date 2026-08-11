@@ -159,28 +159,46 @@ checked; it is real data, not a split artefact. This belongs next to the
 percentile, because "underpowered" understates it: a result concentrated in the
 last four months of the sample is the shape of something that will not repeat.
 
-**Gates 1 and 3 cannot both fire.** The entry sequence as the notes describe it —
-RSI under 30, then hold above the 180 SMA, then the fast SMA, then the ignition
-bar, then reward:risk — produces 4,144 signals at the SMA stage, 67 after the
-RSI condition, and **zero** after reward:risk. Median reward:risk at those 67
-bars is 0.2 against a required 2.0, and 65 of 67 have no measurable ratio at all.
+**Gate 1 cannot be evaluated 92% of the time — and getting to that took being
+corrected.**
 
-The mechanism: a selloff deep enough for RSI under 30 drives price through every
-support, so by the time it closes back above the 180 SMA the nearest three-touch
-floor is ~40% below and the old ceilings are ~8% above. Gate 3 says buy after a
-crash, gate 1 says buy near a floor, and after a crash you are not near a floor.
+First attempt claimed the entry sequence produces ZERO signals in five years.
+That was wrong, and the error is instructive: it implemented Zac's rule as a
+coincidence at one bar, requiring the RSI dip within 10 sessions of the SMA
+reclaim. He pushed back — the dip ARMS the name, it stays armed, and the rest of
+the setup completes whenever it completes. He was right. Exactly the mistake
+this project already documented once, when CONFIRMATION was found to be an event
+rather than a state.
 
-Same shape as session 4's gate-1-versus-the-stop finding, which makes two
-independent pairs of rules in this rulebook that are each sensible alone and
-impossible together. That is now a pattern worth expecting rather than a
-coincidence.
+Rebuilt as a state machine from 3,621 RSI crossings below 30:
 
-It also settles where the code falls short, which was not where it looked. The
-ignition bar is not a gate anywhere — `trend.py` never mentions it and the
-breakout screen only scores it — but the chain is empty before the ignition bar
-is reached, so it cannot explain the weak results. **What counts as support after
-a selloff** is the live question: three touches puts it 40% below, an eye puts it
-at the bounce low. Written up in the workspace notes under section E.
+| Stay armed | Reclaims both SMAs | Then ignition | Then R:R >= 2 |
+| --- | --- | --- | --- |
+| 21 sessions | 130 | 110 | 1 |
+| 63 sessions | 307 | 257 | **10** |
+| 252 sessions | 1,031 | 852 | 32 |
+| unbounded | 3,088 | 2,636 | **67** |
+
+The sequence completes readily — 257 setups at a realistic three-month patience
+limit, comparable to the breakout screen's 246, so it is entirely measurable.
+
+What kills it is gate 1, and not for the reason first supposed. Of 2,636
+completed setups only **212 have a measurable reward:risk at all**; 92% have no
+three-touch level above or below, so the ratio is undefined. Of the 212 that can
+be computed the median is 0.74 against a required 2.0.
+
+That is a fact about the level definition, not the market. Three confirmations is
+the rulebook's rule, faithfully implemented, and it makes levels sparse enough
+that the gate resting on them usually abstains. **A gate that declines to answer
+nine times in ten is not filtering.**
+
+The ignition bar is genuinely absent as a gate — `trend.py` never mentions it,
+the breakout screen only scores it — but it is not the binding constraint either:
+2,636 of 3,088 reclaims produce a valid setup, an 85% pass rate.
+
+**What counts as support** is the live question. Three touches leaves the gate
+blind 92% of the time; an eye marks the recent swing low and always has an
+answer. Written up in the workspace notes under section E.
 
 Recorded but NOT acted on. Changing the level definition is a change to the
 rulebook and needs pre-registering, not tuning until signals appear.
