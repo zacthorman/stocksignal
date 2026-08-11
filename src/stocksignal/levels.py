@@ -30,9 +30,11 @@ Pure functions only. Nothing in here fetches, prints or stores anything.
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, replace
 from datetime import date
 
+import numpy as np
 import pandas as pd
 
 from stocksignal.config import Config
@@ -236,3 +238,121 @@ def _recency(last_touch: pd.Timestamp, df: pd.DataFrame, cfg: Config) -> float:
         return 1.0
     span = cfg.level_lookback_days - cfg.level_fresh_days
     return round(max(0.0, 1.0 - (age - cfg.level_fresh_days) / span), 4)
+
+
+def nearest_levels(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
+    """Nearest swing high above and swing low below the close, at every bar.
+
+    This is gate 1 of the entry checklist, page 115: "more upward potential than
+    downward — distance to the next resistance versus distance to the next
+    support". Everything else in `levels.py` answers "where are the levels";
+    this answers "how much room is there, right now, on a day I could have
+    traded".
+
+    CAUSALITY IS THE ENTIRE DIFFICULTY, and it is not solved by truncation here.
+
+    `swing_points` uses a centred window: a swing high at bar i is only a swing
+    high once bars i+1 to i+lookback have printed lower. Everywhere else in this
+    project that is handled by truncating the frame, because those callers are
+    handed one slice and asked one question. This function is handed the whole
+    history and asked the question at every bar, so truncation is not available
+    and the shift has to be explicit: a swing at bar i enters the pool at bar
+    i + lookback and not one bar sooner. Get that wrong by a single bar and the
+    backtest knows where price turned before it turned, which is the most
+    flattering bug available in this domain and the hardest to notice, because
+    the equity curve merely looks good rather than impossible.
+
+    RAW SWING POINTS, not the three-touch levels `find_levels` builds. The gate
+    asks for the next place price turned, which is what a trader reads off a
+    chart when deciding whether there is room. Requiring three touches would be
+    a different and much stricter claim, would return nothing for most bars, and
+    would answer a question the rulebook does not ask here. `find_levels` stays
+    the right tool for the breakout screen, where "the level" genuinely means a
+    level rather than a turn.
+
+    Returns `resistance`, `support`, `upside_pct`, `downside_pct` and
+    `reward_risk`, all NaN wherever no qualifying level exists on that side.
+    NaN rather than a default: no known ceiling above is not the same as an
+    infinite one, and a screen that treats the two alike will buy tops.
+    """
+    swing = cfg.level_swing_lookback
+    horizon = cfg.level_lookback_days
+    index = df.index
+    n = len(index)
+    close = df["close"].to_numpy(dtype=float)
+
+    highs, lows = swing_points(df["high"], df["low"], swing)
+    at = {stamp: i for i, stamp in enumerate(index)}
+
+    # Bar at which each swing becomes knowable, keyed by that bar.
+    pending: dict[int, list[tuple[float, int, bool]]] = {}
+    for stamp, price in highs.items():
+        origin = at[stamp]
+        known = origin + swing
+        if known < n:
+            pending.setdefault(known, []).append((float(price), origin, True))
+    for stamp, price in lows.items():
+        origin = at[stamp]
+        known = origin + swing
+        if known < n:
+            pending.setdefault(known, []).append((float(price), origin, False))
+
+    resistance = np.full(n, np.nan)
+    support = np.full(n, np.nan)
+
+    # Insertion order is origin order, so expiry is always from the front.
+    live_highs: deque[tuple[float, int]] = deque()
+    live_lows: deque[tuple[float, int]] = deque()
+    sorted_highs = np.empty(0)
+    sorted_lows = np.empty(0)
+    highs_dirty = lows_dirty = False
+
+    for t in range(n):
+        for price, origin, is_high in pending.get(t, ()):
+            if is_high:
+                live_highs.append((price, origin))
+                highs_dirty = True
+            else:
+                live_lows.append((price, origin))
+                lows_dirty = True
+
+        cutoff = t - horizon
+        while live_highs and live_highs[0][1] <= cutoff:
+            live_highs.popleft()
+            highs_dirty = True
+        while live_lows and live_lows[0][1] <= cutoff:
+            live_lows.popleft()
+            lows_dirty = True
+
+        if highs_dirty:
+            sorted_highs = np.sort(np.fromiter((p for p, _ in live_highs), float, len(live_highs)))
+            highs_dirty = False
+        if lows_dirty:
+            sorted_lows = np.sort(np.fromiter((p for p, _ in live_lows), float, len(live_lows)))
+            lows_dirty = False
+
+        price_now = close[t]
+        if not np.isfinite(price_now):
+            continue
+        above = np.searchsorted(sorted_highs, price_now, side="right")
+        if above < len(sorted_highs):
+            resistance[t] = sorted_highs[above]
+        below = np.searchsorted(sorted_lows, price_now, side="left")
+        if below > 0:
+            support[t] = sorted_lows[below - 1]
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        upside = (resistance - close) / close * 100.0
+        downside = (close - support) / close * 100.0
+        reward_risk = np.where(downside > 0, upside / downside, np.nan)
+
+    return pd.DataFrame(
+        {
+            "resistance": resistance,
+            "support": support,
+            "upside_pct": upside,
+            "downside_pct": downside,
+            "reward_risk": reward_risk,
+        },
+        index=index,
+    )

@@ -12,10 +12,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from helpers import quote_from
+from helpers import make_bars, quote_from
 from stocksignal import backtest as bt
 from stocksignal.config import Config
 from stocksignal.data import SyntheticSource
+from stocksignal.levels import nearest_levels
 from stocksignal.screens import screen_trend
 
 
@@ -34,6 +35,37 @@ def run_over(frames, bench, cfg, first: int = 400, last: int = -30, **kw):
     """Run the whole usable window of a synthetic fixture."""
     index = next(iter(frames.values())).index
     return bt.run(frames, bench, cfg, start=index[first].date(), end=index[last].date(), **kw)
+
+
+def panel_of(close, **overrides):
+    """A Panel with permissive defaults, so a test overrides only what it is about.
+
+    Hand-building the full struct in every test meant that adding one field to
+    `Panel` broke seven unrelated tests and taught nothing. Defaults here are
+    deliberately permissive: every gate passes unless a test says otherwise.
+    """
+    close = np.asarray(close, dtype=float)
+    n, m = close.shape
+    full = dict(
+        dates=pd.bdate_range("2026-01-01", periods=n),
+        tickers=tuple("ABCDEFGHIJKLMNOP"[:m]),
+        open=close.copy(),
+        close=close,
+        high=close * 1.01,
+        low=close * 0.99,
+        fast=np.full((n, m), 1.0),
+        slow=np.full((n, m), 1.0),
+        gap=np.full((n, m), 10.0),
+        avg_volume=np.full((n, m), 1e6),
+        rsi=np.full((n, m), 50.0),
+        rsi_low=np.full((n, m), 50.0),
+        reward_risk=np.full((n, m), 5.0),
+        support=np.full((n, m), np.nan),
+        resistance=np.full((n, m), np.nan),
+        beta=np.full((n, m), 3.0),
+    )
+    full.update(overrides)
+    return bt.Panel(**full)
 
 
 class TestLookahead:
@@ -295,18 +327,12 @@ class TestConfirmationEntry:
     def test_a_run_of_passing_days_yields_exactly_one_confirmation(self):
         # The whole point. Sixty days above the line is one signal, not sixty.
         cfg = Config(trend_entry="confirmation")
-        panel = bt.Panel(
-            dates=pd.bdate_range("2026-01-01", periods=6),
-            tickers=("X",),
+        panel = panel_of(
+            np.array([[9.0], [11.0], [12.0], [13.0], [14.0], [15.0]]),
             open=np.full((6, 1), 10.0),
-            close=np.array([[9.0], [11.0], [12.0], [13.0], [14.0], [15.0]]),
-            fast=np.array([[10.0], [10.0], [10.0], [10.0], [10.0], [10.0]]),
+            fast=np.full((6, 1), 10.0),
             slow=np.full((6, 1), 5.0),
             gap=np.full((6, 1), 100.0),
-            avg_volume=np.full((6, 1), 1e6),
-            rsi=np.full((6, 1), 55.0),
-            rsi_low=np.full((6, 1), 55.0),
-            beta=np.full((6, 1), 3.0),
         )
         state, _ = bt.trend_mask(panel, Config())
         event, _ = bt.trend_mask(panel, cfg)
@@ -324,18 +350,15 @@ class TestRsiGate:
 
     def _panel(self, rsi_values):
         n = len(rsi_values)
-        return bt.Panel(
-            dates=pd.bdate_range("2026-01-01", periods=n),
-            tickers=("X",),
+        readings = np.array(rsi_values, dtype=float).reshape(n, 1)
+        return panel_of(
+            np.full((n, 1), 12.0),
             open=np.full((n, 1), 10.0),
-            close=np.full((n, 1), 12.0),
             fast=np.full((n, 1), 11.0),
             slow=np.full((n, 1), 5.0),
             gap=np.full((n, 1), 100.0),
-            avg_volume=np.full((n, 1), 1e6),
-            rsi=np.array(rsi_values, dtype=float).reshape(n, 1),
-            rsi_low=np.array(rsi_values, dtype=float).reshape(n, 1),
-            beta=np.full((n, 1), 3.0),
+            rsi=readings,
+            rsi_low=readings,
         )
 
     def test_off_by_default_so_earlier_results_stay_comparable(self):
@@ -450,10 +473,12 @@ class TestTheNullTest:
         assert null is not None
         assert null.replicates == 25
         assert str(index[700].date()) in null.period
+        assert null.distinct_tickers > 0
         for horizon in bt.HORIZONS:
-            assert 0.0 <= null.beats_pct[horizon] <= 100.0
-            assert null.random_p05[horizon] <= null.random_median[horizon]
-            assert null.random_median[horizon] <= null.random_p95[horizon]
+            for stat in bt.STATS:
+                assert 0.0 <= null.beats_pct[horizon][stat] <= 100.0
+                assert null.random_p05[horizon][stat] <= null.random_median[horizon][stat]
+                assert null.random_median[horizon][stat] <= null.random_p95[horizon][stat]
 
     def test_a_screen_that_only_ever_buys_the_best_name_beats_every_control(self):
         # A rigged panel where one ticker rises and the rest fall. A screen that
@@ -465,19 +490,7 @@ class TestTheNullTest:
         close[:, 0] = np.linspace(100.0, 200.0, n)
         for i in range(1, m):
             close[:, i] = np.linspace(100.0, 60.0, n) + rng.normal(0, 0.5, n)
-        panel = bt.Panel(
-            dates=pd.bdate_range("2024-01-01", periods=n),
-            tickers=tuple("ABCDEF"),
-            open=close,
-            close=close,
-            fast=np.full((n, m), 1.0),
-            slow=np.full((n, m), 1.0),
-            gap=np.full((n, m), 10.0),
-            avg_volume=np.full((n, m), 1e6),
-            rsi=np.full((n, m), 50.0),
-            rsi_low=np.full((n, m), 50.0),
-            beta=np.full((n, m), 3.0),
-        )
+        panel = panel_of(close, dates=pd.bdate_range("2024-01-01", periods=n))
         universe = np.ones((n, m), dtype=bool)
         returns = {h: bt.forward_returns(panel, h, 0.0) for h in bt.HORIZONS}
         days = list(range(5, 30))
@@ -492,27 +505,18 @@ class TestTheNullTest:
             "test",
             replicates=60,
         )
+        # The ceiling, not 100. With 60 controls the strongest honest claim is
+        # 1 - 1/61 = 98.4%: a permutation test cannot report p = 0.
+        ceiling = 100.0 * (1.0 - 1.0 / 61.0)
         for horizon in bt.HORIZONS:
-            assert null.beats_pct[horizon] == 100.0
-            assert null.screens_mean[horizon] > null.random_p95[horizon]
+            assert null.beats_pct[horizon]["mean"] == pytest.approx(ceiling)
+            assert null.screens[horizon]["mean"] > null.random_p95[horizon]["mean"]
 
     def test_a_screen_that_picks_at_random_lands_in_the_middle(self):
         n, m = 80, 8
         rng = np.random.default_rng(11)
         close = 100.0 * np.cumprod(1 + rng.normal(0, 0.02, (n, m)), axis=0)
-        panel = bt.Panel(
-            dates=pd.bdate_range("2024-01-01", periods=n),
-            tickers=tuple("ABCDEFGH"),
-            open=close,
-            close=close,
-            fast=np.full((n, m), 1.0),
-            slow=np.full((n, m), 1.0),
-            gap=np.full((n, m), 10.0),
-            avg_volume=np.full((n, m), 1e6),
-            rsi=np.full((n, m), 50.0),
-            rsi_low=np.full((n, m), 50.0),
-            beta=np.full((n, m), 3.0),
-        )
+        panel = panel_of(close, dates=pd.bdate_range("2024-01-01", periods=n))
         universe = np.ones((n, m), dtype=bool)
         returns = {h: bt.forward_returns(panel, h, 0.0) for h in bt.HORIZONS}
         days = list(range(5, 45))
@@ -530,13 +534,71 @@ class TestTheNullTest:
         )
         # A coin toss should not clear the bar. This is the assertion that
         # stops the machinery from flattering whatever it is handed.
-        assert not any(null.beats_pct[h] >= 95.0 for h in bt.HORIZONS)
+        assert not any(null.beats_pct[h]["mean"] >= 95.0 for h in bt.HORIZONS)
+
+    def _null(self, trades=200, family=1, replicates=200, **pct):
+        """A NullTest with the percentiles dialled in by hand."""
+        beats = {h: {"mean": 50.0, "median": 50.0, "trimmed": 50.0} for h in bt.HORIZONS}
+        for stat, value in pct.items():
+            for h in bt.HORIZONS:
+                beats[h][stat] = value
+        flat = {h: dict.fromkeys(bt.STATS, 1.0) for h in bt.HORIZONS}
+        return bt.NullTest(
+            replicates=replicates,
+            period="test",
+            screen_trades=trades,
+            distinct_tickers=20,
+            family_size=family,
+            exit_rule="hold",
+            screens=flat,
+            random_median=flat,
+            random_p05=flat,
+            random_p95=flat,
+            beats_pct=beats,
+            tail_lift=dict.fromkeys(bt.HORIZONS, 1.5),
+        )
 
     def test_the_verdict_refuses_to_call_a_small_sample(self):
-        assert "decides nothing" in bt.verdict(99.0, trades=12)
-        assert "worth taking seriously" in bt.verdict(97.0, trades=200)
-        assert "coin toss" in bt.verdict(52.0, trades=200)
-        assert "worse than picking at random" in bt.verdict(3.0, trades=200)
+        said = bt.verdict(self._null(trades=12, mean=99.0), 20)
+        assert "decides nothing" in said
+
+    def test_a_clean_pass_is_called_a_pass(self):
+        said = bt.verdict(self._null(mean=99.0, median=99.0, trimmed=99.0, family=1), 20)
+        assert "Take this seriously" in said
+
+    def test_a_coin_toss_is_called_a_coin_toss(self):
+        assert "coin toss" in bt.verdict(self._null(mean=52.0), 20)
+
+    def test_worse_than_random_is_said_out_loud(self):
+        assert "worse than picking at random" in bt.verdict(self._null(mean=3.0), 20)
+
+    def test_an_edge_that_lives_in_its_tail_is_called_out(self):
+        # The whole reason the trimmed statistic exists. A mean that clears the
+        # bar while the trimmed mean does not is not a weaker pass, it is a
+        # different finding, and the verdict has to say which one it is.
+        said = bt.verdict(self._null(mean=99.0, median=99.0, trimmed=40.0), 20)
+        assert "edge IS the tail" in said
+
+    def test_a_mean_that_passes_on_a_worse_typical_trade_is_called_out(self):
+        said = bt.verdict(self._null(mean=99.0, median=20.0, trimmed=99.0), 20)
+        assert "WORSE than random" in said
+        assert "1.50 points" in said
+
+    def test_the_bar_rises_with_the_number_of_variants_tried(self):
+        # 96% is a pass if it was the only thing tested and noise if it is one
+        # of twelve. Same number, different meaning, and the report must not
+        # present them identically.
+        alone = self._null(mean=96.0, median=96.0, trimmed=96.0, family=1)
+        one_of_twelve = self._null(mean=96.0, median=96.0, trimmed=96.0, family=12, replicates=5000)
+        assert "Take this seriously" in bt.verdict(alone, 20)
+        assert "Promising, not proven" in bt.verdict(one_of_twelve, 20)
+
+    def test_too_few_controls_to_resolve_the_bar_says_so(self):
+        # 200 controls resolve to 0.5%, so a 99.58% bar is not expressible.
+        # Printing a confident verdict off that would be an artefact.
+        tight = self._null(mean=99.0, median=99.0, trimmed=99.0, family=12, replicates=200)
+        assert not tight.resolvable
+        assert "cannot resolve" in bt.verdict(tight, 20)
 
     def test_the_verdict_appears_in_the_rendered_report(self, cfg):
         frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=900)
@@ -554,3 +616,465 @@ class TestTheNullTest:
         assert "IS IT LUCK?" in text
         assert "random controls" in text
         assert "20 random controls" in text
+
+
+class TestGate1RewardRisk:
+    """Gate 1, page 115: more upward potential than downward."""
+
+    def test_levels_are_causal_because_truncation_agrees_with_them(self, cfg):
+        # THE test for this feature. Everywhere else in the project causality
+        # comes free from truncating the frame; `nearest_levels` is handed the
+        # whole history and has to shift the centred swing window by hand. If
+        # that shift is wrong by one bar the backtest knows where price turned
+        # before it turned. So: compute at every bar, then recompute on a frame
+        # truncated at each sampled bar, and demand they agree exactly.
+        frames, _ = synth(["AAA"], days=800)
+        df = frames["AAA"]
+        full = nearest_levels(df, cfg)
+        checked = 0
+        for t in range(300, len(df), 23):
+            truncated = nearest_levels(df.iloc[: t + 1], cfg).iloc[-1]
+            for column in ("resistance", "support"):
+                seen, known = truncated[column], full.iloc[t][column]
+                if np.isnan(seen) and np.isnan(known):
+                    continue
+                assert seen == pytest.approx(known), f"{column} at bar {t} saw the future"
+            checked += 1
+        assert checked > 15, "this test is only meaningful if it actually checked things"
+
+    def test_a_swing_is_invisible_until_its_window_completes(self, cfg):
+        # A swing high at bar i needs bars i+1..i+lookback to print lower before
+        # anyone can call it a high. Asserted on the bar, not inferred.
+        #
+        # The baseline is a strictly rising ramp rather than a flat line, which
+        # matters: `swing_points` compares with `==`, so on a plateau every bar
+        # ties the rolling max and every bar registers as a swing. A flat
+        # fixture would have tested the fixture.
+        peak = 40
+        closes = [100.0 + 0.5 * i for i in range(90)]
+        closes[peak] = 200.0
+        df = make_bars(closes)
+        levels = nearest_levels(df, cfg)
+        swing = cfg.level_swing_lookback
+
+        seen_early = levels["resistance"].iloc[peak : peak + swing]
+        assert seen_early.isna().all(), "the peak was visible before its confirming bars printed"
+        assert levels["resistance"].iloc[peak + swing] == pytest.approx(200.0 * 1.01)
+
+    def test_no_ceiling_above_fails_the_gate_rather_than_passing_it(self):
+        # NaN means "I cannot see a level", not "there is no level". A gate that
+        # treats the two alike passes every stock at an all-time high, which is
+        # the exact setup gate 1 exists to be careful about.
+        n = 4
+        panel = panel_of(
+            np.full((n, 1), 12.0),
+            open=np.full((n, 1), 10.0),
+            fast=np.full((n, 1), 11.0),
+            slow=np.full((n, 1), 5.0),
+            gap=np.full((n, 1), 100.0),
+            reward_risk=np.array([[np.nan], [0.5], [1.0], [4.0]]),
+        )
+        loose, _ = bt.trend_mask(panel, Config())
+        assert loose.sum() == 4, "gate 1 must be off by default"
+        gated, _ = bt.trend_mask(panel, Config(min_reward_risk=1.0))
+        assert list(gated[:, 0]) == [False, False, True, True]
+        strict, _ = bt.trend_mask(panel, Config(min_reward_risk=2.0))
+        assert list(strict[:, 0]) == [False, False, False, True]
+
+    def test_the_ratio_is_upside_over_downside_from_todays_close(self, cfg):
+        # Worked by hand so the arithmetic cannot drift. One peak at 110 (bar 5,
+        # confirmed by bar 10), one trough at 90 (bar 15, confirmed by bar 20),
+        # then a monotonic climb to a close of 100 that forms no further swings.
+        closes = [100.0, 102.0, 104.0, 106.0, 108.0, 110.0, 108.0, 106.0, 104.0, 102.0, 100.0]
+        closes += [98.0, 96.0, 94.0, 92.0, 90.0]
+        closes += [91.0, 92.0, 93.0, 94.0, 95.0, 96.0, 97.0, 98.0, 99.0, 100.0]
+        df = make_bars(closes)
+        row = nearest_levels(df, cfg).iloc[-1]
+        assert row["resistance"] == pytest.approx(110.0 * 1.01), "nearest swing HIGH above"
+        assert row["support"] == pytest.approx(90.0 * 0.99), "nearest swing LOW below"
+        assert row["upside_pct"] == pytest.approx(11.1)
+        assert row["downside_pct"] == pytest.approx(10.9)
+        assert row["reward_risk"] == pytest.approx(11.1 / 10.9)
+
+    def test_the_gate_only_ever_removes_signals(self, cfg):
+        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=700)
+        panel = bt.build_panel(frames, bench, cfg)
+        loose, _ = bt.trend_mask(panel, cfg)
+        gated, _ = bt.trend_mask(panel, Config(min_reward_risk=1.0))
+        assert (gated & ~loose).sum() == 0
+        assert gated.sum() < loose.sum(), "this fixture proves nothing if nothing is removed"
+
+    def test_an_impossible_ratio_is_rejected_at_config_time(self):
+        with pytest.raises(ValueError, match="min_reward_risk"):
+            Config(min_reward_risk=0.0)
+
+
+# Exit mechanics tests care about fills, not about the matched-geometry rule
+# that keeps the ARMS comparable, so they switch that off and say so.
+STOPS_ONLY = Config(exit_rule="stops", exit_requires_levels=False)
+
+
+class TestExitRules:
+    """Section 4 of the rulebook: the stop, the target, and the trail.
+
+    Every assertion here is about a fill nobody would dispute. A backtest lies
+    to you most comfortably at the moment it decides what price you got.
+    """
+
+    def _one(self, closes, highs=None, lows=None, opens=None, **kw):
+        """One ticker, bars spelled out.
+
+        `opens` matters more than it looks. The fill rule takes the WORSE of the
+        stop and the bar's open, so a fixture that lazily sets open == close
+        will fill at the close and the test will "fail" while the code is
+        right — which is exactly what happened when these were first written.
+        """
+        close = np.asarray(closes, dtype=float).reshape(-1, 1)
+        n = len(close)
+
+        def col(values):
+            return close.copy() if values is None else np.asarray(values, float).reshape(n, 1)
+
+        return panel_of(close, open=col(opens), high=col(highs), low=col(lows), **kw)
+
+    def test_with_no_level_in_range_stops_change_nothing(self):
+        # The seam has to be exact: a trade that never touches a stop or a
+        # target must return precisely what holding returned, or every
+        # comparison against the earlier results is measuring the plumbing.
+        frames, bench = synth(["AAA", "BBB", "CCC"], days=700)
+        panel = bt.build_panel(frames, bench, Config())
+        bare = bt.Panel(
+            **{
+                **panel.__dict__,
+                "support": np.full_like(panel.support, np.nan),
+                "resistance": np.full_like(panel.resistance, np.nan),
+            }
+        )
+        held = bt.forward_returns(bare, 10, 0.2)
+        stopped = bt.exit_returns(bare, 10, 0.2, STOPS_ONLY)
+        finite = np.isfinite(held) & np.isfinite(stopped)
+        assert finite.any()
+        assert np.allclose(held[finite], stopped[finite])
+
+    def test_the_hard_stop_caps_the_loss(self):
+        # Enter at 100, stop at 95, then price falls off a cliff. Holding loses
+        # 80%; the stop loses about 5%.
+        panel = self._one(
+            [100.0, 100.0, 90.0, 60.0, 20.0, 20.0],
+            opens=[100.0, 100.0, 100.0, 60.0, 20.0, 20.0],
+            lows=[100.0, 100.0, 94.0, 60.0, 20.0, 20.0],
+            support=np.full((6, 1), 95.0),
+        )
+        held = bt.forward_returns(panel, 4, 0.0)[0, 0]
+        stopped = bt.exit_returns(panel, 4, 0.0, STOPS_ONLY)[0, 0]
+        assert held == pytest.approx(-80.0)
+        assert stopped == pytest.approx(-5.0)
+
+    def test_a_gap_through_the_stop_fills_at_the_open_not_the_stop(self):
+        # The decision that stops this from flattering itself. Price closes at
+        # 100 and opens at 80 the next morning, straight through a stop at 95.
+        # You did not get 95. You got 80.
+        close = np.array([[100.0], [100.0], [80.0], [80.0]])
+        panel = panel_of(
+            close,
+            open=np.array([[100.0], [100.0], [80.0], [80.0]]),
+            high=np.array([[100.0], [100.0], [80.0], [80.0]]),
+            low=np.array([[100.0], [100.0], [80.0], [80.0]]),
+            support=np.full((4, 1), 95.0),
+        )
+        got = bt.exit_returns(panel, 2, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(-20.0), "filled at the stop price it never traded at"
+
+    def test_when_one_bar_covers_both_the_stop_wins(self):
+        # Daily bars cannot say which came first. Assuming the stop means the
+        # losing reading always wins, so the result is a floor, not a guess.
+        panel = self._one(
+            [100.0, 100.0, 100.0, 100.0],
+            opens=[100.0, 100.0, 100.0, 100.0],
+            highs=[100.0, 100.0, 130.0, 100.0],
+            lows=[100.0, 100.0, 90.0, 100.0],
+            support=np.full((4, 1), 95.0),
+            resistance=np.full((4, 1), 120.0),
+        )
+        got = bt.exit_returns(panel, 2, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(-5.0), "took the target on a bar that also hit the stop"
+
+    def test_the_trailing_stop_only_arms_after_the_target(self):
+        # Price rises 4% and falls back. That is a 5% round trip from the peak,
+        # so a trail armed from entry would have fired. The target was never
+        # reached, so it must not have.
+        panel = self._one(
+            [100.0, 100.0, 104.0, 98.0, 98.0],
+            opens=[100.0, 100.0, 102.0, 102.0, 98.0],
+            highs=[100.0, 100.0, 104.0, 104.0, 98.0],
+            lows=[100.0, 100.0, 104.0, 98.0, 98.0],
+            support=np.full((5, 1), 90.0),
+            resistance=np.full((5, 1), 120.0),
+        )
+        got = bt.exit_returns(panel, 3, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(-2.0), "the trail armed before the target was reached"
+
+    def test_the_trail_follows_the_high_up_and_never_back_down(self):
+        # Target at 110 reached on bar 2 (high 120, so peak 120, trail 114).
+        # Bar 3 dips to 115: above the trail, still in. Bar 4 dips to 113:
+        # through it, out at 114.
+        panel = self._one(
+            [100.0, 100.0, 118.0, 116.0, 113.0, 113.0],
+            opens=[100.0, 100.0, 118.0, 116.0, 116.0, 113.0],
+            highs=[100.0, 100.0, 120.0, 118.0, 116.0, 113.0],
+            lows=[100.0, 100.0, 112.0, 115.0, 113.0, 113.0],
+            support=np.full((6, 1), 90.0),
+            resistance=np.full((6, 1), 110.0),
+        )
+        got = bt.exit_returns(panel, 4, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(14.0), "the 5% trail below the 120 peak is 114"
+
+    def test_a_stop_at_or_above_entry_is_ignored_rather_than_instant(self):
+        # `nearest_levels` reads support from the signal bar's close. Price can
+        # gap up overnight and leave that support above the entry, which would
+        # otherwise stop the trade out on its own first tick.
+        #
+        # The support has to be ABOVE the 120 entry for this to test anything.
+        # The first version used 110, which was already below it, so the mask
+        # was never exercised and deleting it left the test green.
+        panel = self._one([100.0, 120.0, 130.0, 140.0], support=np.full((4, 1), 125.0))
+        got = bt.exit_returns(panel, 2, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(140.0 / 120.0 * 100.0 - 100.0)
+
+    def test_costs_still_come_off_once(self):
+        panel = self._one([100.0, 100.0, 110.0, 110.0])
+        free = bt.exit_returns(panel, 2, 0.0, STOPS_ONLY)[0, 0]
+        charged = bt.exit_returns(panel, 2, 0.25, STOPS_ONLY)[0, 0]
+        assert free - charged == pytest.approx(0.25)
+
+    def test_the_dispatcher_honours_the_config(self):
+        frames, bench = synth(["AAA", "BBB"], days=500)
+        panel = bt.build_panel(frames, bench, Config())
+        held = bt.horizon_returns(panel, 10, 0.2, Config(exit_rule="hold"))
+        assert np.allclose(held, bt.forward_returns(panel, 10, 0.2), equal_nan=True), (
+            "hold must be untouched, or every earlier result silently changes"
+        )
+
+    def test_stops_shrink_the_left_tail_on_real_shaped_data(self):
+        # The claim the whole exercise rests on. Not "stops make money" — only
+        # that they bound what a loser costs, which is what the rulebook says
+        # they are for.
+        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=700)
+        cfg = STOPS_ONLY
+        panel = bt.build_panel(frames, bench, cfg)
+        held = bt.forward_returns(panel, 20, 0.2)
+        stopped = bt.exit_returns(panel, 20, 0.2, cfg)
+        finite = np.isfinite(held) & np.isfinite(stopped)
+        assert np.nanmin(stopped[finite]) > np.nanmin(held[finite])
+
+    def test_arming_the_trail_never_lowers_the_exit_level(self):
+        # The bug an independent review caught. Arming used to REPLACE the hard
+        # stop with peak * 0.95, so when the target sat less than about 5.26%
+        # above the stop, reaching it moved the exit DOWN. Entry 100, stop 98,
+        # target 102: bar 2 tags 102 and arms a trail at 96.9, and a bar-3 low
+        # of 97 should exit at the hard stop for -2%, not survive to 96.9.
+        panel = self._one(
+            [100.0, 100.0, 101.0, 97.0, 97.0],
+            opens=[100.0, 100.0, 100.0, 99.0, 97.0],
+            highs=[100.0, 100.0, 102.0, 99.0, 97.0],
+            lows=[100.0, 100.0, 100.0, 97.0, 97.0],
+            support=np.full((5, 1), 98.0),
+            resistance=np.full((5, 1), 102.0),
+        )
+        got = bt.exit_returns(panel, 3, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(-2.0), "the trail undercut the pre-committed hard stop"
+
+    def test_a_trade_that_closed_early_survives_a_later_missing_bar(self):
+        # One NaN close in the middle of the history used to discard a trade
+        # that had already stopped out many sessions earlier, for no reason.
+        closes = [100.0, 100.0, 90.0, 95.0, 95.0, 95.0, 95.0]
+        panel = self._one(
+            closes,
+            opens=[100.0, 100.0, 100.0, 95.0, 95.0, 95.0, 95.0],
+            lows=[100.0, 100.0, 94.0, 95.0, 95.0, 95.0, 95.0],
+            support=np.full((7, 1), 95.0),
+        )
+        holed = np.array(panel.close, copy=True)
+        holed[5, 0] = np.nan
+        panel = bt.Panel(**{**panel.__dict__, "close": holed})
+        got = bt.exit_returns(panel, 4, 0.0, STOPS_ONLY)[0, 0]
+        assert got == pytest.approx(-5.0), "a later missing bar erased a completed trade"
+
+    def test_an_unknown_exit_rule_is_rejected_at_config_time(self):
+        with pytest.raises(ValueError, match="exit_rule"):
+            Config(exit_rule="hope")
+
+
+class TestTheArmsGetTheSameGeometry:
+    """The trap that nearly became a finding.
+
+    A trend screen picks names near their highs, which often have no resistance
+    above them. No resistance means no target, which means the trailing stop
+    never arms, which means their winners run uncapped while the control's get
+    trimmed. On a feed containing no signal at all, that alone put the screens
+    at the 96th percentile.
+    """
+
+    def test_a_trade_missing_either_level_is_not_taken(self):
+        panel = panel_of(
+            np.full((5, 1), 100.0),
+            support=np.full((5, 1), 90.0),
+            resistance=np.full((5, 1), np.nan),
+        )
+        matched = bt.exit_returns(panel, 3, 0.0, Config(exit_rule="stops"))
+        assert not np.isfinite(matched).any(), "took a trade with no target"
+        loose = bt.exit_returns(panel, 3, 0.0, STOPS_ONLY)
+        assert np.isfinite(loose[0, 0]), "the opt-out must still trade it"
+
+    def test_screened_names_really_do_have_targets_less_often(self, cfg):
+        # The measurement behind the rule, kept as a test so it cannot quietly
+        # stop being true. If this ever fails, the correction is unnecessary
+        # and should be revisited rather than left in place out of habit.
+        frames, bench = synth([a + b for a in "ABCDEFGH" for b in "XYZ"], days=1100)
+        confirmation = Config(trend_entry="confirmation")
+        panel = bt.build_panel(frames, bench, confirmation)
+        universe = bt.universe_mask(panel, confirmation)
+        signals, _ = bt.trend_mask(panel, confirmation, universe=universe)
+        entry = bt._shift_back(panel.open, 1)
+        has_target = np.isfinite(panel.resistance) & (panel.resistance > entry)
+        eligible = universe & np.isfinite(entry)
+        assert has_target[signals & universe].mean() < has_target[eligible].mean(), (
+            "screened picks no longer skew towards having no ceiling above them"
+        )
+
+    def test_with_matched_geometry_a_signal_free_feed_lands_mid_pack(self):
+        # The end-to-end proof that the correction worked. Synthetic data has no
+        # predictive structure, so under stops the screens must be ordinary.
+        # This is the assertion that would have caught the artefact.
+        frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=1100)
+        index = next(iter(frames.values())).index
+        report = bt.run(
+            frames,
+            bench,
+            Config(trend_entry="confirmation", exit_rule="stops"),
+            start=index[400].date(),
+            end=index[-30].date(),
+            fit_end=index[700].date(),
+            replicates=120,
+        )
+        null = report.null_test
+        assert null is not None and null.screen_trades > 30
+        for horizon in bt.HORIZONS:
+            assert null.beats_pct[horizon]["mean"] < 95.0, (
+                f"{horizon}-session: screens beat the control on a feed with no signal"
+            )
+
+
+class TestTheMedianIsNotEvidenceUnderStops:
+    """The second artefact, caught the same way as the first.
+
+    A hard stop piles stopped-out trades into a dense lump just below zero. The
+    median sits inside that lump, so a small difference in how often an arm gets
+    stopped moves it a long way. Trend-screened names are stopped slightly less
+    often for reasons unrelated to prediction, and on a signal-free feed their
+    median still beat 99-100% of controls.
+    """
+
+    def test_the_report_warns_and_the_verdict_ignores_it(self):
+        frames, bench = synth([a + b for a in "ABCDEF" for b in "XYZ"], days=1100)
+        index = next(iter(frames.values())).index
+        report = bt.run(
+            frames,
+            bench,
+            Config(trend_entry="confirmation", exit_rule="stops"),
+            start=index[400].date(),
+            end=index[-30].date(),
+            fit_end=index[700].date(),
+            replicates=80,
+        )
+        text = bt.render(report)
+        assert "ignore, see below" in text
+        assert "not evidence under stops" in text
+        assert report.null_test is not None
+        assert report.null_test.exit_rule == "stops"
+
+    def test_a_high_mean_with_a_low_median_is_not_blamed_on_the_tail_under_stops(self):
+        # Under "hold" that pattern is a real diagnosis. Under "stops" the median
+        # is unreliable, so the verdict must not reach for it as an explanation.
+        builder = TestTheNullTest()
+        held = builder._null(mean=99.0, median=20.0, trimmed=99.0, family=1)
+        assert "WORSE than random" in bt.verdict(held, 20)
+
+        stopped = bt.NullTest(
+            **{**held.__dict__, "exit_rule": "stops"},
+        )
+        assert "WORSE than random" not in bt.verdict(stopped, 20)
+        assert "Take this seriously" in bt.verdict(stopped, 20)
+
+    def test_no_warning_when_holding_to_the_horizon(self, cfg):
+        frames, bench = synth(["AAA", "BBB", "CCC", "DDD"], days=900)
+        index = next(iter(frames.values())).index
+        report = bt.run(
+            frames, bench, cfg, start=index[400].date(), end=index[-30].date(), replicates=20
+        )
+        assert "ignore, see below" not in bt.render(report)
+
+
+class TestTheEstimatorAndTheControlsConstraints:
+    """Two corrections that came out of an independent statistical review.
+
+    Both point the same way: the first version was willing to overstate, and the
+    second was quietly hiding real effects rather than inventing them.
+    """
+
+    def test_the_percentile_can_never_claim_certainty(self):
+        # A raw proportion prints 100%, which asserts p = 0 off a finite number
+        # of dice rolls. The add-one estimator caps at 1 - 1/(R+1).
+        n, m = 40, 4
+        close = np.tile(np.linspace(100.0, 130.0, n).reshape(n, 1), (1, m))
+        close[:, 1:] = np.linspace(100.0, 70.0, n).reshape(n, 1)
+        panel = panel_of(close, dates=pd.bdate_range("2024-01-01", periods=n))
+        returns = {h: bt.forward_returns(panel, h, 0.0) for h in bt.HORIZONS}
+        days = list(range(5, 18))
+        for replicates in (50, 200):
+            null = bt.null_distribution(
+                panel,
+                np.ones((n, m), dtype=bool),
+                dict.fromkeys(days, 1),
+                returns,
+                np.asarray(days),
+                np.zeros(len(days), dtype=int),
+                np.ones(n, dtype=bool),
+                "test",
+                replicates=replicates,
+            )
+            for horizon in bt.HORIZONS:
+                got = null.beats_pct[horizon]["mean"]
+                assert got < 100.0
+                assert got == pytest.approx(100.0 * (1.0 - 1.0 / (replicates + 1.0)))
+
+    def test_the_control_obeys_the_same_no_repeat_rule_as_the_screens(self):
+        # The screens are thinned so a ticker cannot signal twice inside the
+        # gap. An unthinned control can, and its repeats overlap by 19 of 20
+        # sessions, which widens the null and buries real effects.
+        universe = np.ones((60, 12), dtype=bool)
+        counts = dict.fromkeys(range(0, 40, 4), 2)
+        rng = np.random.default_rng(0)
+        dates, picked = bt._draw_control(universe, counts, rng, min_gap=20)
+        seen: dict[int, int] = {}
+        for t, i in zip(dates, picked, strict=True):
+            if int(i) in seen:
+                assert t - seen[int(i)] >= 20, f"ticker {i} redrawn after {t - seen[int(i)]}"
+            seen[int(i)] = int(t)
+        assert len(dates) == sum(counts.values()), "the count per date must survive the constraint"
+
+    def test_the_constraint_yields_rather_than_break_count_matching(self):
+        # Count matching is the more important property. With too few names to
+        # honour the gap, the draw fills the date anyway rather than short it.
+        universe = np.ones((30, 2), dtype=bool)
+        counts = dict.fromkeys(range(0, 10, 2), 2)
+        dates, _ = bt._draw_control(universe, counts, np.random.default_rng(0), min_gap=20)
+        assert len(dates) == sum(counts.values())
+
+    def test_two_hundred_controls_cannot_decide_at_the_corrected_bar(self):
+        # Ten expected exceedances, not one. One is enough for the grid to
+        # contain the bar and not nearly enough to decide at it.
+        builder = TestTheNullTest()
+        assert not builder._null(family=15, replicates=200).resolvable
+        assert not builder._null(family=15, replicates=2000).resolvable
+        assert builder._null(family=15, replicates=5000).resolvable

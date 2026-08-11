@@ -15,6 +15,7 @@ import typer
 from rich.console import Console
 
 from stocksignal import __version__, signal_log
+from stocksignal.backtest import TESTS_RUN
 from stocksignal.backtest import render as render_backtest
 from stocksignal.backtest import run as run_backtest
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR, Config
@@ -153,11 +154,30 @@ def backtest(
     max_rsi: float | None = typer.Option(
         None, "--max-rsi", help="Gate 3: only enter at or below this RSI. Try 30, or 50."
     ),
+    min_rr: float | None = typer.Option(
+        None,
+        "--min-rr",
+        help="Gate 1: only enter when the distance to the next resistance divided "
+        "by the distance to the next support clears this. 1.0 is the rulebook "
+        "read literally; 2.0 is stricter than anything the course says.",
+    ),
+    exits: str = typer.Option(
+        "hold",
+        "--exits",
+        help="hold = sell at the horizon regardless. stops = the rulebook's hard "
+        "stop at previous support plus a 5% trailing stop after the target.",
+    ),
     replicates: int = typer.Option(
         200,
         "--replicates",
         help="Random controls behind the percentile. 0 skips the test, which you "
         "should only do if you are not going to quote the result.",
+    ),
+    tests_run: int = typer.Option(
+        TESTS_RUN,
+        "--tests-run",
+        help="How many variants have been tried against this data. Raises the bar, "
+        "because one pass in twelve attempts is what chance produces.",
     ),
     source_name: str = typer.Option("alpaca", "--source", "-s"),
     pool: Path = typer.Option(Path("data/watchlist.txt"), "--pool", help="Candidate universe."),
@@ -180,7 +200,12 @@ def backtest(
     """
     logging.basicConfig(level=logging.DEBUG if verbose else logging.WARNING)
     try:
-        cfg = Config(trend_entry=entry, max_entry_rsi=max_rsi)
+        cfg = Config(
+            trend_entry=entry,
+            max_entry_rsi=max_rsi,
+            min_reward_risk=min_rr,
+            exit_rule=exits,
+        )
     except ValueError as exc:
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
@@ -245,9 +270,21 @@ def backtest(
         fit_end=split,
         cost_pct=cost,
         replicates=replicates,
+        family_size=tests_run,
     )
     gate = f", RSI gate at {cfg.max_entry_rsi:g}" if cfg.max_entry_rsi else ", no RSI gate"
-    console.print(f"[dim]entry rule: {cfg.trend_entry}{gate}[/dim]\n")
+    room = (
+        f", gate 1 at {cfg.min_reward_risk:g}:1 reward/risk"
+        if cfg.min_reward_risk
+        else ", no reward/risk gate"
+    )
+    console.print(f"[dim]entry rule: {cfg.trend_entry}{gate}{room}[/dim]")
+    how = (
+        f"stop at previous support, {cfg.trail_pct:g}% trail after target"
+        if cfg.exit_rule == "stops"
+        else "sell at the horizon regardless"
+    )
+    console.print(f"[dim]exit rule: {cfg.exit_rule}, {how}[/dim]\n")
     console.print(render_backtest(report))
     console.print(
         "\n[dim]Candidate pool came from a screen run today, so which tickers are "

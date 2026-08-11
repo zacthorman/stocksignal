@@ -133,6 +133,80 @@ class Config:
         Two values worth testing and no more, because every extra variant spends
         significance: `rsi_oversold` for the course's "good deal", or 50 for
         "below fair value".
+    min_reward_risk:
+        Gate 1 of the entry checklist, page 115, and the last gate to be
+        measured: "more upward potential than downward". The distance to the
+        next resistance divided by the distance to the next support, both from
+        today's close, both from swing points confirmed on or before today. Set
+        it and no entry is taken unless that ratio clears it. None means the
+        gate is off.
+
+        1.0 is the rulebook read literally: more room up than down. 2.0 is the
+        conventional two-to-one a risk manager would ask for and is stricter
+        than anything the course actually says, so it is a separate claim rather
+        than a tightening of the same one.
+
+        WHY THIS GATE IS DIFFERENT FROM THE OTHERS, and why it was worth
+        building a causal level engine for. Every screen measured so far asks
+        about the stock: is it trending, is it strong, is it oversold. This one
+        asks about the TRADE: given where price sits between the last place it
+        turned down and the last place it turned up, is the payoff shaped in
+        your favour. A screen can be right about direction and still lose money
+        by buying with two percent of room above and eight below. Nothing tested
+        before this could see that distinction at all.
+
+        The honest caveat: the course frames gate 1 alongside a hard stop placed
+        at a previous support level. This gate tests only the entry half. A
+        backtest with no stop holds every position for the full horizon, so it
+        measures whether the ratio predicts returns, not whether the ratio plus
+        the stop makes money. Those are different questions and only the first
+        one is answered here.
+    exit_rule:
+        What ends a position, and it is the half of the strategy the first
+        fifteen backtests left out entirely.
+
+        "hold" sells at the close `horizon` sessions after entry, come what may.
+        Simple, and it is what every result before this one measured. It is also
+        not a strategy anybody trades: it lets a position run to minus fifty-
+        eight percent without flinching, which is exactly what happened.
+
+        "stops" is section 4 of the rulebook. A hard stop sits at the previous
+        support level, chosen before entry so it cannot be argued away, and once
+        the target is reached a trailing stop follows price up at `trail_pct`.
+        This changes what a loser COSTS rather than which trades get taken, so
+        it is a genuinely different question from the four entry gates and not
+        another variant of them.
+    exit_requires_levels:
+        Under "stops", take a trade only when BOTH a stop below and a target
+        above actually exist. On by default, and the reason is a trap that was
+        very nearly reported as a discovery.
+
+        The first version let a trade run with whatever levels happened to be
+        there. A trend screen picks names near their highs, so those names
+        frequently have NO resistance above them: no target, therefore the
+        trailing stop never arms, therefore their winners run uncapped. They
+        also more often have a swing low close beneath, so they more often get
+        a protective stop at all. Measured on the synthetic feed, which contains
+        no predictive signal by construction: screened picks had a target 69.1%
+        of the time against the universe's 78.0%, and a stop 84.0% against
+        74.1%. Both asymmetries pay the screens, neither is skill, and together
+        they put the screens at the 96th percentile against controls on data
+        where there was nothing whatsoever to find.
+
+        That is not a bug in the exit engine. It is a bug in the COMPARISON: the
+        control was being handicapped by a rule the screens escaped. Requiring
+        both levels in both arms makes the geometry identical and the only
+        remaining difference the choice of names, which is the thing under test.
+
+        Turning it off measures something real but different — what the rules
+        would actually do in live trading, uncapped highs included. Just do not
+        read the percentile from that run as evidence about stock selection.
+    trail_pct:
+        How far the trailing stop sits below the highest high since the target
+        was reached. 5% is the rulebook's number, page 234. It applies only
+        after the target is hit; before that the hard stop at support is what
+        protects the position, because a trailing stop from entry would be shaken
+        out by ordinary noise in a name chosen for having a beta above 2.
     rsi_lookback:
         How many sessions back the RSI gate is allowed to look for its reading.
 
@@ -272,6 +346,10 @@ class Config:
     sma_gap_strong_pct: float = 67.9
     trend_entry: str = "state"
     max_entry_rsi: float | None = None
+    min_reward_risk: float | None = None
+    exit_rule: str = "hold"
+    trail_pct: float = 5.0
+    exit_requires_levels: bool = True
     rsi_lookback: int = 10
     gap_scoring: str = "absolute"
     gap_relative_lookback: int = 500
@@ -313,6 +391,12 @@ class Config:
             raise ValueError("level_min_touches must be at least 2, one price is not a level")
         if self.level_fresh_days > self.level_lookback_days:
             raise ValueError("level_fresh_days cannot exceed level_lookback_days")
+        if self.min_reward_risk is not None and self.min_reward_risk <= 0:
+            raise ValueError("min_reward_risk must be positive, or None to disable gate 1")
+        if self.exit_rule not in ("hold", "stops"):
+            raise ValueError(f"exit_rule must be 'hold' or 'stops', got {self.exit_rule!r}")
+        if not 0 < self.trail_pct < 100:
+            raise ValueError("trail_pct must be between 0 and 100")
         if self.level_swing_lookback < 1:
             raise ValueError("level_swing_lookback must be at least 1")
         if self.breakout_volume_spike_min <= 1.0:
