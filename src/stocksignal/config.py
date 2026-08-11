@@ -335,19 +335,49 @@ class Config:
         which the rulebook's "massive wicks disqualify it" rejects the setup
         outright.
     breakout_dip_tolerance_pct:
-        How close a post-breakout pullback's low must get to the broken level,
-        as a percentage of the level's price, to count as "the dip" in the
-        dip-and-reject bonus pattern.
-    breakout_dip_reject_bonus:
-        Flat addition to the score when the dip-and-reject pattern confirms
-        (a pullback to the level followed by a close back above it). Additive
-        rather than another weighted term, because the rulebook treats this as
-        a bonus on top of a setup that already qualifies, not a fourth thing
-        that setup must be good at.
-    w_breakout_volume, w_breakout_ignition, w_breakout_recency:
-        Weights for the three continuous readings that make up the breakout
-        score before the dip-and-reject bonus: how strong the volume spike is,
-        how strong the ignition bar is, and how fresh the broken level is.
+        How close the post-breakout pullback's low must get to the broken level,
+        as a percentage of the level's price, to count as a genuine retest.
+    breakout_require_retest:
+        Whether the retest is a GATE. It is, and making it one was the single
+        largest correction this screen has had.
+
+        The first version scored it as a small bonus and justified that with a
+        quote attributed to the rulebook saying the pattern "does not always
+        appear". No source contains that sentence. What page 75 actually says is
+        "if you want to trade a quality breakout, WAIT UNTIL A PUSH BACK and
+        start showing price strength again", and page 76 closes the section with
+        "when there is change of direction we usually test it... This
+        reassurance is key". The chapter's own takeaway box lists exactly two
+        things, and both of them are the retest.
+
+        So the course's edge is not in the breakout candle. It is in what
+        happens afterwards, and a screen that fires on the candle and treats
+        the retest as a garnish has inverted the source. A breakout with no
+        pullback yet is not a failed setup, it is an unfinished one, and the
+        rejection reason says so.
+    breakout_retest_window:
+        How many sessions after the break to keep looking for the pullback
+        before giving up on it. Not a course number. Long enough for a real
+        pullback to develop, short enough that a test three months later is not
+        credited to a breakout everyone has forgotten.
+    breakout_overbought_penalty:
+        Subtracted from the score when RSI is at or above the overbought line on
+        the signal bar. A PENALTY rather than a gate, because that is exactly
+        how pages 72 to 74 frame it: an extreme entry is a "deprecating factor"
+        on an otherwise good breakout, not a disqualification. The course's own
+        example takes a breakout that was near overbought and calls it "not so
+        much quality... but still better than the first one".
+    w_breakout_volume, w_breakout_three_bar, w_breakout_recency:
+        Weights for the three ELEVATING FACTORS that make up the breakout score:
+        how strong the volume spike is, whether the 3-bar setup is present and
+        how clean it is, and how fresh the broken level is.
+
+        Elevating is the right word and it is the course's. Page 79 says of the
+        3-bar setup: "this doesn't mean that whenever you see a 3-bar setup it
+        will run, this is just another elevating factor in our favor". The first
+        version made the ignition bar and its wick HARD GATES, which is stricter
+        than the course anywhere is, and which rejected quality breakouts for
+        failing a test the source never sets.
         Deliberately equal. There is no backtest evidence yet that any one of
         these three matters more than the others for picking winners; the
         Session 4 backtest is what earns the right to move them apart, not a
@@ -392,9 +422,11 @@ class Config:
     breakout_ignition_strong_ratio: float = 3.0
     breakout_baby_max_wick_pct: float = 60.0
     breakout_dip_tolerance_pct: float = 1.5
-    breakout_dip_reject_bonus: float = 0.3
+    breakout_require_retest: bool = True
+    breakout_retest_window: int = 15
+    breakout_overbought_penalty: float = 0.25
     w_breakout_volume: float = 1 / 3
-    w_breakout_ignition: float = 1 / 3
+    w_breakout_three_bar: float = 1 / 3
     w_breakout_recency: float = 1 / 3
 
     # Tickers scanned when no watchlist file is given.
