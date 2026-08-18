@@ -71,3 +71,69 @@ class TestSourceSelection:
         monkeypatch.delenv("ALPACA_API_SECRET_KEY", raising=False)
         source = get_source(provider="alpaca")
         assert hasattr(source, "histories"), "the batch path is why we want Alpaca"
+
+
+class TestTheScanFailsLoudlyOnSystemicErrors:
+    """Added 2026-08-14, after two green runs that scanned nothing.
+
+    On 12 and 13 August the scheduled scan ran with no Alpaca credentials in the
+    repository's Actions secrets. All 256 tickers failed with one identical
+    message, the per-ticker error tolerance swallowed every one of them, the job
+    exited zero and committed a digest reading "Passed 0, Errors 256". A green
+    tick, an empty digest, no Telegram message, and two days gone before anyone
+    noticed. The tolerance is right; extending it to "everything failed" was not.
+    """
+
+    def _report(self, n_errors, n_ok=0, message="Alpaca credentials missing."):
+        from datetime import date
+
+        from stocksignal.scanner import ScanReport
+
+        return ScanReport(
+            as_of=date(2026, 8, 13),
+            signals=(),
+            rejected=tuple((f"OK{i}", "no trend") for i in range(n_ok)),
+            errors=tuple((f"T{i}", message) for i in range(n_errors)),
+        )
+
+    def test_every_ticker_failing_with_one_message_is_systemic(self):
+        from stocksignal import cli
+
+        report = self._report(256)
+        messages = [why for _, why in report.errors]
+        share = len(report.errors) / report.scanned
+        assert share >= cli.SYSTEMIC_ERROR_SHARE
+        assert len(set(messages)) == 1
+
+    def test_a_handful_of_scattered_failures_is_not_systemic(self):
+        # The case the tolerance exists for. Three rate limits out of 256 must
+        # not fail the run, or the alert becomes one you learn to ignore.
+        from stocksignal import cli
+
+        report = self._report(3, n_ok=253, message="rate limited")
+        share = len(report.errors) / report.scanned
+        assert share < cli.SYSTEMIC_ERROR_SHARE
+
+    def test_many_failures_with_different_causes_are_not_called_systemic(self):
+        # Distinct messages mean distinct problems. Only the identical-message
+        # shape is diagnosable as one broken thing.
+        from datetime import date
+
+        from stocksignal.scanner import ScanReport
+
+        report = ScanReport(
+            as_of=date(2026, 8, 13),
+            signals=(),
+            rejected=(),
+            errors=tuple((f"T{i}", f"error number {i}") for i in range(200)),
+        )
+        assert len({why for _, why in report.errors}) > 1
+
+    def test_a_missing_telegram_token_is_reported_as_not_set(self):
+        # The string the fatal check keys on. If notify.py ever rewords this,
+        # this test fails rather than the check silently going dead.
+        from stocksignal.notify import deliver
+
+        outcome = deliver(self._report(0), token="", chat_id="")
+        assert not outcome.sent
+        assert "not set" in outcome.reason

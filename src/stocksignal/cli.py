@@ -30,6 +30,12 @@ from stocksignal.digest import render_markdown, render_terminal
 from stocksignal.notify import deliver
 from stocksignal.scanner import scan as run_scan
 
+# Fraction of the universe that has to fail with ONE identical message
+# before the run is treated as systemically broken rather than unlucky.
+# Not 1.0: a couple of tickers can be delisted or renamed while the real
+# fault takes down everything else, and that should still fail loudly.
+SYSTEMIC_ERROR_SHARE = 0.9
+
 app = typer.Typer(add_completion=False, help="Mechanical stock and ETF screener.")
 console = Console()
 log = logging.getLogger(__name__)
@@ -129,13 +135,56 @@ def scan(
         n = signal_log.log_signals(report.signals)
         console.print(f"[green]logged[/green] {n} signal(s) to signals.db")
 
+    fatal: list[str] = []
+
     if telegram:
-        # Reported, never raised. The scan is the product; the message is a
-        # convenience on top of it, and losing the convenience must not lose
-        # the run or the exit code.
+        # Reported, never raised, WITH ONE EXCEPTION. A provider hiccup or a
+        # rejected HTTP call is a lost convenience and must not cost the run:
+        # the numbers are the product. But being asked for delivery when no
+        # token is configured is not a hiccup, it is a misconfiguration, and it
+        # is silent in exactly the way that cost two days on 12 and 13 August.
         outcome = deliver(report)
         colour = "green" if outcome.sent else "yellow"
         console.print(f"[{colour}]telegram[/{colour}] {outcome}")
+        if not outcome.sent and "not set" in outcome.reason:
+            fatal.append(
+                f"--telegram was requested but {outcome.reason}. Asking for "
+                "delivery and silently not delivering is the failure this "
+                "check exists to stop."
+            )
+
+    # SYSTEMIC FAILURE, added 2026-08-14 after two green runs produced nothing.
+    #
+    # The scan tolerates per-ticker errors on purpose: a run that goes red every
+    # time a rate limit lands is a run you learn to ignore. But that tolerance
+    # cannot extend to the case where EVERY ticker failed, or where one message
+    # explains all of them, because that is never a provider hiccup. It is
+    # missing credentials, a dead endpoint, or a broken build, and on 12 and 13
+    # August it was missing credentials: 256 tickers, 256 identical errors,
+    # exit code zero, a green tick and an empty digest for two days.
+    #
+    # The test is on the SHAPE of the errors, not their text, so it catches the
+    # next cause as well as the one already seen.
+    if report.errors:
+        messages = [why for _, why in report.errors]
+        share = len(report.errors) / report.scanned if report.scanned else 0.0
+        distinct = set(messages)
+        if share >= SYSTEMIC_ERROR_SHARE and len(distinct) == 1:
+            fatal.append(
+                f"{len(report.errors)} of {report.scanned} tickers failed with "
+                f"one identical error, which is systemic rather than a provider "
+                f"hiccup: {messages[0]}"
+            )
+        elif share == 1.0:
+            fatal.append(
+                f"every one of {report.scanned} tickers failed. Whatever the "
+                f"individual messages say, nothing was scanned."
+            )
+
+    if fatal:
+        for line in fatal:
+            console.print(f"[red]FAILED[/red] {line}")
+        raise typer.Exit(code=1)
 
 
 @app.command()

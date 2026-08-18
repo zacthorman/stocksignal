@@ -448,7 +448,8 @@ def trend_mask(
     with np.errstate(invalid="ignore"):
         passes = (
             (panel.fast > panel.slow)
-            & (panel.close > panel.fast)
+            # The OPEN against the short SMA, page 116. Mirrors screens/trend.py.
+            & (panel.open > panel.fast)
             & (panel.close > panel.slow)
             & ~((panel.gap > 0) & (panel.gap < cfg.min_sma_gap_pct))
         )

@@ -429,6 +429,37 @@ class Config:
     w_breakout_three_bar: float = 1 / 3
     w_breakout_recency: float = 1 / 3
 
+    # How far back a filing still counts, for the scorecard's two factors that
+    # read EDGAR rather than price bars. The three windows differ because the
+    # questions differ: an offering six months old is still dilution you are
+    # holding through, while an 8-K six months old is not a catalyst for a trade
+    # today.
+    catalyst_window_days: int = 30
+    dilution_window_days: int = 180
+    insider_window_days: int = 90
+
+    # Layers 4 and 5: sizing and exits.
+    #
+    # `stop_rule` is the dial the exits backtest turns. "support" is the
+    # course's own rule from page 234, and this project has already measured it
+    # stopping out 77% of trades against a 57% control. "atr" places the stop
+    # outside the name's own daily noise by construction. Nothing in this file
+    # decides which is right; `scripts/backtest_exits.py` does, on a
+    # pre-registered test.
+    stop_rule: str = "atr"
+    atr_period: int = 14
+    atr_stop_multiple: float = 2.5
+    stop_percent: float = 8.0
+    max_position_pct: float = 20.0
+
+    # RISK PER TRADE IS NOT FROM THE COURSE. Pages 39 to 41 cap a position at
+    # 20% of the account, which is a concentration limit and says nothing about
+    # risk: 20% behind a stop 2% away and 20% behind a stop 30% away differ by
+    # an order of magnitude. The course never states a risk-per-trade rule, so
+    # this is an addition, every output that uses it says so, and 1% is the
+    # conventional figure rather than a measured one.
+    max_risk_pct: float = 1.0
+
     # Tickers scanned when no watchlist file is given.
     default_watchlist: tuple[str, ...] = field(
         default=("AAPL", "MSFT", "NVDA", "AMD", "TSLA", "SPY", "QQQ", "IWM")

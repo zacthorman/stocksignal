@@ -85,6 +85,27 @@ class Signal:
         return out
 
     @property
+    def setup_reasons(self) -> list[str]:
+        """Why this ticker is a candidate, rather than merely tradable.
+
+        `reasons` returns every passing screen in the order the scanner built
+        them, and the scanner builds them gate first: `(hard_gate, *scoring)`.
+        The hard gate is a liquidity floor that every survivor clears by
+        definition, so its two strings ("price clears the floor", "volume
+        clears the floor") are identical across the whole shortlist and say
+        nothing about why one name outranks another. Anything reading the top
+        of `reasons` therefore gets the least informative half of the answer,
+        which is exactly what the phone digest was doing.
+
+        This returns the scoring screens' reasons instead: the ones that
+        distinguish this ticker from the other candidates. Empty is possible in
+        principle, so callers should fall back to `reasons`.
+        """
+        return [
+            reason for result in self.results[1:] if result.passed for reason in result.reasons
+        ]
+
+    @property
     def not_firing(self) -> list[str]:
         """Names of the scoring screens this ticker did not clear.
 

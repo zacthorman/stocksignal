@@ -11,15 +11,23 @@ so that a gap at or beyond `sma_gap_strong_pct` scores a full 1.0.
 The periods are settled: 9 and 180, read off page 44 of the course on
 2026-08-10. See `Config.sma_fast`.
 
-STILL OPEN, and deliberately not changed here. The course's entry trigger is
-CONFIRMATION, defined on pages 45 and 115 as "the first candlestick holding
-above the short-term SMA line". That is an event on the day price crosses, and
-this screen instead asks whether price is above the line at all, which is a
-state that stays true for as long as the run lasts. The difference is not
-cosmetic: one fires once per move, the other fires every day of it, and they
-produce very different signal counts and very different backtests. Picking
-between them is a decision, so it is left for session 4 to settle with evidence
-rather than smuggled in as a refactor.
+WHICH PRICE THE SHORT SMA IS TESTED AGAINST. The OPEN, not the close. Page 116
+is explicit and the parenthesis is the whole point: "FIRST CANDLESTICK HOLDING
+(OPENING) ABOVE THE BLUE SMA LINE". Page 111 states the mirror of it for the
+exit, on AMRN: a candle that dipped below the line "didn't open below the line.
+That means it was not a Validation." Until 2026-08-14 this screen tested the
+close on both averages, which let in any bar that opened under the 9 and
+recovered by the bell. That is a different bar from the one the course names.
+
+The LONG SMA is still tested on the close. Page 115 item 4 asks only whether you
+are "trading above the long-term SMA line" and never specifies a price field, so
+there is nothing to correct there.
+
+STILL OPEN, and deliberately not changed here. The course's entry trigger is an
+EVENT, the first candlestick holding above the line, and this screen asks a
+STATE question: is it above the line at all. One fires once per move, the other
+every day of it. The price-field fix above does not settle that; it is a
+separate decision and `Config.trend_entry` already carries it for the backtest.
 """
 
 from __future__ import annotations
@@ -47,6 +55,7 @@ def screen_trend(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenResult:
         return ScreenResult(name=NAME, passed=False, reasons=("moving averages not yet defined",))
 
     close = quote.close
+    open_ = float(df["open"].iloc[-1])
     gap = pct_gap(float(fast), float(slow))
 
     failures: list[str] = []
@@ -54,8 +63,8 @@ def screen_trend(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenResult:
         failures.append(
             f"fast SMA {fast:.2f} is not above slow SMA {slow:.2f} (downtrend by the rulebook)"
         )
-    if close <= fast:
-        failures.append(f"close {close:.2f} is not above the {cfg.sma_fast}-day SMA {fast:.2f}")
+    if not (open_ > fast):
+        failures.append(f"open {open_:.2f} is not above the {cfg.sma_fast}-day SMA {fast:.2f}")
     if close <= slow:
         failures.append(f"close {close:.2f} is not above the {cfg.sma_slow}-day SMA {slow:.2f}")
     if 0 < gap < cfg.min_sma_gap_pct:
@@ -69,7 +78,8 @@ def screen_trend(df: pd.DataFrame, quote: Quote, cfg: Config) -> ScreenResult:
 
     strength, note = _score_gap(df, cfg, gap)
     reasons = (
-        f"close {close:.2f} is above both averages ({fast:.2f} / {slow:.2f})",
+        f"opened {open_:.2f} above the {cfg.sma_fast}-day SMA {fast:.2f}, "
+        f"close {close:.2f} above the {cfg.sma_slow}-day {slow:.2f}",
         note,
     )
     return ScreenResult(name=NAME, passed=True, score=strength, reasons=reasons)

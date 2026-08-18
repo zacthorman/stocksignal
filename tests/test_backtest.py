@@ -329,7 +329,11 @@ class TestConfirmationEntry:
         cfg = Config(trend_entry="confirmation")
         panel = panel_of(
             np.array([[9.0], [11.0], [12.0], [13.0], [14.0], [15.0]]),
-            open=np.full((6, 1), 10.0),
+            # Opens half a point under each close, so the OPEN crosses the fast
+            # SMA on bar 1 exactly as the close does. Since 2026-08-14 the short
+            # SMA is tested against the open (page 116), so a flat open under
+            # the line would fail every bar and this test would measure nothing.
+            open=np.array([[8.5], [10.5], [11.5], [12.5], [13.5], [14.5]]),
             fast=np.full((6, 1), 10.0),
             slow=np.full((6, 1), 5.0),
             gap=np.full((6, 1), 100.0),
@@ -353,7 +357,10 @@ class TestRsiGate:
         readings = np.array(rsi_values, dtype=float).reshape(n, 1)
         return panel_of(
             np.full((n, 1), 12.0),
-            open=np.full((n, 1), 10.0),
+            # Above the fast SMA and still distinct from the close. The short
+            # SMA is tested on the open (page 116); this fixture is about the
+            # gate under test, not about confirmation, so it must clear it.
+            open=np.full((n, 1), 11.5),
             fast=np.full((n, 1), 11.0),
             slow=np.full((n, 1), 5.0),
             gap=np.full((n, 1), 100.0),
@@ -681,7 +688,10 @@ class TestGate1RewardRisk:
         n = 4
         panel = panel_of(
             np.full((n, 1), 12.0),
-            open=np.full((n, 1), 10.0),
+            # Above the fast SMA and still distinct from the close. The short
+            # SMA is tested on the open (page 116); this fixture is about the
+            # gate under test, not about confirmation, so it must clear it.
+            open=np.full((n, 1), 11.5),
             fast=np.full((n, 1), 11.0),
             slow=np.full((n, 1), 5.0),
             gap=np.full((n, 1), 100.0),

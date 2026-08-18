@@ -159,3 +159,87 @@ class TestDelivery:
 def test_every_report_shape_renders_without_error(count):
     text = notify.render_telegram(report([signal(f"T{i}") for i in range(count)]))
     assert text and len(text) <= notify.MESSAGE_LIMIT
+
+
+class TestThePhoneMessageExplainsWhyAName:
+    """The gate is not the reason. Fixed 2026-08-14.
+
+    Every candidate clears the tradability gate by definition, so its reasons
+    are identical across the whole shortlist. The first version of the phone
+    digest took `reasons[:2]`, which is gate-first, so eight different names
+    arrived on the phone carrying the same two lines about the price floor and
+    the volume floor. The message was well formed and completely uninformative.
+    """
+
+    def _two_screen_signal(self, ticker: str = "AEHR"):
+        gate = ScreenResult(
+            name="tradability",
+            passed=True,
+            score=1.0,
+            reasons=(
+                "price 123.30 clears the 15.00 swing floor",
+                "avg volume 2,805,720 clears the 100,000 floor",
+            ),
+        )
+        trend = ScreenResult(
+            name="trend",
+            passed=True,
+            score=1.4,
+            reasons=(
+                "close 123.30 is above both averages (118.02 / 96.41)",
+                "SMA gap 22.41% scored against the fixed 67.9% ceiling",
+            ),
+        )
+        return Signal(
+            ticker=ticker,
+            as_of=date(2026, 8, 11),
+            close=123.30,
+            score=1.5,
+            results=(gate, trend),
+        )
+
+    def test_the_message_shows_the_scoring_screen_not_the_hard_gate(self):
+        text = notify.render_telegram(report([self._two_screen_signal()]))
+        assert "above both averages" in text
+        assert "swing floor" not in text
+        assert "clears the 100,000 floor" not in text
+
+    def test_two_candidates_do_not_read_identically(self):
+        # The actual symptom: the whole shortlist justified by one liquidity
+        # filter, so nothing distinguished the first name from the eighth.
+        a = self._two_screen_signal("AEHR")
+        b = Signal(
+            ticker="TWST",
+            as_of=date(2026, 8, 11),
+            close=125.29,
+            score=1.5,
+            results=(
+                a.results[0],
+                ScreenResult(
+                    name="breakout",
+                    passed=True,
+                    score=1.4,
+                    reasons=("broke a 3-touch resistance at 121.40 on 2.8x volume",),
+                ),
+            ),
+        )
+        text = notify.render_telegram(report([a, b]))
+        assert "above both averages" in text
+        assert "broke a 3-touch resistance" in text
+
+    def test_it_falls_back_to_the_gate_when_nothing_else_passed(self):
+        # Defensive: a signal with only a gate result should still say
+        # something rather than render a bare ticker with no reasoning.
+        gate_only = Signal(
+            ticker="ONLY",
+            as_of=date(2026, 8, 11),
+            close=50.0,
+            score=0.1,
+            results=(
+                ScreenResult(
+                    name="tradability", passed=True, score=1.0, reasons=("price clears the floor",)
+                ),
+            ),
+        )
+        text = notify.render_telegram(report([gate_only]))
+        assert "price clears the floor" in text

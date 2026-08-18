@@ -87,7 +87,12 @@ def render_telegram(report: ScanReport, limit: int = DEFAULT_LIMIT) -> str:
                 f"\n<b>{i}. {escape(signal.ticker)}</b> "
                 f"{signal.close:,.2f} · score {signal.score:.2f}"
             ]
-            lines += [f"  · {escape(r)}" for r in signal.reasons[:REASONS_PER_SIGNAL]]
+            # The scoring screens, not the hard gate. The gate's reasons come
+            # first on `reasons` and are the same on every candidate, so taking
+            # the top of that list made all eight names read identically and
+            # told you nothing about which to open. See `Signal.setup_reasons`.
+            why = signal.setup_reasons or signal.reasons
+            lines += [f"  · {escape(r)}" for r in why[:REASONS_PER_SIGNAL]]
             chunks.append("\n".join(lines))
         body = "\n".join(chunks)
         if len(report.signals) > limit:
