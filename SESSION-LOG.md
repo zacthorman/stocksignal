@@ -4,6 +4,420 @@ A running record of what got done, what was learned, and what the next session o
 
 ---
 
+## Session 6, Friday 14 August 2026
+
+**Where it started:** the daily scan had gone silent, and Zac reported it as a
+failure.
+**Where it ended:** the scan had never failed. It ran green for two days with no
+credentials and produced nothing, which is a worse outcome than failing. Plus
+the phone digest was fixed, and the armed reclaim sequence was measured for
+outcomes rather than counts.
+
+### The scan was green and empty for two days
+
+GitHub Actions fired on schedule on 12 and 13 August. Both runs completed
+successfully in about 16 seconds. Every step passed. The digest for 13 August
+reads:
+
+```
+Scanned 256. Passed 0. Rejected 0. Errors 256.
+- AEHR: Alpaca credentials missing. Set ALPACA_API_KEY_ID and ...
+```
+
+Cause: the repository had **no Actions secrets at all**. The workflow shipped on
+11 August, the four secrets it reads were never added. Every ticker failed on
+auth, and Telegram delivery skipped quietly because its token was missing too,
+so nothing arrived on the phone.
+
+**The real defect is that this looked healthy.** `daily-scan.yml` says in its own
+comments that the job should fail for "things that are genuinely your problem:
+missing credentials". It does not. Missing credentials arrive disguised as N
+per-ticker errors, the tolerant error handling swallows them, and the run exits
+zero. Green tick, empty digest, no message, two days gone.
+
+Not yet fixed. The rule that would catch it: if the error count equals the ticker
+count, or one error string covers every ticker, that is systemic rather than a
+provider hiccup, and the run should exit non-zero. Same for `--telegram` passed
+with no token present: explicitly requesting delivery and silently not delivering
+should be loud.
+
+Also worth noting: re-running the workflow overwrote `digests/digest-2026-08-13.md`,
+so the errored version of that day is gone. The digest folder is supposed to be
+the record of what the tool claimed at the time. It is currently
+last-write-wins.
+
+### The phone digest was justifying every name with the hard gate
+
+Zac's first real message listed eight candidates and gave all eight the same two
+reasons: price clears the 15.00 swing floor, average volume clears the 100,000
+floor. True of all 94 that passed, so it distinguished nothing.
+
+Mechanism: `scanner.py` builds `results=(gate, *scoring)`, `Signal.reasons`
+concatenates in that order, and `notify.py` took `reasons[:2]`. Tradability
+always emits exactly two reasons, so the scoring screens could never reach the
+message. The screen that made a ticker a candidate was the one thing never shown.
+
+Fixed. `Signal.setup_reasons` returns the scoring screens' reasons, skipping the
+hard gate; `render_telegram` uses it and falls back to the old behaviour if a
+signal somehow has nothing else. Three regression tests added to
+`tests/test_notify.py`. 365 tests passing.
+
+### The armed reclaim sequence, measured for outcomes
+
+Zac asked for the sequence run as a sequence rather than a coincidence, which is
+the correction already made on 11 August, and then for something new: not how
+often it completes, but what happened to the ones that did.
+
+New script `scripts/reclaim_outcomes.py`. Sequence measured: RSI crosses under
+30 arms the name, first later bar closing above both SMAs with fast above slow
+is the signal, entry at the next open. **No ignition bar and no gate 1**, because
+the rule as Zac states it has neither, and gate 1 is the thing under question.
+
+Risk is the most recent CAUSALLY confirmed swing low, 5-bar lookback, not the
+three-touch level. That is a rulebook change and it is recorded as one: the
+three-touch definition is undefined too often to produce a readable count. Even
+on the setups measured here it was defined only about 63% of the time.
+
+Overlap rule: a new arm is skipped while an earlier setup on that ticker is
+still inside its 20-session horizon. **This makes the counts NOT comparable to
+the 11 August funnel table**, which counted every crossing. At unbounded arming
+2,462 of 3,621 dips are dropped as overlapping.
+
+Costs not deducted. No control arm, no percentile, no significance claim.
+
+| Stay armed | Entries | Up @20 | Down @20 | Reached 2R | Stopped first |
+| --- | --- | --- | --- | --- | --- |
+| 21 sessions | 73 | 49.3% | 50.7% | 13.7% | 27.4% |
+| **63 sessions** | **182** | **51.1%** | **48.9%** | **8.8%** | **22.0%** |
+| 252 sessions | 370 | 51.4% | 48.6% | 9.5% | 18.4% |
+| unbounded | 455 | 51.0% | 49.0% | 10.5% | 17.8% |
+
+**Two readings, and the second matters more than the first.**
+
+Direction is a coin flip. 51% up at 20 sessions, stable across every arming
+window. Nothing here suggests the reclaim shifts which way the next month goes.
+Without a control arm that is suggestive rather than settled, since roughly half
+of all 20-session windows are up anyway.
+
+The 2:1 target does not clear its own arithmetic. A 1R stop against a 2R target
+needs better than a 33% hit rate to break even. At the realistic three-month
+patience limit it hits 8.8% and stops out 22.0%. Counting only the resolved
+trades that is 16 wins at +2R against 40 losses at -1R, so -8R before costs, with
+126 trades finishing somewhere in between. The tighter the arming window the
+better the hit rate looks and the worse the stop rate gets, which is the same
+shape session 4 found: a close floor sits inside ordinary noise.
+
+**Known limitation in the script, stated rather than buried.** Setups are dropped
+when the most recent confirmed swing low sits at or above the entry price, which
+means an already-broken floor. That drops 43 of 229 at the 63-session window, so
+roughly a fifth of the sample. Walking back to the nearest swing low BELOW entry
+instead would keep them and would change the numbers. Not done, because picking
+the definition after seeing the result is exactly the thing this project refuses
+to do. If it gets changed it gets changed as a pre-registered rerun.
+
+### Same sequence, one rulebook factor at a time
+
+Zac asked for the run again with the ignition bar and the other indicators from
+the documents. New script `scripts/reclaim_factor_ablation.py`. Arming window
+fixed at 63 sessions and horizon at 20 BEFORE the run, so the only thing varying
+across rows is the factor. Every configuration printed, none promoted.
+
+| configuration | n | up | down | hit 2R | stopped | net R |
+| --- | --- | --- | --- | --- | --- | --- |
+| base: arm + reclaim both SMAs | 182 | 51.1% | 48.9% | 8.8% | 22.0% | -8 |
+| + SMA gap >= 3.6% (chop filter) | 55 | 49.1% | 50.9% | 14.5% | 29.1% | 0 |
+| + ignition bar within 10 sessions | 159 | 52.8% | 47.2% | 9.4% | 19.5% | -1 |
+| + RSI < 70 at signal | 128 | 46.9% | 53.1% | 9.4% | 27.3% | -11 |
+| + volume >= 1.5x average | 39 | 53.8% | 46.2% | 12.8% | 17.9% | +3 |
+| + gate 1: reward:risk >= 2 | 4 | n/a | n/a | n/a | n/a | unreadable |
+| + full breakout screen fires | 10 | n/a | n/a | n/a | n/a | unreadable |
+| all of gap, ignition, RSI<70, volume | 6 | n/a | n/a | n/a | n/a | unreadable |
+
+Net R counts resolved trades only, +2R per target, -1R per stop.
+
+**Nothing moved direction.** Up rate across every readable row sits between 46.9%
+and 53.8%. Eight configurations, and the spread is noise around a coin flip.
+
+**The ignition bar filters almost nothing, again.** 182 down to 159, an 87% pass
+rate, and the outcome columns barely move. Session 5 measured the same thing
+from a different script and got 85%. Two independently written implementations
+agreeing on that number is the most reassuring thing in this table.
+
+**The RSI ceiling actively hurts.** The only row clearly worse than base: 46.9%
+up and -11 net R. After an oversold dip and a reclaim of both SMAs, the names
+reading above 70 are the ones that have run hardest, and excluding them removes
+winners. This is session 4's finding arriving by a second route, where adding the
+RSI gate to gate 1 more than halved the effect. Twice now an RSI filter has
+removed trades the rest of the system correctly wanted. Worth treating as a
+pattern rather than two coincidences.
+
+**Gate 1 is still unmeasurable.** 182 setups down to 4. Harsher than the 92%
+figure from session 5, because gate 1 needs a three-touch level on both sides at
+the reclaim bar specifically. The finding replicates on a different entry
+definition, which is the useful part.
+
+**The two best-looking rows are the two smallest, and that is the whole story of
+this table.** Volume at n=39 is 5 targets against 7 stops; one trade either way
+flips the sign. With eight configurations run, one landing marginally positive is
+the expected outcome of running eight configurations. Neither row is a finding
+and neither should be built on.
+
+**What no filter fixed.** Best readable 2R hit rate is 14.5% against the 33%
+needed to break even. Every configuration fails the target geometry by a factor
+of two or more. The problem is not a missing filter. A 2R target measured off a
+close stop does not clear its own arithmetic on this sequence, which is the same
+conclusion session 4 reached about gate 1 and the page 234 stop.
+
+**What could not be tested, and why it matters.** `min_float` needs shares
+outstanding, `growth_template.py` needs fundamentals, and `opportunity.py` needs
+a growth direction from a research pass. The cache holds OHLCV only. So every
+factor in the table above reads the same six years of the same price series, and
+their agreeing with each other is close to guaranteed. The only genuinely
+independent axis the project has is the one that cannot be backtested from this
+data at all.
+
+### Zac's exit rule: close below the 9 SMA
+
+Zac rejected the 2:1 format outright. His rule: sell on price rejection, when the
+candle holds below the short-term SMA. New script `scripts/reclaim_sma_exit.py`.
+
+This is a THIRD exit rule, not a variant. `Config.exit_rule` knows "hold" (fixed
+horizon) and "stops" (page 234 support stop plus trail). This is neither: no
+target, no fixed floor, and it needs no level to be defined, which is what made
+gate 1 unmeasurable. It is the mirror of the entry, exiting on the first candle
+that stops holding above the 9.
+
+Entry unchanged. Exit at the first close below the 9 SMA, filled at the next
+open. **SPY measured over each trade's own window**, because a hit rate without
+a comparator is not readable once the output is returns rather than counts. That
+comparator is the project's original honesty gate, not something invented here.
+
+| configuration | n | hit | mean | median | trim5% | SPY | excess | hold |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| base: arm + reclaim both SMAs | 215 | 37.7% | +1.57% | -1.92% | -1.60% | +0.43% | +1.15% | 5d |
+| + SMA gap >= 3.6% | 80 | 41.2% | +2.64% | -1.50% | -0.14% | +0.43% | +2.21% | 5d |
+| + ignition bar | 179 | 35.2% | +1.22% | -1.68% | -1.46% | +0.39% | +0.83% | 5d |
+| + RSI < 70 | 161 | 38.5% | +0.72% | -2.21% | -1.78% | +0.40% | +0.32% | 5d |
+| + volume >= 1.5x | 50 | 42.0% | +6.88% | -1.60% | +0.74% | +0.66% | +6.22% | 6d |
+| + gate 1 | 4 | n/a | n/a | n/a | n/a | n/a | n/a | unreadable |
+| + full breakout screen | 11 | n/a | n/a | n/a | n/a | n/a | n/a | unreadable |
+| all four stacked | 10 | n/a | n/a | n/a | n/a | n/a | n/a | unreadable |
+
+Sensitivity on what "holds below" means, base configuration only:
+
+| closes below | n | hit | mean | median | trim5% | excess | hold |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 215 | 37.7% | +1.57% | -1.92% | -1.60% | +1.15% | 5d |
+| 2 | 215 | 43.7% | +3.73% | -0.89% | -1.12% | +3.02% | 7d |
+| 3 | 215 | 42.8% | +3.51% | -1.70% | -1.85% | +2.68% | 9d |
+
+**Zac was right that the 2:1 format was wrong.** It is not close. The 2R target
+was -8 net R and structurally broken; this produces a positive mean that beats
+the tracker on every readable row. Discarding it was the correct call.
+
+**And it is the same shape as everything else in this project.** Positive mean,
+negative median, negative trimmed mean. Session 5 found precisely this signature
+on the breakout screen. Three different exits have now been measured on this
+universe and all of them are carried by a handful of trades.
+
+To be fair to the rule: for a trend-following exit, a 37.7% hit rate with a
+negative median and a positive mean is the DESIGN, not a defect. Cut losers in
+five days, let the winners run. Nothing here refutes the method, exactly as
+nothing in session 5 refuted the breakout method.
+
+What cannot be waved away is the trimmed mean. Remove the best 5% of trades and
+the base row goes to -1.60%, which loses to a tracker returning +0.43%. The
+entire edge is in a dozen trades out of 215, and 215 trades across six years
+cannot settle whether that tail is real or a lucky draw. **Underpowered, not
+negative. The third time this project has reached that verdict by a new route.**
+
+**The volume row is a trap and it is worth naming before anyone builds on it.**
++6.88% mean is the best number produced by any run today. Its trimmed mean is
++0.74% against SPY's +0.66%, so an excess of roughly eight basis points before
+costs, negative after. On 50 trades, essentially the whole +6.88% is two or three
+names. It is the most impressive-looking and least substantial row in the table.
+
+**Do not select 2 consecutive closes because it looks best.** It was run as a
+sensitivity check on an ambiguous phrase, not as a parameter search. Its median
+and trimmed mean are both still negative, so the improvement over 1 close is
+once again entirely tail. Picking it now would be choosing the definition after
+seeing the result, which is the one move this project has refused throughout.
+
+**Costs.** Not deducted anywhere above. The CLI's standing assumption is 0.2%
+round trip, which takes the base excess from +1.15% to +0.95% and the trimmed
+mean to -1.80%. It does not change any conclusion, but at a five-day median hold
+this is the configuration where omitting costs flatters a result most, and the
+number should be run with them before it is quoted anywhere.
+
+### The factor ledger, and reading the notes properly
+
+Zac asked for the course read end to end and the rules followed as written. Done
+against `02 Projects/Trading Bot/ZipTraderU Course - OCR Transcript.md`, all 256
+pages. Three things came out of it and two of them invalidated work done earlier
+the same day.
+
+**1. Confirmation and validation are OPEN-based, and every script today used the
+close.** p116: "FIRST CANDLESTICK HOLDING (OPENING) ABOVE THE BLUE SMA LINE."
+p111, on AMRN: the candle "did go below the short-term SMA line but it didn't
+open below the line. That means it was not a Validation." This was already an
+open item in the README and it got reproduced anyway.
+
+Rerun as `scripts/reclaim_sma_exit_open.py`:
+
+| | n | hit | mean | median | trim5% | excess |
+| --- | --- | --- | --- | --- | --- | --- |
+| close-based | 215 | 37.7% | +1.57% | -1.92% | -1.60% | +1.15% |
+| open-based | 214 | 41.1% | +1.30% | -1.27% | -1.72% | +0.99% |
+
+Verdict unchanged. Worth recording: the "2 consecutive closes looks better"
+effect flagged as not-to-be-chased DISAPPEARS on opens (+0.99% against +0.92%).
+It was an artefact of the wrong price field, which is a decent argument for the
+rule about not selecting on a number you have just seen.
+
+**2. "Two or three elevating factors and no deprecating factors" is not in the
+course.** Searched specifically. There is no list of elevating factors (p45
+defines them open-endedly: "Every indicator that is in your favor is an
+elevating factor"), no required count (p47's "a moderate amount" is the maximum
+precision available), and deprecating factors explicitly do not disqualify
+(p131: "Even good trades can have some deprecating factors"; p132: "A big
+elevating factor can counter a deprecating factor"; p205 takes a UVXY position
+while overbought). The ledger is deliberately unscored, weighted by factor size
+and by timeframe.
+
+Zac's call, recorded as his: **at least 2 elevating AND zero deprecating.**
+Stricter than the rulebook on the deprecating side, and a number the rulebook
+does not contain on the elevating side. Implemented in `scripts/factor_ledger.py`
+with every factor carrying its page citation.
+
+**3. The result, and it is about the rule rather than the returns.**
+
+Entry: first candle OPENING above the 9 SMA where the ledger passes. Exit: first
+candle OPENING below it. Page 142 universe. 267 stocks, six years.
+
+```
+confirmations                                7563
+  blocked by a deprecating factor            6208
+  blocked by too few elevating factors          0
+  TRADES TAKEN                               1044
+```
+
+**The "2 or more elevating" half of the rule never fires once.** Zero. It is
+entirely absorbed by the zero-deprecating half, and the reason is structural:
+direction and MACD are both two-sided factors, so anything that avoids being
+deprecating on them is automatically elevating on both, which is already two.
+The threshold Zac specified cannot bind at any value up to 2, and the
+zero-deprecating rule is doing one hundred percent of the filtering.
+
+| n | hit | mean | median | trim5% | SPY | excess | hold |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1044 | 43.9% | +2.09% | -1.05% | -0.91% | +0.44% | +1.65% | 4d |
+
+Same signature for the fourth time today: positive mean, negative median,
+negative trimmed mean. This run matters more than the others because the sample
+is 1,044 rather than 214, and removing the best 5% (52 trades) STILL turns it
+negative against a tracker that made +0.44%. A larger sample has not rescued the
+shape, it has sharpened it.
+
+What actually blocks entries: MACD 3,948, direction 2,923, over-expanded
+volatility 1,293, reward:risk 419, at-resistance 255, overbought RSI 219. So the
+ledger in practice is a MACD-and-above-the-180-SMA filter with a volatility
+overlay, and the rest of the factors are close to decorative at this threshold.
+
+**Still not measured on the instruments Zac actually trades.** All of the above
+is 267 high-beta stocks from the page 142 scanner. The course's ETF content is
+one module, p203-212, on TVIX, UVXY and JNUG. TVIX was delisted in 2020 and
+Credit Suisse terminated the ETNs in 2023, so it cannot be fetched or traded.
+`scripts/fetch_cache.py` was written for Zac to pull a mainstream ETF universe;
+the fetch has to be his because the credentials are on his machine.
+
+Note for that run: **page 142's beta >= 2 filter must come off for ETFs.** It is
+a stock-selection filter, SPY is beta 1.0 by construction, and the course never
+applies a scanner to its ETF module at all, it uses a hand-picked watchlist.
+`--no-beta-filter` does this and the change is deliberate, not a convenience.
+
+One limit of the whole ledger, stated because it will not show up in any table:
+of roughly 22 elevating factors the course names, only the price-derived ones are
+implemented. Analyst targets, insider buying, catalysts and overreaction news are
+absent, as are dilution, delisting threat and insider selling on the other side.
+A ledger built from price bars alone cannot see the reasons a stock is cheap, and
+those absences are not symmetric.
+
+### Two fixes shipped: open-based confirmation, and fail-loud on the scan
+
+**1. `screens/trend.py` now tests the OPEN against the short SMA.** Page 116:
+"FIRST CANDLESTICK HOLDING (OPENING) ABOVE THE BLUE SMA LINE". Until today the
+live scanner tested the close on both averages, which admitted any bar that
+opened under the 9 and recovered by the bell. That is not the bar the course
+names, and it was going out on the phone every day. `backtest.trend_mask` was
+changed in the same commit, because a test asserts the two agree condition for
+condition and they must not drift apart.
+
+The LONG SMA still tests the close. Page 115 item 4 asks only whether you are
+"trading above the long-term SMA line" and names no price field, so there was
+nothing to correct.
+
+Three fixtures in `test_backtest.py` failed on the change. All three pinned
+`open` below the fast SMA while testing something else entirely (the RSI gate,
+gate 1, confirmation-as-an-event), using the open only as a distinct fill price.
+Updated to sit above the fast SMA while staying distinct from the close, with a
+comment saying why, so the next person does not read it as arbitrary.
+
+**Expect the candidate count to move.** Yesterday's 94 was computed on closes.
+This is a real change to what the daily message contains, not a refactor.
+
+**2. The scan now fails loudly on systemic errors.** Two checks in `cli.py`:
+
+- If 90% or more of the universe fails with ONE identical message, that is not a
+  provider hiccup. It is missing credentials, a dead endpoint or a broken build.
+  The threshold is not 100%, because a couple of tickers can be delisted while
+  the real fault takes down everything else.
+- If `--telegram` is requested and the token is absent, that is a
+  misconfiguration rather than a lost convenience, and it now exits non-zero.
+  A genuine HTTP failure still does not fail the run: the numbers are the
+  product and a job that goes red on every rate limit is a job you ignore.
+
+Verified end to end rather than only in unit tests, because the tests assert the
+predicates and the bug would have been in the wiring:
+
+```
+scan --offline                          exit 0   (no false positive)
+scan --offline --telegram, no token     exit 1   FAILED --telegram was requested but ...
+scan --source alpaca, no credentials    exit 1   FAILED 4 of 4 tickers failed with one identical error
+```
+
+The third is the 12 and 13 August failure reproduced exactly. It now exits 1.
+
+369 tests passing.
+
+### Open items
+
+1. ~~Make the scan fail loudly on systemic errors.~~ **DONE**, see above.
+2. **Digest history is last-write-wins.** A re-run overwrites the record of what
+   the tool claimed that day. Consider writing re-runs to a suffixed filename.
+3. **The 92% problem is still the live question.** Three touches makes support
+   sparse enough that gate 1 usually cannot be evaluated. The swing-low
+   definition used in this session's script always answers. Choosing between
+   them is a rulebook change that needs pre-registering, not tuning.
+4. **The breakout screen still has the page 77 to 81 fidelity faults**, and the
+   0-100 scorecard from page 115 is still unbuilt.
+5. **Nothing has been measured on ETFs yet.** Zac trades ETFs; every number in
+   this session is stocks. Blocked on him running `scripts/fetch_cache.py`.
+6. ~~Open versus close in the live scanner.~~ **DONE**, see above.
+7. **The elevating-factor threshold is inert at 2.** Measured: it blocks zero
+   entries, because direction and MACD are two-sided, so clearing the
+   zero-deprecating rule already supplies two elevating factors. If the count is
+   meant to bind it has to be 3 or higher, or the two-sided factors have to come
+   out of the count. Zac's call, not a bug.
+
+### Next session opens with
+
+The two-week review of the daily scan is scheduled for 25 August. It now has
+eleven days of digests worth reading, since the first two were empty. Before
+then, item 1 above, because a review of a scan that can fail silently is a review
+of the wrong thing.
+
+---
+
 ## Session 5, Tuesday 11 August 2026
 
 **Where it started:** a breakout screen rebuilt against the course and never
