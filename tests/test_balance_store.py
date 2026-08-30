@@ -54,9 +54,7 @@ def store_file(tmp_path, as_of=AS_OF_ISO, readings=None, unreadable=None):
 
 
 def report(*tickers) -> ScanReport:
-    signals = tuple(
-        Signal(ticker=t, as_of=AS_OF, close=100.0, score=1.0) for t in tickers
-    )
+    signals = tuple(Signal(ticker=t, as_of=AS_OF, close=100.0, score=1.0) for t in tickers)
     return ScanReport(as_of=AS_OF, signals=signals, rejected=(), errors=())
 
 

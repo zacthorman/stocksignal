@@ -61,6 +61,4 @@ def minimal_card(balance=None) -> str:
     from stocksignal.opportunity import build_card
 
     df = make_bars([100.0 + i * 0.1 for i in range(400)])
-    return render_card_markdown(
-        build_card("TEM", df, DEFAULT_CONFIG, balance=balance)
-    )
+    return render_card_markdown(build_card("TEM", df, DEFAULT_CONFIG, balance=balance))

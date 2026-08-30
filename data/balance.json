@@ -482,6 +482,28 @@
       ],
       "verdict": "SOLID"
     },
+    "ARM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,751m, covering 265% of current liabilities.",
+        "2. 58% of assets are current, 17% are goodwill and intangibles, current ratio 6.00.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +17%, 96 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ASML": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 12,916m, covering 53% of current liabilities.",
+        "2. 61% of assets are current, 10% are goodwill and intangibles, current ratio 1.26.",
+        "3. Debt of 1,682m against cash, so net CASH of 11,234m.",
+        "4. Receivables -32% against payables at +1%, 34 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
     "ASTS": {
       "coverage": 4,
       "flags": [
@@ -679,6 +701,23 @@
         "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
       ],
       "verdict": "UNKNOWN"
+    },
+    "CAMT": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew -9% against payables at -28%, a 19 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 178m, covering 166% of current liabilities.",
+        "2. 71% of assets are current, 7% are goodwill and intangibles, current ratio 8.35.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -9% against payables at -28%, 67 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "CCL": {
       "coverage": 4,
@@ -1029,6 +1068,23 @@
         "4. Receivables +660% against payables at +87%, 225 days of revenue outstanding."
       ],
       "verdict": "CONCERN"
+    },
+    "CSIQ": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 4,640m exceeds equity of 2,808m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,370m, covering 23% of current liabilities.",
+        "2. 39% of assets are current, 0% are goodwill and intangibles, current ratio 1.02.",
+        "3. Debt of 6,010m against cash, so net debt of 4,640m.",
+        "4. Receivables -26%, 54 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "CTEV": {
       "coverage": 4,
@@ -1477,6 +1533,17 @@
       ],
       "verdict": "CONCERN"
     },
+    "FUTU": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,345m, covering 6% of current liabilities.",
+        "2. 98% of assets are current, 1% are goodwill and intangibles, current ratio 1.19.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
     "GCT": {
       "coverage": 3,
       "flags": [],
@@ -1621,6 +1688,17 @@
       ],
       "verdict": "WATCH"
     },
+    "HIMX": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 138m, covering 41% of current liabilities.",
+        "2. 82% of assets are current, 4% are goodwill and intangibles, current ratio 1.96.",
+        "3. Debt of 147m against cash, so net debt of 9m.",
+        "4. Receivables -2% against payables at -2%, 100 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
     "HL": {
       "coverage": 4,
       "flags": [
@@ -1658,6 +1736,17 @@
         "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
       ],
       "verdict": "UNKNOWN"
+    },
+    "HSAI": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 238m, covering 88% of current liabilities.",
+        "2. 63% of assets are current, 1% are goodwill and intangibles, current ratio 3.73.",
+        "3. Debt of 343m against cash, so net debt of 105m.",
+        "4. Receivables -76% against payables at -75%, 152 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
     },
     "HUT": {
       "coverage": 3,
@@ -2299,6 +2388,23 @@
       ],
       "verdict": "SOLID"
     },
+    "NBIS": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +6331% against payables at +431%, a 5901 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 3,678m, covering 241% of current liabilities.",
+        "2. 38% of assets are current, 0% are goodwill and intangibles, current ratio 3.08.",
+        "3. Debt of 4,128m against cash, so net debt of 450m.",
+        "4. Receivables +6331% against payables at +431%."
+      ],
+      "verdict": "WATCH"
+    },
     "NNE": {
       "coverage": 2,
       "flags": [],
@@ -2337,6 +2443,23 @@
         "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
       ],
       "verdict": "SOLID"
+    },
+    "NVMI": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +9% against payables at -21%, a 30 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 214m, covering 96% of current liabilities.",
+        "2. 60% of assets are current, 6% are goodwill and intangibles, current ratio 6.28.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +9% against payables at -21%, 63 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "NVT": {
       "coverage": 2,
@@ -2935,6 +3058,28 @@
       ],
       "verdict": "SOLID"
     },
+    "SILC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 35m, covering 129% of current liabilities.",
+        "2. 74% of assets are current, 2% are goodwill and intangibles, current ratio 4.15.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -22%, 54 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "SIMO": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 202m, covering 59% of current liabilities.",
+        "2. 77% of assets are current, current ratio 2.78.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
     "SITM": {
       "coverage": 3,
       "flags": [
@@ -3050,6 +3195,17 @@
         "4. Receivables -0% against payables at +14%, 65 days of revenue outstanding."
       ],
       "verdict": "CONCERN"
+    },
+    "STM": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,837m, covering 85% of current liabilities.",
+        "2. 45% of assets are current, 3% are goodwill and intangibles, current ratio 3.36.",
+        "3. Debt of 2,133m against cash, so net CASH of 704m.",
+        "4. Receivables -0%, 54 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
     },
     "STRL": {
       "coverage": 3,
@@ -3177,6 +3333,17 @@
         "4. Receivables +11% against payables at +18%, 48 days of revenue outstanding."
       ],
       "verdict": "WATCH"
+    },
+    "TSEM": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 235m, covering 89% of current liabilities.",
+        "2. 51% of assets are current, 0% are goodwill and intangibles, current ratio 6.48.",
+        "3. Debt of 28m against cash, so net CASH of 207m.",
+        "4. Receivables +5% against payables at -5%, 52 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
     },
     "TSLA": {
       "coverage": 4,
@@ -3650,39 +3817,26 @@
   "unreadable": {
     "ADUR": "EdgarError: ADUR: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "AG": "EdgarError: AG: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "ARM": "EdgarError: ARM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "ARQQ": "EdgarError: ARQQ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "ASML": "EdgarError: ASML: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "ASX": "EdgarError: ASX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "AUGO": "EdgarError: AUGO: files no us-gaap facts, only ['dei']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "AYA": "EdgarError: not found: https://data.sec.gov/api/xbrl/companyfacts/CIK0001826836.json",
     "BBAR": "EdgarError: BBAR: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "BRUN": "EdgarError: BRUN: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "CAMT": "EdgarError: CAMT: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "BRUN": "EdgarError: BRUN: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: none. The filer reports 177 us-gaap tags.",
     "CCJ": "EdgarError: CCJ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "CSIQ": "EdgarError: CSIQ: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "ENLT": "EdgarError: ENLT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "ERO": "EdgarError: ERO: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "FUTU": "EdgarError: FUTU: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "GFS": "EdgarError: GFS: files no us-gaap facts, only ['dei', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "HBM": "EdgarError: HBM: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "HIMX": "EdgarError: HIMX: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "HMY": "EdgarError: HMY: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "HSAI": "EdgarError: HSAI: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "IAG": "EdgarError: IAG: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "IMOS": "EdgarError: IMOS: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "IAG": "EdgarError: IAG: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
+    "IMOS": "EdgarError: IMOS: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IPX": "EdgarError: IPX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "MT": "EdgarError: MT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'invest']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "NBIS": "EdgarError: NBIS: files us-gaap facts but no Assets tag, cannot read a balance sheet",
     "NBTX": "EdgarError: NBTX: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "NVMI": "EdgarError: NVMI: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "SA": "EdgarError: SA: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "SILC": "EdgarError: SILC: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "SIMO": "EdgarError: SIMO: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "STM": "EdgarError: STM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "SA": "EdgarError: SA: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 7 us-gaap tags.",
     "TECK": "EdgarError: TECK: files no us-gaap facts, only ['ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "TSAT": "EdgarError: TSAT: files us-gaap facts but no Assets tag, cannot read a balance sheet",
-    "TSEM": "EdgarError: TSEM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "TSAT": "EdgarError: TSAT: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 6 us-gaap tags.",
     "TSM": "EdgarError: TSM: files no us-gaap facts, only ['dei', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread."
   }
 }

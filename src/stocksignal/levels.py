@@ -138,9 +138,7 @@ def _recent_touches(df: pd.DataFrame, cfg: Config) -> list[tuple[pd.Timestamp, f
     return pooled
 
 
-def swing_runs(
-    series: pd.Series, index: pd.DatetimeIndex
-) -> list[tuple[list[int], list[float]]]:
+def swing_runs(series: pd.Series, index: pd.DatetimeIndex) -> list[tuple[list[int], list[float]]]:
     """Maximal runs of adjacent swing bars, as (bar positions, prices).
 
     Split out from `_collapse_runs` so the backtest can have the runs themselves

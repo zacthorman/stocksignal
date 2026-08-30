@@ -56,24 +56,86 @@ elsewhere refuses to do. Page 131 is quoted in `balance.py` to justify not
 summing the elevating and deprecating ledger, and the verdict property sums
 flags anyway.
 
-## 2. Thirty-six names are structurally invisible, and they are not random
+## 2. Thirty-six names are structurally invisible, and the reason is not one reason
 
-Every one of the 35 "no Assets series" failures is a foreign issuer: ASML, TSM,
-ARM, STM, TSEM, CAMT, NVMI, SILC, SIMO, HIMX, IMOS, ASX, GFS, CCJ, TECK, HBM,
-ERO, IAG, AG, SA, HMY, MT, BBAR, FUTU, CSIQ, HSAI, ENLT, AUGO, NBTX, IPX, NBIS,
-TSAT, ARQQ, ADUR, BRUN. AYA fails differently, on a CIK that returns 404.
+> [!warning] This section said something false when first written, and the fix
+> for it is what proved it false. Corrected below the rule.
 
-`annual_series` reads `facts["facts"]["us-gaap"]` and nothing else. A company
-filing a 20-F under IFRS files its balance sheet under a different taxonomy, so
-the module does not fail to read it, it never looks. **14% of the watchlist is
-excluded on domicile**, and the message "no Assets series, cannot read a balance
-sheet" describes a company that files no balance sheet, which is not what is
-happening. Same shape as the "no CIK: foreign issuer, ETF, or delisted" message
-that made a watchlist parsing bug look like 256 delisted companies earlier the
-same day: a plausible cause attached to the wrong failure.
+**What I wrote, and it was a guess dressed as a finding.** Every one of the 35
+"no Assets series" failures was a foreign issuer, so I concluded the cause was
+uniform: `annual_series` reads `facts["facts"]["us-gaap"]` and nothing else, a
+20-F filer reports under IFRS, therefore 14% of the watchlist is excluded on
+domicile. The list of names supported it. ASML, TSM, ARM, STM, CCJ, TECK, the
+Israeli and Taiwanese semis, the Canadian miners.
 
-Whether to read IFRS is a real scope decision and not a bug fix. Naming the
-cause honestly is a bug fix.
+**What the honest message actually returned, on its first run.** Making the
+error report which taxonomies the payload carries, rather than asserting the
+company files no balance sheet, split the 36 in two:
+
+| Cause | Count | Names |
+| --- | ---: | --- |
+| Files no us-gaap facts at all | 17 | ADUR, AG, ARQQ, ASX, AUGO, BBAR, CCJ, ENLT, ERO, GFS, HBM, HMY, IPX, MT, NBTX, TECK, TSM |
+| Files us-gaap facts but no `Assets` tag | 18 | ARM, ASML, BRUN, CAMT, CSIQ, FUTU, HIMX, HSAI, IAG, IMOS, NBIS, NVMI, SA, SILC, SIMO, STM, TSAT, TSEM |
+| CIK returns 404 | 1 | AYA |
+
+**ASML and ARM do file us-gaap facts.** So the message was changed again, to
+report the other accounting taxonomies in the payload alongside `us-gaap`, and
+the 36 were reread. That splits them a third time, and this one is definitive:
+
+| Cause | Count | Names |
+| --- | ---: | --- |
+| No us-gaap facts at all, accounts under `ifrs-full` | 17 | ADUR, AG, ARQQ, ASX, AUGO, BBAR, CCJ, ENLT, ERO, GFS, HBM, HMY, IPX, MT, NBTX, TECK, TSM |
+| us-gaap facts, no `Assets`, but `ifrs-full` also present | 5 | HIMX, IAG, IMOS, SA, TSAT |
+| us-gaap facts, no `Assets`, **no other accounting taxonomy** | 13 | ARM, ASML, BRUN, CAMT, CSIQ, FUTU, HSAI, NBIS, NVMI, SILC, SIMO, STM, TSEM |
+| CIK returns 404 | 1 | AYA |
+
+22 of the 36 do have their balance sheet in `ifrs-full`, so the domicile story
+was right about those and only those. The 13 are a different problem, and it is
+not a taxonomy problem: those companies report us-gaap and nothing else, and
+still have no `Assets` tag. That third group turned out to have nothing to do
+with taxonomies at all, and the next section is how long it took to find out.
+
+**First guess at the 13: wrong.** Total assets equals total liabilities plus
+equity, so `LiabilitiesAndStockholdersEquity` is the same number under another
+element name and some filers tag only that. Added it, plus `AssetsNet`, with two
+tests. It recovered nothing. But the diagnostic printed alongside it gave the
+answer away: **ASML reports 623 us-gaap tags. STM 700. NBIS 520. CAMT 477.**
+Those are not companies missing a balance sheet.
+
+**The actual cause, found on the fourth attempt.** `annual_series`, one line:
+
+```python
+if not str(row.get("form", "")).startswith("10-K"):
+    continue
+```
+
+A foreign private issuer files its annual report on a **20-F**, or a 40-F under
+the Canadian MJDS, and never files a 10-K in its life. All 13 report under US
+GAAP in full. Every row is stamped 20-F, so the filter dropped every fact they
+have ever filed.
+
+The filter's own docstring says its purpose is "annual, not quarterly", and the
+exclusion of foreign filers was never a decision, just a side effect of writing
+one form name for a document that has three. `ANNUAL_FORMS = ("10-K", "20-F",
+"40-F")`, three tests, and it is fixed.
+
+**The result, and it is the whole of the 13.** Unreadable falls from 36 to 23.
+ASML comes back SOLID on 4 of 4 checks, STM SOLID on 4 of 4, ARM SOLID on 3,
+along with TSEM, HIMX, HSAI and SILC SOLID, NBIS, NVMI, CAMT and CSIQ on WATCH,
+and SIMO and FUTU as UNKNOWN.
+
+**This is a scope change, not only a bug fix.** It widens every EDGAR-derived
+reading in the project, not just the balance layer: revenue, share count, cash
+flow, the growth template. Thirteen foreign filers that previously returned
+nothing now return numbers everywhere. Reverting is one line.
+
+**The point is not the taxonomy.** A plausible cause fitted all 36 names, was
+consistent with every one of them, and was wrong. Then the second explanation
+was wrong. Then the third. Each was true as far as it went and each pointed away
+from a one-line form filter, and the only reason the loop terminated is that
+every wrong message was replaced with one that reported what the code had
+actually looked at. "14% excluded on domicile" was four wrong answers away from
+"the filter names one form and there are three".
 
 ## 3. CORZ is a confirmed false AVOID
 
@@ -178,8 +240,6 @@ The three defects above are fixed and the layer now reaches both surfaces.
 
 ## The three fixes, and what they move
 
-Simulated from the recorded flags of the pre-fix run, not from a fresh sweep.
-
 | Verdict | Before | After |
 | --- | ---: | ---: |
 | SOLID | 86 | 86 |
@@ -191,6 +251,12 @@ Simulated from the recorded flags of the pre-fix run, not from a fresh sweep.
 Flagged hard falls from 25.0% to 14.5%, and every name that moves is one of the
 23 identified as double-counted or falsely blamed. Nothing else shifts, which is
 what a targeted fix should look like.
+
+**These are the measured numbers, not the projection.** They were first
+simulated from the recorded flags of the pre-fix run and then reproduced exactly
+by a fresh 256-name sweep: 86 / 83 / 28 / 4 / 19, 14.5% flagged hard, CORZ at
+WATCH on a lone negative-equity flag, TEM still CONCERN, SEZL still SOLID. The
+four surviving AVOIDs are CMCO, IART, NX and WW.
 
 1. **Negative equity is its own flag.** CORZ drops from AVOID to WATCH. It still
    reports that liabilities exceed assets by 963m, it just no longer says
@@ -249,5 +315,64 @@ where every company came back clean.
 - `src/stocksignal/digest.py`, `card_render.py`, `opportunity.py`, `cli.py`,
   `scripts/cards.py`, the wiring
 - `tests/test_balance_store.py`, 14 tests. Full suite 502 passing, ruff clean
+
+Nothing here is financial advice, and every entry and exit is your decision.
+
+---
+
+# The final numbers, after the form fix
+
+| Verdict | Count | Share |
+| --- | ---: | ---: |
+| SOLID | 93 | 39.9% |
+| WATCH | 87 | 37.3% |
+| CONCERN | 28 | 12.0% |
+| AVOID | 4 | 1.7% |
+| UNKNOWN | 21 | 9.0% |
+
+**233 read, 23 unreadable. 13.7% flagged hard, 9.0% unreadable.** Still inside
+every threshold, on a universe 13 names larger than the one the layer was first
+judged on.
+
+The 23 that remain are, for the first time today, a scope question rather than a
+bug: 17 file no us-gaap at all and keep their accounts in `ifrs-full`, four more
+(TSAT, SA, IMOS, IAG) carry between one and seven stray us-gaap tags with the
+real accounts in `ifrs-full`, BRUN reports 177 us-gaap tags and genuinely no
+total-assets figure, and AYA's CIK returns 404. Reading IFRS would recover 21 of
+those 23 and it is a real piece of work, not a fix.
+
+## What today actually cost, and what it bought
+
+Six wrong error messages, each naming a cause it had not checked.
+
+1. "no CIK: foreign issuer, ETF, or delisted", on all 256 names, when the
+   watchlist parser was reading inline comments as tickers.
+2. "no Assets series, cannot read a balance sheet", on 36 companies that file
+   full balance sheets.
+3. "the intangibles are NOT mostly goodwill, so they were largely
+   self-generated", on a company reporting no intangibles.
+4. "files no us-gaap facts", which was true of 17 names and false of 18.
+5. "no total-assets figure under any of [three tags]", true, and pointing away
+   from a form filter.
+6. `make: ruff: No such file or directory`, with the ruff binary present and
+   executable, because the venv's `VIRTUAL_ENV` still pointed at the vault's old
+   Desktop path and `activate` was prepending a directory that no longer exists.
+
+Every one was true as stated. Every one attributed the failure to the wrong
+thing. The pattern is not carelessness in any single case, it is that a message
+which asserts a cause is a claim, and a claim in an error string never gets
+tested. The three that were rewritten to report what the code had actually
+looked at each disproved themselves on their first run.
+
+That is the finding worth keeping from today, more than the distribution.
+
+## Files
+
+- `src/stocksignal/sources/edgar.py`, `ANNUAL_FORMS` and the widened
+  `ASSETS_TAGS`
+- `scripts/balance_sheet.py`, the two failure messages that report rather than
+  assert
+- `tests/test_edgar.py`, five tests added
+- Full suite 507 passing, ruff check and ruff format both clean
 
 Nothing here is financial advice, and every entry and exit is your decision.

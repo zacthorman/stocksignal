@@ -38,8 +38,9 @@ def test_missing_data_is_unknown_and_never_zero():
 
 
 def test_runway_is_cash_over_burn():
-    r = CashReading("T", operating_cash_flow=-30e6, free_cash_flow=-50e6,
-                    cash_and_equivalents=150e6)
+    r = CashReading(
+        "T", operating_cash_flow=-30e6, free_cash_flow=-50e6, cash_and_equivalents=150e6
+    )
     assert r.runway_years == pytest.approx(3.0)
     assert r.verdict == "FUNDED"
 
@@ -51,7 +52,7 @@ def test_runway_is_cash_over_burn():
         (300e6, -100e6, 20),  # 3 years
         (200e6, -100e6, 15),  # 2 years
         (100e6, -100e6, 10),  # 1 year
-        (50e6, -100e6, 0),    # half a year, under the template's lowest rung
+        (50e6, -100e6, 0),  # half a year, under the template's lowest rung
     ],
 )
 def test_company_health_follows_the_templates_own_rule(cash, fcf, expected):
@@ -114,8 +115,12 @@ def test_notes_read_the_statements_in_michaels_order():
     """Cash flow, then balance sheet, then income statement. The order is the
     argument, so it is worth a test rather than a comment."""
     r = CashReading(
-        "T", operating_cash_flow=-20e6, free_cash_flow=-40e6,
-        cash_and_equivalents=120e6, total_debt=10e6, net_income=-25e6,
+        "T",
+        operating_cash_flow=-20e6,
+        free_cash_flow=-40e6,
+        cash_and_equivalents=120e6,
+        total_debt=10e6,
+        net_income=-25e6,
         ocf_history=(-50e6, -35e6, -20e6),
     )
     joined = r.notes

@@ -51,6 +51,11 @@ from stocksignal.sources.edgar import (  # noqa: E402
 
 CACHE = ROOT / "cache" / "edgar"
 
+NON_ACCOUNTING_TAXONOMIES = frozenset({"dei", "srt", "ffd", "invest", "country"})
+"""Namespaces that carry no balance sheet. `dei` is entity metadata, `srt` is
+SEC reporting taxonomy scaffolding, `ffd` is form-specific, `invest` is fund
+holdings. Their presence says nothing about where the accounts are."""
+
 # Field name on BalanceSheet to the tags that fill it. Order matters inside a
 # tag group: the first tag that returns anything wins, which is how a company
 # that reports AccountsPayableCurrent and one that reports the combined
@@ -113,8 +118,26 @@ def build(ticker: str, facts: dict) -> BalanceSheet:
                 f"This reader covers us-gaap only, so a 20-F filer reporting under "
                 f"IFRS is not unreadable, it is unread."
             )
+        # AND THE SECOND BRANCH HAS TO NAME ITS CAUSE TOO, WHICH IT DID NOT.
+        # The first run of the honest message split the 36 failures in two and
+        # the split immediately disproved the guess in the build note: ASML and
+        # ARM came back "files us-gaap facts", not "files IFRS". That is true
+        # and still not the whole answer, because a 20-F filer can carry a few
+        # us-gaap facts while its actual balance sheet sits in ifrs-full. So
+        # this branch reports the other accounting taxonomies in the payload,
+        # and the difference between "none" and "ifrs-full" is the difference
+        # between a company with no total-assets figure anywhere and one this
+        # reader simply does not cover.
+        others = [t for t in taxonomies if t not in NON_ACCOUNTING_TAXONOMIES and t != "us-gaap"]
+        # And when there is no other taxonomy to blame, say what WAS looked for
+        # and how much us-gaap the filer actually reports, so the next person
+        # does not have to guess a third time.
+        looked = ", ".join(ASSETS_TAGS)
+        n = len((facts.get("facts") or {}).get("us-gaap") or {})
         raise EdgarError(
-            f"{ticker}: files us-gaap facts but no Assets tag, cannot read a balance sheet"
+            f"{ticker}: no total-assets figure under any of [{looked}]. "
+            f"Other accounting taxonomies present: {others or 'none'}. "
+            f"The filer reports {n} us-gaap tags."
         )
     latest = years[-1]
     prior = years[-2] if len(years) > 1 else None

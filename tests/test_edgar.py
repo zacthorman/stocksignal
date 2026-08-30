@@ -12,6 +12,7 @@ from datetime import date
 import pytest
 
 from stocksignal.sources.edgar import (
+    ASSETS_TAGS,
     DEBT_TAGS,
     REVENUE_TAGS,
     EdgarClient,
@@ -632,3 +633,118 @@ def test_the_named_long_term_debt_tags_still_win_over_the_facility():
     the facility, or a drawn revolver gets counted twice across the two."""
     assert DEBT_TAGS.index("LongTermDebt") < DEBT_TAGS.index("LongTermLineOfCredit")
     assert DEBT_TAGS.index("LongTermDebtNoncurrent") < DEBT_TAGS.index("LongTermLineOfCredit")
+
+
+def test_total_assets_falls_back_to_the_accounting_identity():
+    """Some filers tag the bottom of the right-hand column and never tag Assets.
+
+    Total assets equals total liabilities plus equity, so
+    `LiabilitiesAndStockholdersEquity` is the same number under a different
+    element name. The 220-name sweep on 2026-08-30 left 13 companies reporting
+    us-gaap facts, no other accounting taxonomy, and no `Assets` tag, which is
+    the reader looking for one spelling of a number that has two.
+    """
+    facts = {
+        "facts": {
+            "us-gaap": {
+                "LiabilitiesAndStockholdersEquity": {
+                    "units": {
+                        "USD": [
+                            {
+                                "form": "10-K",
+                                "fy": 2025,
+                                "fp": "FY",
+                                "end": "2025-12-31",
+                                "val": 1_000.0,
+                                "frame": "CY2025Q4I",
+                            },
+                        ]
+                    }
+                }
+            }
+        }
+    }
+    series = annual_series(facts, ASSETS_TAGS)
+    assert series.values, "the identity should be read when Assets is absent"
+
+
+def test_the_named_assets_tag_still_wins_when_both_are_present():
+    """Order matters inside a tag group: the first that answers is used."""
+
+    def usd(val):
+        return {
+            "units": {
+                "USD": [
+                    {
+                        "form": "10-K",
+                        "fy": 2025,
+                        "fp": "FY",
+                        "end": "2025-12-31",
+                        "val": val,
+                        "frame": "CY2025Q4I",
+                    },
+                ]
+            }
+        }
+
+    facts = {
+        "facts": {
+            "us-gaap": {
+                "Assets": usd(1_000.0),
+                "LiabilitiesAndStockholdersEquity": usd(9_999.0),
+            }
+        }
+    }
+    series = annual_series(facts, ASSETS_TAGS)
+    assert 1_000.0 in series.values.values()
+    assert 9_999.0 not in series.values.values()
+
+
+def test_a_foreign_private_issuer_filing_20_f_is_read():
+    """ASML reports 623 us-gaap tags and never files a 10-K.
+
+    The form filter exists to keep quarterly year-to-date figures out. Written
+    as `startswith("10-K")` it also kept out every annual report filed by a
+    foreign private issuer, which is 13 names on this watchlist.
+    """
+    rows = [
+        {
+            "form": "20-F",
+            "fy": 2025,
+            "fp": "FY",
+            "end": "2025-12-31",
+            "val": 1_000.0,
+            "frame": "CY2025Q4I",
+        },
+    ]
+    series = annual_series(facts("Assets", rows), ASSETS_TAGS)
+    assert series.values, "a 20-F is an annual report"
+
+
+def test_a_canadian_mjds_filer_on_40_f_is_read():
+    rows = [
+        {
+            "form": "40-F",
+            "fy": 2025,
+            "fp": "FY",
+            "end": "2025-12-31",
+            "val": 500.0,
+            "frame": "CY2025Q4I",
+        },
+    ]
+    assert annual_series(facts("Assets", rows), ASSETS_TAGS).values
+
+
+def test_quarterly_filings_are_still_excluded():
+    """The reason the filter is on the form and not on `fp`."""
+    rows = [
+        {
+            "form": "10-Q",
+            "fy": 2025,
+            "fp": "FY",
+            "end": "2025-12-31",
+            "val": 999.0,
+            "frame": "CY2025Q4I",
+        },
+    ]
+    assert not annual_series(facts("Assets", rows), ASSETS_TAGS).values

@@ -131,8 +131,9 @@ def test_directional_strength_is_zero_below_the_slow_sma():
 
 def test_directional_strength_scores_above_the_slow_sma():
     df = rising()
-    factor = next(f for f in score_ticker(df, quote_for(df)).factors
-                  if f.key == "directional_strength")
+    factor = next(
+        f for f in score_ticker(df, quote_for(df)).factors if f.key == "directional_strength"
+    )
     assert factor.points is not None and factor.points > 0
     assert "above the 180 SMA" in factor.detail
 
@@ -147,20 +148,26 @@ def test_confirmation_decays_with_distance_from_the_cross():
     """
     fresh = frame([30.0] * 400 + [20.0] * 100 + [31.0])
     stale = rising()
-    f_fresh = next(f for f in score_ticker(fresh, quote_for(fresh)).factors
-                   if f.key == "confirmation")
-    f_stale = next(f for f in score_ticker(stale, quote_for(stale)).factors
-                   if f.key == "confirmation")
+    f_fresh = next(
+        f for f in score_ticker(fresh, quote_for(fresh)).factors if f.key == "confirmation"
+    )
+    f_stale = next(
+        f for f in score_ticker(stale, quote_for(stale)).factors if f.key == "confirmation"
+    )
     assert f_fresh.points > f_stale.points
 
 
 def test_deal_quality_grades_oversold_above_fair_value_above_overbought():
     oversold = frame([100.0 - 1.0 * i for i in range(300)] + [40.0] * 200 + [39.0])
     overbought = rising()
-    f_os = next(f for f in score_ticker(oversold, quote_for(oversold)).factors
-                if f.key == "deal_quality")
-    f_ob = next(f for f in score_ticker(overbought, quote_for(overbought)).factors
-                if f.key == "deal_quality")
+    f_os = next(
+        f for f in score_ticker(oversold, quote_for(oversold)).factors if f.key == "deal_quality"
+    )
+    f_ob = next(
+        f
+        for f in score_ticker(overbought, quote_for(overbought)).factors
+        if f.key == "deal_quality"
+    )
     assert f_os.points > f_ob.points
 
 
@@ -168,8 +175,11 @@ def test_volume_reads_the_ratio_not_a_boolean():
     df = rising()
     quiet = quote_for(df)
     loud = Quote(
-        ticker="TEST", as_of=quiet.as_of, close=quiet.close,
-        avg_volume=quiet.avg_volume, latest_volume=quiet.avg_volume * 4,
+        ticker="TEST",
+        as_of=quiet.as_of,
+        close=quiet.close,
+        avg_volume=quiet.avg_volume,
+        latest_volume=quiet.avg_volume * 4,
     )
     f_quiet = next(f for f in score_ticker(df, quiet).factors if f.key == "volume")
     f_loud = next(f for f in score_ticker(df, loud).factors if f.key == "volume")
@@ -181,10 +191,12 @@ def test_long_term_prefers_a_name_low_in_its_range():
     """The one factor where a high price scores badly, matching the page 142 sort."""
     at_high = rising()
     off_high = frame([20.0 + 0.05 * i for i in range(500)] + [30.0 - 0.1 * i for i in range(100)])
-    f_high = next(f for f in score_ticker(at_high, quote_for(at_high)).factors
-                  if f.key == "long_term")
-    f_off = next(f for f in score_ticker(off_high, quote_for(off_high)).factors
-                 if f.key == "long_term")
+    f_high = next(
+        f for f in score_ticker(at_high, quote_for(at_high)).factors if f.key == "long_term"
+    )
+    f_off = next(
+        f for f in score_ticker(off_high, quote_for(off_high)).factors if f.key == "long_term"
+    )
     assert f_off.points > f_high.points
 
 
@@ -255,7 +267,10 @@ def test_to_dict_exports_fraction_separately_from_points():
 
 def test_bands_are_ordered_and_reachable():
     for floor, name, _note in (
-        (85.0, "STRONG", ""), (70.0, "WORTH A LOOK", ""), (50.0, "WATCH", ""), (10.0, "SKIP", "")
+        (85.0, "STRONG", ""),
+        (70.0, "WORTH A LOOK", ""),
+        (50.0, "WATCH", ""),
+        (10.0, "SKIP", ""),
     ):
         card = Scorecard(
             ticker="T",

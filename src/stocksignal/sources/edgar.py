@@ -103,7 +103,21 @@ COST_OF_REVENUE_TAGS = ("CostOfRevenue", "CostOfGoodsAndServicesSold")
 # The balance sheet, for `balance.py`. These are the lines Michael's four spot
 # checks need: the current/non-current split, the intangibles that separate NAV
 # from NTAV, and the receivables and payables whose relative growth is check 4.
-ASSETS_TAGS = ("Assets",)
+ASSETS_TAGS = (
+    "Assets",
+    # THE IDENTITY, AS A FALLBACK, AND IT IS NOT A FUDGE. Total assets equals
+    # total liabilities plus equity by the accounting equation, and
+    # `LiabilitiesAndStockholdersEquity` is the standard us-gaap element for the
+    # bottom of the right-hand column. Some filers tag that and never tag
+    # `Assets` at all.
+    #
+    # Added because the 220-name sweep on 2026-08-30 left 13 companies reporting
+    # us-gaap facts, no other accounting taxonomy, and no `Assets` tag: ASML,
+    # ARM, STM, TSEM, CAMT, NVMI, SIMO, SILC, CSIQ, FUTU, HSAI, NBIS, BRUN. The
+    # reader was looking for one spelling of a number that has two.
+    "LiabilitiesAndStockholdersEquity",
+    "AssetsNet",
+)
 ASSETS_CURRENT_TAGS = ("AssetsCurrent",)
 LIABILITIES_TAGS = ("Liabilities",)
 LIABILITIES_CURRENT_TAGS = ("LiabilitiesCurrent",)
@@ -241,6 +255,18 @@ def _period_year(row: dict) -> int | None:
     return end_date.year
 
 
+ANNUAL_FORMS = ("10-K", "20-F", "40-F")
+"""The forms that carry a full year of audited accounts.
+
+10-K for a domestic filer, 20-F for a foreign private issuer, 40-F for a
+Canadian issuer under the multijurisdictional disclosure system. `startswith`
+covers the amendments and variants: 10-K/A, 10-K405, 20-F/A.
+
+Quarterly forms are deliberately absent. A 10-Q carries FY-tagged year-to-date
+figures and would walk straight in on an `fp` test, which is why this filter is
+on the form name."""
+
+
 def annual_series(facts: dict, tags: tuple[str, ...]) -> AnnualSeries:
     """Pull one line item as {fiscal_year: value} from a companyfacts payload.
 
@@ -255,8 +281,26 @@ def annual_series(facts: dict, tags: tuple[str, ...]) -> AnnualSeries:
     view of its own history rather than whichever row happened to be parsed
     last.
 
-    The 10-K filter is on the FORM rather than on `fp`, because a 10-Q carries
+    The filter is on the FORM rather than on `fp`, because a 10-Q carries
     FY-tagged year-to-date figures and would otherwise walk straight in.
+
+    IT WAS 10-K ONLY, AND THAT EXCLUDED EVERY FOREIGN FILER BY ACCIDENT. The
+    intent of this filter has always been "annual, not quarterly". A foreign
+    private issuer files its annual report on a 20-F, or a 40-F under the
+    Canadian MJDS, and never files a 10-K at all, so `startswith("10-K")`
+    silently dropped every row they have ever filed.
+
+    That went unnoticed until the 220-name balance sweep on 2026-08-30 left 13
+    companies unreadable while reporting hundreds of us-gaap tags each: ASML
+    623, STM 700, NBIS 520, CAMT 477, CSIQ 472, TSEM 431, HIMX 376, SIMO 359,
+    NVMI 330, FUTU 315, ARM 288, HSAI 276, SILC 262, BRUN 177. They report
+    under US GAAP in full. Every row is stamped 20-F, and the reader was
+    looking for one form name for a document that has three.
+
+    Diagnosing it took four wrong answers in a row, each one a message naming a
+    cause it had not checked: "no CIK", then "no Assets series", then "files no
+    us-gaap facts", then "no total-assets figure under any of these tags". Every
+    one was true as far as it went and every one pointed away from the filter.
     """
     us_gaap = (facts.get("facts") or {}).get("us-gaap") or {}
     for tag in tags:
@@ -266,7 +310,7 @@ def annual_series(facts: dict, tags: tuple[str, ...]) -> AnnualSeries:
         out: dict[int, tuple[str, float]] = {}
         for unit_rows in (entry.get("units") or {}).values():
             for row in unit_rows:
-                if not str(row.get("form", "")).startswith("10-K"):
+                if not str(row.get("form", "")).startswith(ANNUAL_FORMS):
                     continue
                 year = _period_year(row)
                 if year is None:

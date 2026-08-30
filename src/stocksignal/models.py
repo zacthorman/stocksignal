@@ -101,9 +101,7 @@ class Signal:
         distinguish this ticker from the other candidates. Empty is possible in
         principle, so callers should fall back to `reasons`.
         """
-        return [
-            reason for result in self.results[1:] if result.passed for reason in result.reasons
-        ]
+        return [reason for result in self.results[1:] if result.passed for reason in result.reasons]
 
     @property
     def not_firing(self) -> list[str]:
