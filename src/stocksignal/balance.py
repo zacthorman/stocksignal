@@ -72,6 +72,28 @@ always printed so the trigger can be disagreed with."""
 
 CRITICAL, SERIOUS, WATCH = "critical", "serious", "watch"
 
+CORRELATED_CHECKS = (frozenset({"receivables vs payables", "receivables vs revenue"}),)
+"""Groups of checks that are readings of ONE number, counted once in the verdict.
+
+WHY THIS EXISTS. Both receivables flags divide by the same numerator, receivable
+growth, and differ only in what they compare it against. On the 220-name sweep
+they were the two most common flags on the board, and 30 of the 47 names tripping
+the payables one tripped the revenue one as well. Two SERIOUS flags is the rule
+that promotes WATCH to CONCERN, so 22 of the 50 CONCERN verdicts had no other
+serious flag at all: one fact, stated twice, moved them up a band.
+
+Both flags still print, because outrunning payables AND revenue is worse than
+outrunning one of them and the reader should see both. What they no longer do is
+vote twice. This is the same argument page 131 makes and that this module already
+makes about the elevating and deprecating ledger, applied to its own ladder."""
+
+
+def _money_pair(nav: float | None, ntav: float | None) -> str:
+    """NAV and NTAV for a flag message, with "not reported" where that is true."""
+    if nav is None:
+        return "Neither NAV nor NTAV can be computed, the sheet does not report them."
+    return f"NAV is {nav / 1e6:,.0f}m but NTAV is {(ntav or 0) / 1e6:,.0f}m."
+
 
 @dataclass(frozen=True)
 class Flag:
@@ -272,13 +294,43 @@ class BalanceSheet:
                 Flag(
                     SERIOUS,
                     "intangibles",
-                    f"{pct:.0f}% of total assets are goodwill and intangibles. NAV is "
-                    f"{(self.nav or 0) / 1e6:,.0f}m but NTAV is {(self.ntav or 0) / 1e6:,.0f}m. "
+                    f"{pct:.0f}% of total assets are goodwill and intangibles. "
+                    # `or 0` here would print "NAV 0m" for a company that never
+                    # reported one, which is the same missing-is-zero error as
+                    # above and worse for being silent. A company reporting
+                    # assets and intangibles but neither liabilities nor equity
+                    # has no NAV to read, and the message says so.
+                    f"{_money_pair(self.nav, self.ntav)} "
                     f"Read the NTAV, because a creditor cannot sell a brand valuation.",
                 )
             )
 
-        if self.ntav is not None and self.ntav < 0:
+        if self.ntav is not None and self.ntav < 0 and not self.soft_assets:
+            # NEGATIVE NTAV WITH NOTHING INTANGIBLE TO STRIP IS A DIFFERENT
+            # FINDING, AND THE SWEEP CAUGHT THE MODULE ASSERTING OTHERWISE.
+            # Core Scientific reports no goodwill and no intangibles at all, so
+            # its NTAV equals its NAV at -963m: liabilities simply exceed
+            # assets. The branch below still fired and told it its intangibles
+            # "were largely self-generated", which is a cause the filing does
+            # not contain. Third time in one day that a message has named a
+            # plausible wrong reason, after "no CIK" and "no Assets series".
+            #
+            # SEVERITY IS DELIBERATELY NOT CRITICAL. CRITICAL returns AVOID and
+            # is reserved for the one trap the source actually describes, the
+            # miner capitalising 30m of drilling. Negative equity is severe and
+            # it is plainly visible, but making it a disqualifier is a rulebook
+            # change and belongs to Zac, not to a bug fix.
+            out.append(
+                Flag(
+                    SERIOUS,
+                    "negative equity",
+                    f"Total liabilities exceed total assets, so equity is NEGATIVE at "
+                    f"{self.ntav / 1e6:,.0f}m. This is not the intangibles trap: the company "
+                    f"reports no goodwill and no intangibles, so there is nothing to strip. "
+                    f"NAV and NTAV are the same number and both are below zero.",
+                )
+            )
+        elif self.ntav is not None and self.ntav < 0:
             # NEGATIVE NTAV IS TWO DIFFERENT SIGNALS AND THE FIRST VERSION
             # CONFLATED THEM. Tested against Tempus, which carries 825m of
             # goodwill and intangibles from buying Ambry and Paige, it fired
@@ -374,14 +426,31 @@ class BalanceSheet:
                 )
             )
 
+        # MISSING IS NOT ZERO, AND THIS FLAG BROKE THAT RULE. The guard used to
+        # read `(self.revenue_growth or 0) < 20`, which quietly treated a
+        # company that does not report a comparable prior-year revenue as one
+        # growing at 0%. It then crashed formatting that None into the message,
+        # which is the only reason the bug was ever found: on a sweep of the
+        # whole watchlist TER stopped the run at name 58. Had the message not
+        # needed the number, the flag would have gone on firing on companies
+        # whose revenue growth is simply unknown.
+        #
+        # This flag is a COMPARISON between two growth rates, so it cannot be
+        # made when one of them is missing. It abstains instead.
         soft_growth = self._growth(self.intangibles, self.prev_intangibles)
-        if soft_growth is not None and soft_growth > 50 and (self.revenue_growth or 0) < 20:
+        rev_growth = self.revenue_growth
+        if (
+            soft_growth is not None
+            and rev_growth is not None
+            and soft_growth > 50
+            and rev_growth < 20
+        ):
             out.append(
                 Flag(
                     WATCH,
                     "capitalised costs",
                     f"Intangibles grew {soft_growth:+.0f}% while revenue grew "
-                    f"{self.revenue_growth:+.0f}%. Check whether development costs are being "
+                    f"{rev_growth:+.0f}%. Check whether development costs are being "
                     f"capitalised onto the balance sheet rather than expensed.",
                 )
             )
@@ -419,7 +488,7 @@ class BalanceSheet:
         sev = {f.severity for f in self.flags}
         if CRITICAL in sev:
             return "AVOID"
-        serious = sum(1 for f in self.flags if f.severity == SERIOUS)
+        serious = self._independent_serious_count()
         if serious >= 2:
             return "CONCERN"
         if serious == 1:
@@ -427,6 +496,16 @@ class BalanceSheet:
         if self.flags:
             return "WATCH"
         return "SOLID"
+
+    def _independent_serious_count(self) -> int:
+        """Serious flags, with each correlated group counted once."""
+        checks = {f.check for f in self.flags if f.severity == SERIOUS}
+        count = 0
+        for group in CORRELATED_CHECKS:
+            if checks & group:
+                count += 1
+            checks -= group
+        return count + len(checks)
 
     @property
     def notes(self) -> tuple[str, ...]:
@@ -499,6 +578,17 @@ def to_dict(b: BalanceSheet) -> dict:
         "net_current_assets": r(b.net_current_assets, 0),
         "current_pct": r(b.current_pct, 1),
         "intangible_pct": r(b.intangible_pct, 1),
+        # THE CRITICAL VERSUS SERIOUS SPLIT TURNS ON goodwill / soft_assets AND
+        # NEITHER NUMBER WAS RECORDED. The 220-name sweep produced five AVOID
+        # verdicts and there was no way to check any of them from its own output,
+        # which is the sort of unauditable reading this project keeps refusing.
+        "goodwill": r(b.goodwill, 0),
+        "intangibles": r(b.intangibles, 0),
+        "soft_assets": r(b.soft_assets, 0),
+        "goodwill_share": r(
+            None if not b.soft_assets or b.goodwill is None else 100.0 * b.goodwill / b.soft_assets,
+            1,
+        ),
         "nav": r(b.nav, 0),
         "ntav": r(b.ntav, 0),
         "total_debt": r(b.total_debt, 0),

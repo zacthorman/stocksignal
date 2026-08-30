@@ -229,3 +229,132 @@ def test_an_unreported_receivable_line_says_so_rather_than_blaming_the_prior_yea
     note = [n for n in b.notes if n.startswith("4.")][0]
     assert "no trade receivable line is reported" in note
     assert "prior-year" not in note
+
+
+# --------------------------------------------------------------------------
+# What the 256-name sweep forced, on 2026-08-30
+# --------------------------------------------------------------------------
+
+
+def test_capitalised_costs_abstains_when_revenue_growth_is_unknown():
+    """The guard used to read `(revenue_growth or 0) < 20`.
+
+    That is missing-is-zero, the one rule this module is built around not
+    breaking. It also crashed on the format string, which is the only reason it
+    was caught: TER stopped a full-watchlist sweep at name 58. The flag compares
+    two growth rates, so with one of them missing it has nothing to compare.
+    """
+    b = sheet(intangibles=30e6, prev_intangibles=10e6, revenue=105e6, prev_revenue=None)
+    assert b.revenue_growth is None
+    assert not flags_of(b, "capitalised costs")
+    # And the whole reading still renders, rather than raising.
+    assert b.verdict
+    assert to_dict(b)["flags"] is not None
+
+
+def test_capitalised_costs_still_fires_when_both_rates_are_known():
+    b = sheet(intangibles=30e6, prev_intangibles=10e6, revenue=105e6, prev_revenue=100e6)
+    assert flags_of(b, "capitalised costs")
+
+
+def test_the_intangibles_flag_says_so_rather_than_printing_a_nav_of_zero():
+    """Assets and intangibles reported, neither liabilities nor equity.
+
+    `(nav or 0)` printed "NAV is 0m", a number the filing never contained. The
+    silent half of the same bug.
+    """
+    b = BalanceSheet(ticker="T", assets=100e6, intangibles=80e6)
+    assert b.nav is None
+    flag = flags_of(b, "intangibles")
+    assert flag, "an 80% intangible sheet should still prompt a look"
+    assert "0m" not in flag[0].message
+    assert "not report" in flag[0].message
+
+
+# --------------------------------------------------------------------------
+# What the 220-name sweep found, on 2026-08-30
+# --------------------------------------------------------------------------
+
+
+def test_negative_equity_is_not_blamed_on_intangibles_that_do_not_exist():
+    """CORZ. No goodwill, no intangibles, NTAV equal to NAV and below zero.
+
+    The module used to return AVOID on a CRITICAL flag saying the intangibles
+    "were largely self-generated". There are none. Liabilities exceed assets,
+    which is severe and is a different finding.
+    """
+    b = BalanceSheet(
+        ticker="CORZ",
+        assets=1_000e6,
+        assets_current=380e6,
+        liabilities=1_963e6,
+        liabilities_current=330e6,
+        cash=311e6,
+    )
+    assert b.soft_assets is None
+    assert b.ntav is not None and b.ntav < 0
+    assert not flags_of(b, "negative NTAV"), "nothing intangible to strip"
+    flag = flags_of(b, "negative equity")
+    assert flag and flag[0].severity == SERIOUS
+    assert "not the intangibles trap" in flag[0].message
+    assert b.verdict != "AVOID"
+
+
+def test_a_real_intangibles_trap_still_reaches_critical():
+    """The miner who capitalised 30m of drilling. Nothing about that changes."""
+    b = sheet(assets=100e6, liabilities=95e6, equity=5e6, intangibles=60e6, goodwill=None)
+    assert b.ntav is not None and b.ntav < 0
+    flag = flags_of(b, "negative NTAV")
+    assert flag and flag[0].severity == CRITICAL
+    assert b.verdict == "AVOID"
+
+
+def test_the_two_receivables_flags_do_not_vote_twice():
+    """One number, read two ways, must not promote WATCH to CONCERN on its own.
+
+    Receivables +101%, payables +52%, revenue +83% trips both flags. That is one
+    fact about collection, so the verdict counts it once.
+    """
+    b = sheet(
+        receivables=201e6,
+        prev_receivables=100e6,
+        payables=152e6,
+        prev_payables=100e6,
+        revenue=183e6,
+        prev_revenue=100e6,
+    )
+    checks = {f.check for f in b.flags if f.severity == SERIOUS}
+    assert {"receivables vs payables", "receivables vs revenue"} <= checks, "both still print"
+    assert b.verdict == "WATCH", "one fact, one vote"
+
+
+def test_a_second_independent_serious_flag_still_reaches_concern():
+    """The pair counts once, not zero. Add anything unrelated and it promotes."""
+    b = sheet(
+        assets_current=20e6,
+        liabilities_current=40e6,
+        receivables=201e6,
+        prev_receivables=100e6,
+        payables=152e6,
+        prev_payables=100e6,
+        revenue=183e6,
+        prev_revenue=100e6,
+    )
+    assert flags_of(b, "current ratio")
+    assert b.verdict == "CONCERN"
+
+
+def test_to_dict_records_the_numbers_the_verdict_turns_on():
+    """Five AVOID verdicts came back from the sweep and none could be audited."""
+    b = sheet(assets=100e6, goodwill=30e6, intangibles=10e6)
+    d = to_dict(b)
+    assert d["goodwill"] == 30e6
+    assert d["intangibles"] == 10e6
+    assert d["soft_assets"] == 40e6
+    assert d["goodwill_share"] == 75.0
+
+
+def test_the_goodwill_share_is_none_rather_than_zero_when_nothing_is_reported():
+    d = to_dict(sheet())
+    assert d["goodwill_share"] is None
+    assert d["soft_assets"] is None

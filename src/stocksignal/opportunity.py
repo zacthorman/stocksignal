@@ -246,6 +246,19 @@ class OpportunityCard:
     position: PositionPlan
     warnings: tuple[str, ...] = field(default=())
 
+    # THE BALANCE READING SITS OUTSIDE THE LEDGER, AND THAT IS THE WHOLE POINT.
+    # It would have been easy to append the flags to `deprecating` and let them
+    # take their chances in the table. Page 131 says a big elevating factor can
+    # counter a deprecating one, so putting a negative-NTAV flag in there means
+    # three good factors can talk past it. That is precisely the mistake the
+    # source warns about: "I've seen more investors do their dough buying cheap
+    # stocks without checking the balance sheet than any other mistake."
+    #
+    # So it is a separate field, printed above the ledger, and nothing in the
+    # card is allowed to net it off. It still does not decide, because the card
+    # does not decide. It just cannot be argued with by the other section.
+    balance: object | None = None
+
     @property
     def upside_pct(self) -> float | None:
         return self.target.upside_pct(self.close)
@@ -862,6 +875,7 @@ def build_card(
     card: CardConfig | None = None,
     direction: GrowthDirection | None = None,
     volume_ratio: float | None = None,
+    balance: object | None = None,
 ) -> OpportunityCard:
     """Everything above, in the order the 7-Step Test runs (page 133).
 
@@ -953,4 +967,5 @@ def build_card(
         exit_plan=exit_plan(cfg.sma_fast, stop, primary, card),
         position=position_plan(close, stop, card),
         warnings=tuple(warnings),
+        balance=balance,
     )

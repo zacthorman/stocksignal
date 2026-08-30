@@ -1,0 +1,21 @@
+{
+  "ticker": "DEMO (example figures, replace with real ones)",
+  "years": [2021, 2022, 2023, 2024, 2025],
+  "revenues": [1200000000, 1560000000, 1950000000, 2320000000, 2900000000],
+  "shares": [410000000, 418000000, 425000000, 431000000, 440000000],
+  "projection_years": 4,
+  "scores": {
+    "company_health":       {"points": 20, "reasoning": "Cash and equivalents cover roughly 3 years at the current burn. Template rule: 3 years = 20."},
+    "growth_strategy":      {"points": 18, "reasoning": "R&D up 22% YoY and directed at the named platform, not scattered. Client acquisition cost falling three quarters running."},
+    "scalability":          {"points": 17, "reasoning": "TAM cited at 40bn over 5 years against a 9bn market cap. Credible but the TAM is the company's own number."},
+    "competitive_advantage":{"points": 16, "reasoning": "Only vendor with regulatory clearance in the category; two competitors withdrew in 2025."},
+    "new_revenue_streams":  {"points": 13, "reasoning": "Two adjacent product lines announced, neither shipping yet, so this is intent rather than evidence."},
+    "market_share":         {"points": 5,  "reasoning": "Roughly 25% of the addressable segment. Template rule: 25% = 5."},
+    "market_share_growth":  {"points": 11, "reasoning": "Share up from 18% to 25% over two years while the market itself grew."},
+    "track_record":         {"points": 15, "reasoning": "Five consecutive years of revenue growth. Template rule: 5 years = 15."},
+    "leadership":           {"points": 10, "reasoning": "CEO founded the company; CFO joined 2024 from a larger listed competitor. No prior public-company record for the CFO."},
+    "profit_margin":        {"points": 6,  "reasoning": "Gross margin 61% and improving, but still loss-making at the net line."},
+    "certainty":            {"points": 5,  "reasoning": "Regulated sector with a live legal challenge outstanding. Genuinely uncertain."},
+    "maturity":             {"points": 4,  "reasoning": "Small penalty: growth is still accelerating, but the largest segment slowed from 40% to 31%."}
+  }
+}

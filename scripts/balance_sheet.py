@@ -99,7 +99,23 @@ def build(ticker: str, facts: dict) -> BalanceSheet:
     # stops a single stray tag from inventing a year with one number in it.
     years = sorted(series["assets"].values)
     if not years:
-        raise EdgarError(f"{ticker}: no Assets series, cannot read a balance sheet")
+        # NAME THE CAUSE, DO NOT GUESS IT. "no Assets series, cannot read a
+        # balance sheet" describes a company that files no balance sheet. On the
+        # 220-name sweep it was returned for 35 names and every one of them was a
+        # foreign private issuer: ASML, TSM, ARM, STM, CCJ, TECK and the rest.
+        # They file full balance sheets, under IFRS, and `annual_series` reads
+        # `facts["us-gaap"]` and nothing else, so the module never looked. The
+        # message now reports which taxonomies the payload actually carries.
+        taxonomies = sorted((facts.get("facts") or {}).keys())
+        if "us-gaap" not in taxonomies:
+            raise EdgarError(
+                f"{ticker}: files no us-gaap facts, only {taxonomies or 'nothing'}. "
+                f"This reader covers us-gaap only, so a 20-F filer reporting under "
+                f"IFRS is not unreadable, it is unread."
+            )
+        raise EdgarError(
+            f"{ticker}: files us-gaap facts but no Assets tag, cannot read a balance sheet"
+        )
     latest = years[-1]
     prior = years[-2] if len(years) > 1 else None
 

@@ -48,3 +48,19 @@ def quote_from(
         shares_float=shares_float,
         beta=beta,
     )
+
+
+def minimal_card(balance=None) -> str:
+    """A rendered markdown card, built from the smallest frame that works.
+
+    Exists so the balance-sheet section can be asserted on without a test having
+    to know anything about medians, levels or the 7-Step Test.
+    """
+    from stocksignal.card_render import render_card_markdown
+    from stocksignal.config import DEFAULT_CONFIG
+    from stocksignal.opportunity import build_card
+
+    df = make_bars([100.0 + i * 0.1 for i in range(400)])
+    return render_card_markdown(
+        build_card("TEM", df, DEFAULT_CONFIG, balance=balance)
+    )

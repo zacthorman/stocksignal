@@ -1,0 +1,27 @@
+{
+  "NVDA": {
+    "call": "positive",
+    "basis": [
+      "Q2 revenue up 122% YoY, data centre segment up 154%",
+      "guidance range sits entirely above consensus",
+      "investor presentation names three new product lines for FY26"
+    ],
+    "researched_on": "2026-08-11",
+    "source": "IR quarterly release + 6 analyst write-ups"
+  },
+  "AMD": {
+    "call": "negative",
+    "basis": [
+      "guidance range spans negative to barely positive EPS, the page 222 warning sign",
+      "client segment revenue down two quarters running"
+    ],
+    "researched_on": "2026-08-09",
+    "source": "IR quarterly release"
+  },
+  "TSLA": {
+    "call": "positive",
+    "basis": ["margins recovering, energy storage at record"],
+    "researched_on": "2026-01-15",
+    "source": "stale on purpose, to show the ageing rule"
+  }
+}

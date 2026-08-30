@@ -54,6 +54,15 @@ def render_card_telegram(card: OpportunityCard) -> str:
 
     lines.append(f"<b>{escape(card.ticker)}</b> · {card.close:,.2f} · {card.as_of.isoformat()}")
     lines.append(f"<i>{escape(card.play_type)} play · {escape(card.direction.describe())}</i>")
+
+    # ONE LINE ON THE PHONE, AND IT IS ALWAYS PRESENT. A card that silently
+    # dropped the balance reading whenever there was none would look exactly
+    # like one where the sheet came back clean, which is the failure this
+    # project has now written down in three separate modules.
+    if card.balance is None:
+        lines.append("<i>Balance sheet: no reading</i>")
+    else:
+        lines.append(f"<i>Balance sheet: {escape(card.balance.summary)}</i>")
     lines.append("")
 
     if card.target.price is not None:
@@ -124,6 +133,30 @@ def render_card_markdown(card: OpportunityCard) -> str:
         if card.direction.source:
             add(f"- source: {card.direction.source}")
         add("")
+
+    # PLACED BEFORE STEP 1, AND OUTSIDE THE COURSE'S NUMBERING ON PURPOSE. The
+    # 7-Step Test never asks about the balance sheet, so this cannot be a step
+    # without inventing one. It goes first rather than last because the source
+    # it comes from treats it as the thing you check before you get interested:
+    # "I've seen more investors do their dough buying cheap stocks without
+    # checking the balance sheet than any other mistake."
+    add("## The balance sheet, which the 7-Step Test does not ask about")
+    add("")
+    if card.balance is None:
+        add(
+            "**No reading.** This card is a price and geometry reading only, with nothing "
+            "said about cash, debt, or what the assets are made of. Build the readings with "
+            "`scripts/balance_sweep.py --store data/balance.json`."
+        )
+    else:
+        out.extend(card.balance.detail())
+    add("")
+    add(
+        "_Not part of the 7-Step Test, and deliberately not folded into the ledger below: "
+        "page 131 lets a big elevating factor counter a deprecating one, and a balance sheet "
+        "flag is not the sort of thing three good factors should be able to talk past._"
+    )
+    add("")
 
     add("## 1. Timeframe")
     add("")

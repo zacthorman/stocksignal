@@ -18,6 +18,7 @@ from stocksignal import __version__, signal_log
 from stocksignal.backtest import TESTS_RUN
 from stocksignal.backtest import render as render_backtest
 from stocksignal.backtest import run as run_backtest
+from stocksignal.balance_store import BalanceStore
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR, Config
 from stocksignal.data import (
     PROVIDERS,
@@ -123,12 +124,25 @@ def scan(
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
     report = run_scan(symbols, source, cfg)
-    render_terminal(report, console)
+
+    # Loaded once and passed down, rather than read inside the renderers. Digest
+    # rendering has no business touching the filesystem, and a scan whose store
+    # is missing must still produce a digest that says so.
+    balance = BalanceStore.load()
+    if balance is None:
+        console.print("[yellow]no balance readings: data/balance.json is absent[/yellow]")
+    elif balance.is_stale(report.as_of):
+        console.print(
+            f"[yellow]balance readings are {balance.days_old(report.as_of)} days old, "
+            f"rerun scripts/balance_sweep.py[/yellow]"
+        )
+
+    render_terminal(report, console, balance=balance)
 
     if save:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         out = OUT_DIR / f"digest-{report.as_of.isoformat()}.md"
-        out.write_text(render_markdown(report))
+        out.write_text(render_markdown(report, balance=balance))
         console.print(f"[green]written[/green] {out}")
 
     if log:

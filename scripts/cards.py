@@ -55,6 +55,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from stocksignal.balance_store import BalanceStore  # noqa: E402
 from stocksignal.card_render import (  # noqa: E402
     render_card_markdown,
     render_cards_telegram,
@@ -69,6 +70,7 @@ from stocksignal.opportunity import (  # noqa: E402
 )
 
 DIRECTIONS = ROOT / "data" / "directions.json"
+BALANCE = ROOT / "data" / "balance.json"
 DEFAULT_STALE_DAYS = 90
 """A quarter. The direction call is read off the last quarterly report (pages
 220 to 222), so it has a natural shelf life of exactly one reporting cycle."""
@@ -201,6 +203,20 @@ def main() -> int:
             file=sys.stderr,
         )
 
+    balance = BalanceStore.load(BALANCE)
+    if balance is None:
+        print(
+            f"no balance readings at {BALANCE}. Every card will say so rather than "
+            "printing a price reading that looks complete.",
+            file=sys.stderr,
+        )
+    elif balance.is_stale():
+        print(
+            f"balance readings are {balance.days_old()} days old, so at least one quarter "
+            "of accounts has been filed since. Rerun scripts/balance_sweep.py --store.",
+            file=sys.stderr,
+        )
+
     card_cfg = CardConfig(account_size=args.account)
     cards: list[OpportunityCard] = []
     errors: list[tuple[str, str]] = []
@@ -221,6 +237,7 @@ def main() -> int:
                 DEFAULT_CONFIG,
                 card_cfg,
                 directions.get(symbol, GrowthDirection()),
+                balance=balance.readings.get(symbol) if balance else None,
             )
         )
 

@@ -1,0 +1,3688 @@
+{
+  "as_of": "2026-08-30",
+  "readings": {
+    "AAOI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +109% against payables at +37%, a 72 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +109% while revenue grew +83%, a 26 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 171 to 196. It is taking 25 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 206m, covering 80% of current liabilities.",
+        "2. 58% of assets are current, current ratio 2.63.",
+        "3. Debt of 68m against cash, so net CASH of 138m.",
+        "4. Receivables +109% against payables at +37%, 196 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "AAON": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +113% while revenue grew +20%, a 93 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 45 to 80. It is taking 35 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 0m, covering 0% of current liabilities.",
+        "2. 52% of assets are current, 5% are goodwill and intangibles, current ratio 2.63.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables +113% against payables at +147%, 80 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ACLS": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 145m, covering 74% of current liabilities.",
+        "2. 69% of assets are current, current ratio 4.77.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -17% against payables at -10%, 73 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ACMR": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +30% while revenue grew +15%, a 15 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 181 to 204. It is taking 24 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 757m, covering 102% of current liabilities.",
+        "2. 85% of assets are current, current ratio 3.27.",
+        "3. Debt of 249m against cash, so net CASH of 508m.",
+        "4. Receivables +30%, 204 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ADEA": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "59% of total assets are goodwill and intangibles. NAV is 481m but NTAV is -137m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -137m, because 617m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew -16% against payables at -40%, a 24 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 73m, covering 92% of current liabilities.",
+        "2. 29% of assets are current, 59% are goodwill and intangibles, current ratio 3.81.",
+        "3. Debt of 439m against cash, so net debt of 366m.",
+        "4. Receivables -16% against payables at -40%, 24 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "AEHR": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 116m, covering 652% of current liabilities.",
+        "2. 75% of assets are current, 8% are goodwill and intangibles, current ratio 10.33.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "AEIS": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 791m, covering 80% of current liabilities.",
+        "2. 62% of assets are current, 12% are goodwill and intangibles, current ratio 1.59.",
+        "3. Debt of 1,135m against cash, so net debt of 344m.",
+        "4. Receivables +23% against payables at +56%, 66 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AEVA": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +183% against payables at +8%, a 175 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +183% while revenue grew +99%, a 84 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 48 to 68. It is taking 20 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 72m, covering 202% of current liabilities.",
+        "2. 85% of assets are current, 0% are goodwill and intangibles, current ratio 4.28.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +183% against payables at +8%, 68 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "AFRM": {
+      "coverage": 2,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 8,164m exceeds equity of 5,484m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,630m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt of 9,794m against cash, so net debt of 8,164m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "AGL": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 174m, covering 16% of current liabilities.",
+        "2. 86% of assets are current, 5% are goodwill and intangibles, current ratio 1.02.",
+        "3. Debt of 54m against cash, so net CASH of 119m.",
+        "4. Receivables -34% against payables at -42%, 41 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AIP": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -21m, because 6m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew -7% against payables at -37%, a 30 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 34m, covering 46% of current liabilities.",
+        "2. 72% of assets are current, 6% are goodwill and intangibles, current ratio 1.13.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -7% against payables at -37%, 99 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "ALAB": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +114% against payables at +57%, a 57 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 168m, covering 126% of current liabilities.",
+        "2. 89% of assets are current, current ratio 10.24.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +114% against payables at +57%, 36 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ALGM": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 169m, covering 116% of current liabilities.",
+        "2. 36% of assets are current, 31% are goodwill and intangibles, current ratio 3.45.",
+        "3. Debt of 282m against cash, so net debt of 114m.",
+        "4. Receivables +10%, 38 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ALGT": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.95, below 1.0. Current liabilities exceed current assets by 51m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 173m, covering 17% of current liabilities.",
+        "2. 23% of assets are current, current ratio 0.95.",
+        "3. Debt of 118m against cash, so net CASH of 55m.",
+        "4. Receivables -37% against payables at +4%, 9 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ALK": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.50, below 1.0. Current liabilities exceed current assets by 3,323m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 4,682m exceeds equity of 4,118m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 627m, covering 10% of current liabilities.",
+        "2. 16% of assets are current, 17% are goodwill and intangibles, current ratio 0.50.",
+        "3. Debt of 5,309m against cash, so net debt of 4,682m.",
+        "4. Receivables +1% against payables at +74%, 14 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "ALMU": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +1503% against payables at +14%, a 1489 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +1503% while revenue grew +408%, a 1096 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 24 to 75. It is taking 51 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 4m, covering 515% of current liabilities.",
+        "2. 89% of assets are current, 0% are goodwill and intangibles, current ratio 24.59.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +1503% against payables at +14%, 75 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ALNT": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 41m, covering 59% of current liabilities.",
+        "2. 44% of assets are current, 23% are goodwill and intangibles, current ratio 3.66.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +13% against payables at +5%, 58 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AMAT": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 7,241m, covering 91% of current liabilities.",
+        "2. 58% of assets are current, 11% are goodwill and intangibles, current ratio 2.61.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables -1% against payables at +26%, 67 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AMBA": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 191m, covering 107% of current liabilities.",
+        "2. 51% of assets are current, 38% are goodwill and intangibles, current ratio 2.31.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +32% against payables at +148%, 37 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AMBQ": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 140m, covering 731% of current liabilities.",
+        "2. 91% of assets are current, 6% are goodwill and intangibles, current ratio 8.76.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -30% against payables at +192%, 37 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AMD": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "54% of total assets are goodwill and intangibles. NAV is 62,999m but NTAV is 21,168m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 5,539m, covering 59% of current liabilities.",
+        "2. 35% of assets are current, 54% are goodwill and intangibles, current ratio 2.85.",
+        "3. Debt of 3,222m against cash, so net CASH of 2,317m.",
+        "4. Receivables +2% against payables at +19%, 67 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "AMKR": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +28% while revenue grew +6%, a 22 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,378m, covering 81% of current liabilities.",
+        "2. 48% of assets are current, 0% are goodwill and intangibles, current ratio 2.27.",
+        "3. Debt of 1,619m against cash, so net debt of 240m.",
+        "4. Receivables +28% against payables at +28%, 74 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "AMRC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 109m, covering 12% of current liabilities.",
+        "2. 31% of assets are current, 2% are goodwill and intangibles, current ratio 1.46.",
+        "3. Debt of 149m against cash, so net debt of 41m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "AMSC": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +50% while revenue grew +34%, a 16 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 141m, covering 102% of current liabilities.",
+        "2. 45% of assets are current, 26% are goodwill and intangibles, current ratio 2.39.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +50% against payables at +93%, 85 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ANET": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +65% while revenue grew +29%, a 37 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,964m, covering 37% of current liabilities.",
+        "2. 84% of assets are current, 4% are goodwill and intangibles, current ratio 3.05.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +65% against payables at +71%, 76 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ANRO": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 176m, covering 1558% of current liabilities.",
+        "2. 96% of assets are current, current ratio 15.69.",
+        "3. Debt of 1m against cash, so net CASH of 176m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "AOSL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +23% while revenue grew -2%, a 26 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 181m, covering 142% of current liabilities.",
+        "2. 45% of assets are current, 0% are goodwill and intangibles, current ratio 3.44.",
+        "3. Debt of 4m against cash, so net CASH of 177m.",
+        "4. Receivables +23%, 23 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "APLD": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +724% against payables at +57%, a 667 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,592m, covering 137% of current liabilities.",
+        "2. 47% of assets are current, 1% are goodwill and intangibles, current ratio 4.01.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +724% against payables at +57%."
+      ],
+      "verdict": "WATCH"
+    },
+    "APP": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,487m, covering 186% of current liabilities.",
+        "2. 61% of assets are current, 27% are goodwill and intangibles, current ratio 3.32.",
+        "3. Debt of 3,513m against cash, so net debt of 1,026m.",
+        "4. Receivables +42% against payables at +48%, 121 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ASTS": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +2595% against payables at +175%, a 2420 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 2,336m, covering 1554% of current liabilities.",
+        "2. 49% of assets are current, current ratio 16.35.",
+        "3. Debt of 12m against cash, so net CASH of 2,324m.",
+        "4. Receivables +2595% against payables at +175%."
+      ],
+      "verdict": "WATCH"
+    },
+    "ASYS": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 18m, covering 87% of current liabilities.",
+        "2. 65% of assets are current, 1% are goodwill and intangibles, current ratio 2.94.",
+        "3. Debt of 0m against cash, so net CASH of 18m.",
+        "4. Receivables -10% against payables at +44%, 91 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "AVGO": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "76% of total assets are goodwill and intangibles. NAV is 81,292m but NTAV is -48,782m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -48,782m, because 130,074m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +62% against payables at -6%, a 68 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +62% while revenue grew +24%, a 38 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 16,178m, covering 87% of current liabilities.",
+        "2. 18% of assets are current, 76% are goodwill and intangibles, current ratio 1.71.",
+        "3. Debt of 70,272m against cash, so net debt of 54,094m.",
+        "4. Receivables +62% against payables at -6%, 41 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "AXTI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +5% while revenue grew -11%, a 16 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 120m, covering 133% of current liabilities.",
+        "2. 57% of assets are current, current ratio 2.72.",
+        "3. Debt of 68m against cash, so net CASH of 52m.",
+        "4. Receivables +5% against payables at +5%, 111 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "BAND": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -96m, because 496m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 103m, covering 67% of current liabilities.",
+        "2. 21% of assets are current, 47% are goodwill and intangibles, current ratio 1.42.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +6% against payables at +50%, 44 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "BE": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,454m, covering 393% of current liabilities.",
+        "2. 85% of assets are current, current ratio 5.98.",
+        "3. Debt of 2,622m against cash, so net debt of 168m.",
+        "4. Receivables +11% against payables at +119%, 68 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "BEAM": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 295m, covering 304% of current liabilities.",
+        "2. 86% of assets are current, current ratio 13.09.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "BELFA": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 58m, covering 45% of current liabilities.",
+        "2. 41% of assets are current, 46% are goodwill and intangibles, current ratio 3.02.",
+        "3. Debt of 198m against cash, so net debt of 140m.",
+        "4. Receivables +9% against payables at +8%, 66 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "BETR": {
+      "coverage": 1,
+      "flags": [],
+      "notes": [
+        "1. Cash of 100m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "BKSY": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +132% while revenue grew +4%, a 128 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 53 to 117. It is taking 64 days longer to get paid than a year ago.",
+          "severity": "watch"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 173m exceeds equity of 95m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 42m, covering 71% of current liabilities.",
+        "2. 54% of assets are current, 4% are goodwill and intangibles, current ratio 3.48.",
+        "3. Debt of 216m against cash, so net debt of 173m.",
+        "4. Receivables +132%, 117 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "BLZE": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +90% against payables at +9%, a 81 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +90% while revenue grew +14%, a 76 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 29m, covering 47% of current liabilities.",
+        "2. 34% of assets are current, current ratio 1.07.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +90% against payables at +9%, 9 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "BMNR": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 512m, covering 5140% of current liabilities.",
+        "2. 6% of assets are current, current ratio 51.50.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "CCL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.32, below 1.0. Current liabilities exceed current assets by 8,873m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 28,058m exceeds equity of 12,284m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,928m, covering 15% of current liabilities.",
+        "2. 8% of assets are current, 3% are goodwill and intangibles, current ratio 0.32.",
+        "3. Debt of 29,986m against cash, so net debt of 28,058m.",
+        "4. Receivables +15% against payables at +10%, 9 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "CDE": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +131% against payables at +18%, a 113 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +131% while revenue grew +96%, a 35 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 554m, covering 141% of current liabilities.",
+        "2. 21% of assets are current, 13% are goodwill and intangibles, current ratio 2.47.",
+        "3. Debt of 17m against cash, so net CASH of 537m.",
+        "4. Receivables +131% against payables at +18%, 12 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CEVA": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +33% while revenue grew +2%, a 30 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 127 to 164. It is taking 37 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 41m, covering 141% of current liabilities.",
+        "2. 73% of assets are current, 15% are goodwill and intangibles, current ratio 9.93.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +33%, 164 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CHRN": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.51, below 1.0. Current liabilities exceed current assets by 43m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +231% against payables at +128%, a 103 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +231% while revenue grew -15%, a 246 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 16 to 64. It is taking 48 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 10m, covering 11% of current liabilities.",
+        "2. 14% of assets are current, 17% are goodwill and intangibles, current ratio 0.51.",
+        "3. Debt of 3m against cash, so net CASH of 6m.",
+        "4. Receivables +231% against payables at +128%, 64 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "CHYM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 466m, covering 120% of current liabilities.",
+        "2. 89% of assets are current, 3% are goodwill and intangibles, current ratio 4.53.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +19% against payables at +8%, 43 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "CIEN": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,092m, covering 83% of current liabilities.",
+        "2. 61% of assets are current, 13% are goodwill and intangibles, current ratio 2.73.",
+        "3. Debt of 12m against cash, so net CASH of 1,080m.",
+        "4. Receivables +7% against payables at +28%, 75 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "CIFR": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 2,121m exceeds equity of 806m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 628m, covering 90% of current liabilities.",
+        "2. 62% of assets are current, 2% are goodwill and intangibles, current ratio 3.79.",
+        "3. Debt of 2,749m against cash, so net debt of 2,121m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "CLFD": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +100% while revenue grew +20%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 21m, covering 59% of current liabilities.",
+        "2. 65% of assets are current, 5% are goodwill and intangibles, current ratio 5.42.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +30% against payables at +153%, 44 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CLS": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 596m, covering 15% of current liabilities.",
+        "2. 79% of assets are current, 8% are goodwill and intangibles, current ratio 1.44.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +28% against payables at +44%, 78 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "CMCO": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "63% of total assets are goodwill and intangibles. NAV is 1,449m but NTAV is -1,570m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -1,570m and the intangibles are NOT mostly goodwill, so they were largely self-generated. Strip them and the equity is worth less than nothing. This is the shape of a company capitalising its own costs onto the balance sheet.",
+          "severity": "critical"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +130% while revenue grew +24%, a 106 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 63 to 116. It is taking 54 days longer to get paid than a year ago.",
+          "severity": "watch"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 2,451m exceeds equity of 1,449m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 97m, covering 17% of current liabilities.",
+        "2. 25% of assets are current, 63% are goodwill and intangibles, current ratio 2.02.",
+        "3. Debt of 2,547m against cash, so net debt of 2,451m.",
+        "4. Receivables +130%, 116 days of revenue outstanding."
+      ],
+      "verdict": "AVOID"
+    },
+    "COGT": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 312m, covering 488% of current liabilities.",
+        "2. 97% of assets are current, current ratio 14.23.",
+        "3. Debt of 223m against cash, so net CASH of 89m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "COHR": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +39% while revenue grew +23%, a 17 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,162m, covering 41% of current liabilities.",
+        "2. 38% of assets are current, 24% are goodwill and intangibles, current ratio 2.43.",
+        "3. Debt of 3,230m against cash, so net debt of 2,068m.",
+        "4. Receivables +39% against payables at +125%, 69 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "COHU": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 227m, covering 208% of current liabilities.",
+        "2. 60% of assets are current, 29% are goodwill and intangibles, current ratio 6.88.",
+        "3. Debt of 316m against cash, so net debt of 89m.",
+        "4. Receivables +19% against payables at +33%, 88 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "COIN": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +2886% while revenue grew +9%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 11,285m, covering 130% of current liabilities.",
+        "2. 69% of assets are current, 19% are goodwill and intangibles, current ratio 2.34.",
+        "3. Debt of 8,476m against cash, so net CASH of 2,809m.",
+        "4. Receivables +16% against payables at +86%, 16 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CORZ": {
+      "coverage": 2,
+      "flags": [
+        {
+          "check": "negative equity",
+          "message": "Total liabilities exceed total assets, so equity is NEGATIVE at -963m. This is not the intangibles trap: the company reports no goodwill and no intangibles, so there is nothing to strip. NAV and NTAV are the same number and both are below zero.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 311m, covering 40% of current liabilities.",
+        "2. 38% of assets are current, current ratio 1.15.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "CRCL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +880% against payables at +26%, a 854 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +880% while revenue grew +624%, a 256 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 154 to 209. It is taking 55 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,526m, covering 2% of current liabilities.",
+        "2. 99% of assets are current, 1% are goodwill and intangibles, current ratio 1.03.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +880% against payables at +26%, 209 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CRDO": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,165m, covering 591% of current liabilities.",
+        "2. 87% of assets are current, 5% are goodwill and intangibles, current ratio 10.15.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +44% against payables at +91%, 64 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "CRWV": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.46, below 1.0. Current liabilities exceed current assets by 8,952m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +660% against payables at +87%, a 573 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +660% while revenue grew +168%, a 492 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 79 to 225. It is taking 146 days longer to get paid than a year ago.",
+          "severity": "watch"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 24,954m exceeds equity of 3,335m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 3,127m, covering 19% of current liabilities.",
+        "2. 15% of assets are current, 3% are goodwill and intangibles, current ratio 0.46.",
+        "3. Debt of 28,081m against cash, so net debt of 24,954m.",
+        "4. Receivables +660% against payables at +87%, 225 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "CTEV": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.86, below 1.0. Current liabilities exceed current assets by 37m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "intangibles",
+          "message": "88% of total assets are goodwill and intangibles. NAV is -167m but NTAV is -4,458m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -4,458m, because 4,290m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +42% against payables at -30%, a 72 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +42% while revenue grew +4%, a 38 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 4,610m exceeds equity of -174m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 17m, covering 6% of current liabilities.",
+        "2. 5% of assets are current, 88% are goodwill and intangibles, current ratio 0.86.",
+        "3. Debt of 4,627m against cash, so net debt of 4,610m.",
+        "4. Receivables +42% against payables at -30%, 48 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "CTGO": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.90, below 1.0. Current liabilities exceed current assets by 8m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 65m, covering 85% of current liabilities.",
+        "2. 40% of assets are current, current ratio 0.90.",
+        "3. Debt of 38m against cash, so net CASH of 27m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "CUE": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +487% against payables at +40%, a 447 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +487% while revenue grew +196%, a 291 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 37 to 74. It is taking 37 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 27m, covering 201% of current liabilities.",
+        "2. 88% of assets are current, current ratio 2.74.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +487% against payables at +40%, 74 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "CVNA": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,327m, covering 153% of current liabilities.",
+        "2. 50% of assets are current, 0% are goodwill and intangibles, current ratio 4.31.",
+        "3. Debt of 5,129m against cash, so net debt of 2,802m.",
+        "4. Receivables -19% against payables at +0%, 4 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "DAVE": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 81m, covering 71% of current liabilities.",
+        "2. 90% of assets are current, 3% are goodwill and intangibles, current ratio 3.83.",
+        "3. Debt of 75m against cash, so net CASH of 6m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "DELL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.91, below 1.0. Current liabilities exceed current assets by 5,667m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -26,550m, because 24,080m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +71% while revenue grew +19%, a 52 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 27,965m exceeds equity of -2,470m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 11,528m, covering 18% of current liabilities.",
+        "2. 57% of assets are current, 24% are goodwill and intangibles, current ratio 0.91.",
+        "3. Debt of 39,493m against cash, so net debt of 27,965m.",
+        "4. Receivables +71% against payables at +61%, 57 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "DIOD": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 367m, covering 97% of current liabilities.",
+        "2. 51% of assets are current, 9% are goodwill and intangibles, current ratio 3.32.",
+        "3. Debt of 26m against cash, so net CASH of 342m.",
+        "4. Receivables -6% against payables at +12%, 76 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "DOCN": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.69, below 1.0. Current liabilities exceed current assets by 192m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -477m, because 448m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +25% against payables at -29%, a 54 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 1,366m exceeds equity of -29m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 254m, covering 41% of current liabilities.",
+        "2. 23% of assets are current, 24% are goodwill and intangibles, current ratio 0.69.",
+        "3. Debt of 1,621m against cash, so net debt of 1,366m.",
+        "4. Receivables +25% against payables at -29%, 37 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "ECG": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 170m, covering 23% of current liabilities.",
+        "2. 75% of assets are current, 8% are goodwill and intangibles, current ratio 1.76.",
+        "3. Debt of 297m against cash, so net debt of 126m.",
+        "4. Receivables +30% against payables at +64%, 75 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ENPH": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 1,362m exceeds equity of 1,087m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 474m, covering 38% of current liabilities.",
+        "2. 74% of assets are current, 7% are goodwill and intangibles, current ratio 2.07.",
+        "3. Debt of 1,837m against cash, so net debt of 1,362m.",
+        "4. Receivables +3% against payables at +126%, 57 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ENTG": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "58% of total assets are goodwill and intangibles. Neither NAV nor NTAV can be computed, the sheet does not report them. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 360m, covering 74% of current liabilities.",
+        "2. 20% of assets are current, 58% are goodwill and intangibles, current ratio 3.35.",
+        "3. Debt of 3,698m against cash, so net debt of 3,337m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "ESI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "57% of total assets are goodwill and intangibles. NAV is 2,689m but NTAV is -210m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -210m, because 2,899m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 626m, covering 146% of current liabilities.",
+        "2. 31% of assets are current, 57% are goodwill and intangibles, current ratio 3.68.",
+        "3. Debt of 1,636m against cash, so net debt of 1,010m.",
+        "4. Receivables +18% against payables at +36%, 74 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "FCEL": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 278m, covering 410% of current liabilities.",
+        "2. 48% of assets are current, 0% are goodwill and intangibles, current ratio 6.63.",
+        "3. Debt of 16m against cash, so net CASH of 262m.",
+        "4. Receivables -66% against payables at -25%, 9 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "FCX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +69% against payables at +6%, a 63 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +69% while revenue grew +0%, a 69 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 3,824m, covering 64% of current liabilities.",
+        "2. 24% of assets are current, 1% are goodwill and intangibles, current ratio 2.29.",
+        "3. Debt of 9,379m against cash, so net debt of 5,555m.",
+        "4. Receivables +69% against payables at +6%, 14 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "FEIM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2m, covering 8% of current liabilities.",
+        "2. 53% of assets are current, 0% are goodwill and intangibles, current ratio 2.29.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -20%."
+      ],
+      "verdict": "SOLID"
+    },
+    "FIX": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 982m, covering 29% of current liabilities.",
+        "2. 64% of assets are current, 23% are goodwill and intangibles, current ratio 1.21.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "FLEX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +27% while revenue grew +8%, a 19 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 2,389m, covering 20% of current liabilities.",
+        "2. 74% of assets are current, 7% are goodwill and intangibles, current ratio 1.36.",
+        "3. Debt of 3,751m against cash, so net debt of 1,362m.",
+        "4. Receivables +27% against payables at +56%, 61 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "FLY": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +4495% against payables at -5%, a 4500 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +4495% while revenue grew +163%, a 4332 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 6 to 105. It is taking 99 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 793m, covering 371% of current liabilities.",
+        "2. 53% of assets are current, 34% are goodwill and intangibles, current ratio 4.51.",
+        "3. Debt of 7m against cash, so net CASH of 786m.",
+        "4. Receivables +4495% against payables at -5%, 105 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "FN": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 347m, covering 25% of current liabilities.",
+        "2. 81% of assets are current, current ratio 2.25.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +34%, 80 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "FORM": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +20% against payables at -24%, a 44 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +20% while revenue grew +3%, a 17 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +57% while revenue grew +3%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 103m, covering 83% of current liabilities.",
+        "2. 45% of assets are current, 19% are goodwill and intangibles, current ratio 4.50.",
+        "3. Debt of 13m against cash, so net CASH of 90m.",
+        "4. Receivables +20% against payables at -24%, 58 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "FTAI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 3,148m exceeds equity of 334m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 300m, covering 75% of current liabilities.",
+        "2. 48% of assets are current, 2% are goodwill and intangibles, current ratio 5.28.",
+        "3. Debt of 3,449m against cash, so net debt of 3,148m.",
+        "4. Receivables +39% against payables at +201%, 31 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "FTH": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 9m, covering 204% of current liabilities.",
+        "2. 94% of assets are current, current ratio 5.06.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "FTRE": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.98, below 1.0. Current liabilities exceed current assets by 16m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "intangibles",
+          "message": "58% of total assets are goodwill and intangibles. NAV is 564m but NTAV is -1,018m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -1,018m, because 1,582m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 878m exceeds equity of 564m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 175m, covering 19% of current liabilities.",
+        "2. 33% of assets are current, 58% are goodwill and intangibles, current ratio 0.98.",
+        "3. Debt of 1,053m against cash, so net debt of 878m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "CONCERN"
+    },
+    "GCT": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 380m, covering 111% of current liabilities.",
+        "2. 57% of assets are current, 1% are goodwill and intangibles, current ratio 2.02.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +15% against payables at +35%, 19 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "GEV": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.98, below 1.0. Current liabilities exceed current assets by 756m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 8,848m, covering 22% of current liabilities.",
+        "2. 64% of assets are current, 8% are goodwill and intangibles, current ratio 0.98.",
+        "3. Debt of 63m against cash, so net CASH of 8,785m.",
+        "4. Receivables +20%, 94 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "GHM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 7m, covering 4% of current liabilities.",
+        "2. 48% of assets are current, 12% are goodwill and intangibles, current ratio 1.00.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -5% against payables at -6%, 50 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "GLSI": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 6m, covering 106% of current liabilities.",
+        "2. 100% of assets are current, current ratio 1.06.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "GLW": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +35% while revenue grew +19%, a 16 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,526m, covering 27% of current liabilities.",
+        "2. 29% of assets are current, 10% are goodwill and intangibles, current ratio 1.59.",
+        "3. Debt of 804m against cash, so net CASH of 722m.",
+        "4. Receivables +35% against payables at +34%, 65 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "GLXY": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,246m, covering 23% of current liabilities.",
+        "2. 75% of assets are current, 1% are goodwill and intangibles, current ratio 1.60.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -38% against payables at +154%, 0 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "GNRC": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 341m, covering 28% of current liabilities.",
+        "2. 44% of assets are current, 38% are goodwill and intangibles, current ratio 2.03.",
+        "3. Debt of 13m against cash, so net CASH of 329m.",
+        "4. Receivables -2% against payables at -5%, 52 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "GRAL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "63% of total assets are goodwill and intangibles. NAV is 2,578m but NTAV is 727m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew -10% against payables at -57%, a 47 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 250m, covering 313% of current liabilities.",
+        "2. 33% of assets are current, 63% are goodwill and intangibles, current ratio 11.97.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -10% against payables at -57%, 45 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "HAPN": {
+      "coverage": 1,
+      "flags": [],
+      "notes": [
+        "1. Enough cash for normal operations: cash not reported.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "HIMS": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +426% against payables at +57%, a 369 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +426% while revenue grew +59%, a 367 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 229m, covering 57% of current liabilities.",
+        "2. 36% of assets are current, 22% are goodwill and intangibles, current ratio 1.90.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +426% against payables at +57%, 5 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "HL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +440% against payables at +15%, a 425 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +440% while revenue grew +53%, a 387 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 12 to 44. It is taking 31 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 242m, covering 104% of current liabilities.",
+        "2. 18% of assets are current, current ratio 2.72.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables +440% against payables at +15%, 44 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "HOOD": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 4,261m, covering 15% of current liabilities.",
+        "2. 95% of assets are current, 1% are goodwill and intangibles, current ratio 1.26.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "HUT": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +345% against payables at +40%, a 306 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +345% while revenue grew +45%, a 301 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 16 to 48. It is taking 33 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 45m, covering 12% of current liabilities.",
+        "2. 15% of assets are current, 8% are goodwill and intangibles, current ratio 1.09.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +345% against payables at +40%, 48 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "HYMC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 182m, covering 2350% of current liabilities.",
+        "2. 71% of assets are current, current ratio 24.24.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "IART": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -706m and the intangibles are NOT mostly goodwill, so they were largely self-generated. Strip them and the equity is worth less than nothing. This is the shape of a company capitalising its own costs onto the balance sheet.",
+          "severity": "critical"
+        }
+      ],
+      "notes": [
+        "1. Cash of 235m, covering 52% of current liabilities.",
+        "2. 32% of assets are current, 49% are goodwill and intangibles, current ratio 2.54.",
+        "3. Debt of 727m against cash, so net debt of 492m.",
+        "4. Receivables +2%, 62 days of revenue outstanding."
+      ],
+      "verdict": "AVOID"
+    },
+    "ICHR": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 98m, covering 76% of current liabilities.",
+        "2. 43% of assets are current, 40% are goodwill and intangibles, current ratio 3.16.",
+        "3. Debt of 130m against cash, so net debt of 31m.",
+        "4. Receivables -19% against payables at -8%, 27 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "IDR": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Enough cash for normal operations: cash not reported.",
+        "2. 44% of assets are current, current ratio 13.96.",
+        "3. Debt of 2m against cash.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "IESC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 127m, covering 20% of current liabilities.",
+        "2. 68% of assets are current, 9% are goodwill and intangibles, current ratio 1.71.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +18% against payables at +26%, 60 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "INBX": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 124m, covering 368% of current liabilities.",
+        "2. 91% of assets are current, current ratio 3.93.",
+        "3. Debt of 101m against cash, so net CASH of 24m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "INOD": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +66% while revenue grew +48%, a 18 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 82m, covering 163% of current liabilities.",
+        "2. 80% of assets are current, 10% are goodwill and intangibles, current ratio 2.68.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +66% against payables at +111%, 67 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "INTC": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +10% against payables at -21%, a 32 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 14,265m, covering 45% of current liabilities.",
+        "2. 30% of assets are current, 13% are goodwill and intangibles, current ratio 2.02.",
+        "3. Debt of 49,084m against cash, so net debt of 34,819m.",
+        "4. Receivables +10% against payables at -21%, 27 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "IONQ": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +553% against payables at +400%, a 153 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +553% while revenue grew +202%, a 351 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 86 to 187. It is taking 100 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,031m, covering 618% of current liabilities.",
+        "2. 39% of assets are current, 42% are goodwill and intangibles, current ratio 15.50.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +553% against payables at +400%, 187 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "IPGP": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 404m, covering 173% of current liabilities.",
+        "2. 59% of assets are current, 5% are goodwill and intangibles, current ratio 6.08.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +6% against payables at +11%, 66 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "IREN": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +1247% while revenue grew +41%, a 1206 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 5,896m, covering 265% of current liabilities.",
+        "2. 50% of assets are current, 2% are goodwill and intangibles, current ratio 3.55.",
+        "3. Debt of 7,762m against cash, so net debt of 1,867m.",
+        "4. Receivables +1247% against payables at +1487%, 11 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ISSC": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 3m, covering 16% of current liabilities.",
+        "2. 49% of assets are current, 29% are goodwill and intangibles, current ratio 3.04.",
+        "3. Debt of 27m against cash, so net debt of 24m.",
+        "4. Receivables +3% against payables at +55%, 56 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "JBL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +91% while revenue grew +3%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,933m, covering 14% of current liabilities.",
+        "2. 74% of assets are current, 6% are goodwill and intangibles, current ratio 1.00.",
+        "3. Debt of 2,885m against cash, so net debt of 952m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "KLAC": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +28% while revenue grew +12%, a 16 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,650m, covering 38% of current liabilities.",
+        "2. 69% of assets are current, 11% are goodwill and intangibles, current ratio 2.88.",
+        "3. Debt of 5,887m against cash, so net debt of 4,238m.",
+        "4. Receivables +28% against payables at +36%, 78 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "KLIC": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 216m, covering 115% of current liabilities.",
+        "2. 82% of assets are current, 7% are goodwill and intangibles, current ratio 4.79.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "KRMN": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "58% of total assets are goodwill and intangibles. NAV is 383m but NTAV is -256m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -256m, because 638m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +43% against payables at +12%, a 31 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 34m, covering 38% of current liabilities.",
+        "2. 26% of assets are current, 58% are goodwill and intangibles, current ratio 3.29.",
+        "3. Debt of 4m against cash, so net CASH of 30m.",
+        "4. Receivables +43% against payables at +12%, 61 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "KTOS": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +40% against payables at -15%, a 56 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +40% while revenue grew +19%, a 22 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 561m, covering 180% of current liabilities.",
+        "2. 51% of assets are current, 26% are goodwill and intangibles, current ratio 4.06.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +40% against payables at -15%, 45 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "LASR": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 99m, covering 154% of current liabilities.",
+        "2. 77% of assets are current, 4% are goodwill and intangibles, current ratio 3.79.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +46% against payables at +39%, 71 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "LEU": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,957m, covering 463% of current liabilities.",
+        "2. 97% of assets are current, 1% are goodwill and intangibles, current ratio 5.59.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables -62%, 25 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "LIF": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 494m, covering 511% of current liabilities.",
+        "2. 63% of assets are current, 14% are goodwill and intangibles, current ratio 6.26.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +39% against payables at +54%, 60 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "LITE": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,044m, covering 82% of current liabilities.",
+        "2. 57% of assets are current, 19% are goodwill and intangibles, current ratio 1.68.",
+        "3. Debt of 3,234m against cash, so net debt of 1,191m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "LMND": {
+      "coverage": 1,
+      "flags": [],
+      "notes": [
+        "1. Cash of 385m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "LRCX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +58% while revenue grew +26%, a 32 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 5,579m, covering 94% of current liabilities.",
+        "2. 66% of assets are current, 8% are goodwill and intangibles, current ratio 2.63.",
+        "3. Debt of 3,722m against cash, so net CASH of 1,857m.",
+        "4. Receivables +58% against payables at +52%, 84 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "LSCC": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +26% while revenue grew +3%, a 23 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 134m, covering 114% of current liabilities.",
+        "2. 41% of assets are current, 36% are goodwill and intangibles, current ratio 3.09.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +26% against payables at +53%, 71 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "LUNR": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of -247m exceeds equity of -755m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 583m, covering 467% of current liabilities.",
+        "2. 82% of assets are current, 4% are goodwill and intangibles, current ratio 4.96.",
+        "3. Debt of 335m against cash, so net CASH of 247m.",
+        "4. Receivables -73%, 21 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "MCHP": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "61% of total assets are goodwill and intangibles. NAV is 6,432m but NTAV is -2,296m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -2,296m, because 8,729m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +30% while revenue grew +7%, a 23 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 240m, covering 21% of current liabilities.",
+        "2. 17% of assets are current, 61% are goodwill and intangibles, current ratio 2.09.",
+        "3. Debt of 5,496m against cash, so net debt of 5,256m.",
+        "4. Receivables +30% against payables at +28%, 69 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "MEI": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 140m, covering 55% of current liabilities.",
+        "2. 46% of assets are current, 30% are goodwill and intangibles, current ratio 2.37.",
+        "3. Debt of 0m against cash, so net CASH of 139m.",
+        "4. Receivables +7% against payables at +7%, 92 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MIR": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "69% of total assets are goodwill and intangibles. NAV is 1,917m but NTAV is -562m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -562m, because 2,479m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 412m, covering 130% of current liabilities.",
+        "2. 25% of assets are current, 69% are goodwill and intangibles, current ratio 2.83.",
+        "3. Debt of 2m against cash, so net CASH of 411m.",
+        "4. Receivables +2% against payables at +2%, 72 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "MKSI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "54% of total assets are goodwill and intangibles. NAV is 2,719m but NTAV is -1,995m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -1,995m, because 4,714m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 3,732m exceeds equity of 2,719m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 418m, covering 45% of current liabilities.",
+        "2. 29% of assets are current, 54% are goodwill and intangibles, current ratio 2.71.",
+        "3. Debt of 4,150m against cash, so net debt of 3,732m.",
+        "4. Receivables +6% against payables at +19%, 60 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "MOD": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +53% while revenue grew +23%, a 30 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 74m, covering 10% of current liabilities.",
+        "2. 53% of assets are current, 11% are goodwill and intangibles, current ratio 1.94.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +53% against payables at +60%, 84 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "MP": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,166m, covering 390% of current liabilities.",
+        "2. 56% of assets are current, 0% are goodwill and intangibles, current ratio 7.24.",
+        "3. Debt of 1,066m against cash, so net CASH of 100m.",
+        "4. Receivables -21% against payables at +56%, 24 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MPWR": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +48% while revenue grew +26%, a 22 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,099m, covering 298% of current liabilities.",
+        "2. 52% of assets are current, 1% are goodwill and intangibles, current ratio 5.91.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +48% against payables at +35%, 33 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "MRAM": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 44m, covering 330% of current liabilities.",
+        "2. 77% of assets are current, 2% are goodwill and intangibles, current ratio 4.84.",
+        "3. Debt of 2m against cash, so net CASH of 43m.",
+        "4. Receivables -31% against payables at +127%, 54 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MRCY": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 214m, covering 65% of current liabilities.",
+        "2. 42% of assets are current, 48% are goodwill and intangibles, current ratio 2.96.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -37% against payables at +15%, 26 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MRVL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "58% of total assets are goodwill and intangibles. NAV is 14,308m but NTAV is 1,492m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +113% against payables at +73%, a 40 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +113% while revenue grew +42%, a 71 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 65 to 97. It is taking 32 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 2,639m, covering 82% of current liabilities.",
+        "2. 29% of assets are current, 58% are goodwill and intangibles, current ratio 2.01.",
+        "3. Debt of 4,471m against cash, so net debt of 1,832m.",
+        "4. Receivables +113% against payables at +73%, 97 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "MSTR": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,301m, covering 504% of current liabilities.",
+        "2. 4% of assets are current, current ratio 5.62.",
+        "3. Debt of 8,221m against cash, so net debt of 5,920m.",
+        "4. Receivables +14%, 157 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MTSI": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 112m, covering 34% of current liabilities.",
+        "2. 57% of assets are current, 20% are goodwill and intangibles, current ratio 3.71.",
+        "3. Debt of 501m against cash, so net debt of 388m.",
+        "4. Receivables +41% against payables at +56%, 56 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MU": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 9,642m, covering 84% of current liabilities.",
+        "2. 35% of assets are current, 2% are goodwill and intangibles, current ratio 2.52.",
+        "3. Debt of 12,093m against cash, so net debt of 2,451m.",
+        "4. Receivables +32% against payables at +32%, 70 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "MUX": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 51m, covering 80% of current liabilities.",
+        "2. 13% of assets are current, current ratio 1.69.",
+        "3. Debt of 126m against cash, so net debt of 75m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "MXL": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 73m, covering 39% of current liabilities.",
+        "2. 31% of assets are current, 46% are goodwill and intangibles, current ratio 1.34.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -46% against payables at +21%, 36 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "NNE": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 203m, covering 5312% of current liabilities.",
+        "2. 90% of assets are current, current ratio 53.48.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: prior-year figures not available."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "NOVT": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +22% while revenue grew +3%, a 19 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 381m, covering 179% of current liabilities.",
+        "2. 43% of assets are current, 46% are goodwill and intangibles, current ratio 3.69.",
+        "3. Debt of 289m against cash, so net CASH of 92m.",
+        "4. Receivables +22% against payables at +23%, 69 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "NUTX": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 186m, covering 118% of current liabilities.",
+        "2. 59% of assets are current, 4% are goodwill and intangibles, current ratio 3.41.",
+        "3. Debt of 13m against cash, so net CASH of 172m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "NVT": {
+      "coverage": 2,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "66% of total assets are goodwill and intangibles. NAV is 3,730m but NTAV is -824m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -824m, because 4,554m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Enough cash for normal operations: cash not reported.",
+        "2. 24% of assets are current, 66% are goodwill and intangibles, current ratio 1.63.",
+        "3. Debt of 1,574m against cash.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "CONCERN"
+    },
+    "NX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -94m and the intangibles are NOT mostly goodwill, so they were largely self-generated. Strip them and the equity is worth less than nothing. This is the shape of a company capitalising its own costs onto the balance sheet.",
+          "severity": "critical"
+        }
+      ],
+      "notes": [
+        "1. Cash of 76m, covering 27% of current liabilities.",
+        "2. 29% of assets are current, 42% are goodwill and intangibles, current ratio 2.04.",
+        "3. Debt of 704m against cash, so net debt of 628m.",
+        "4. Receivables +4% against payables at +6%."
+      ],
+      "verdict": "AVOID"
+    },
+    "NXT": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,095m, covering 94% of current liabilities.",
+        "2. 70% of assets are current, 14% are goodwill and intangibles, current ratio 2.45.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -12% against payables at -9%, 43 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "OCC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 0m, covering 1% of current liabilities.",
+        "2. 77% of assets are current, 1% are goodwill and intangibles, current ratio 1.82.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -6% against payables at +32%, 51 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "OKLO": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 788m, covering 3086% of current liabilities.",
+        "2. 82% of assets are current, 0% are goodwill and intangibles, current ratio 49.08.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "ON": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 2,148m, covering 167% of current liabilities.",
+        "2. 46% of assets are current, 16% are goodwill and intangibles, current ratio 4.52.",
+        "3. Debt of 2,980m against cash, so net debt of 833m.",
+        "4. Receivables -22% against payables at -0%, 55 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ONTO": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +134% while revenue grew +2%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 346m, covering 158% of current liabilities.",
+        "2. 54% of assets are current, 40% are goodwill and intangibles, current ratio 5.79.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -13% against payables at +91%, 98 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "OUST": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 67m, covering 95% of current liabilities.",
+        "2. 80% of assets are current, 4% are goodwill and intangibles, current ratio 3.93.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +55% against payables at +218%, 60 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "P": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +39% while revenue grew +16%, a 23 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 855m, covering 45% of current liabilities.",
+        "2. 66% of assets are current, 8% are goodwill and intangibles, current ratio 1.60.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables +39% against payables at +36%, 94 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "PDFS": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 42m, covering 59% of current liabilities.",
+        "2. 39% of assets are current, 23% are goodwill and intangibles, current ratio 2.28.",
+        "3. Debt of 69m against cash, so net debt of 27m.",
+        "4. Receivables +13% against payables at +107%, 138 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "PENG": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 454m, covering 96% of current liabilities.",
+        "2. 66% of assets are current, 14% are goodwill and intangibles, current ratio 2.25.",
+        "3. Debt of 482m against cash, so net debt of 28m.",
+        "4. Receivables +22% against payables at +47%, 82 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "PGY": {
+      "coverage": 1,
+      "flags": [],
+      "notes": [
+        "1. Cash of 235m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "PI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +25% against payables at -21%, a 46 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +25% while revenue grew -1%, a 26 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 329m exceeds equity of 209m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 48m, covering 38% of current liabilities.",
+        "2. 62% of assets are current, 6% are goodwill and intangibles, current ratio 2.68.",
+        "3. Debt of 378m against cash, so net debt of 329m.",
+        "4. Receivables +25% against payables at -21%, 72 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "PL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +50% while revenue grew +26%, a 24 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 229m, covering 49% of current liabilities.",
+        "2. 68% of assets are current, 15% are goodwill and intangibles, current ratio 1.65.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +50% against payables at +308%, 99 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "PLAB": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 492m, covering 297% of current liabilities.",
+        "2. 49% of assets are current, current ratio 5.37.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -2% against payables at +7%, 84 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "PLPC": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Enough cash for normal operations: cash not reported.",
+        "2. 56% of assets are current, 5% are goodwill and intangibles, current ratio 3.17.",
+        "3. Debt of 45m against cash.",
+        "4. Receivables +2%, 62 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "PLSE": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 81m, covering 1019% of current liabilities.",
+        "2. 88% of assets are current, 4% are goodwill and intangibles, current ratio 10.53.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: prior-year figures not available."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "POWI": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 59m, covering 84% of current liabilities.",
+        "2. 59% of assets are current, 13% are goodwill and intangibles, current ratio 6.51.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "POWL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +1128% while revenue grew +9%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 451m, covering 101% of current liabilities.",
+        "2. 84% of assets are current, 1% are goodwill and intangibles, current ratio 2.09.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +1% against payables at -9%, 72 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "PPTA": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 714m, covering 4874% of current liabilities.",
+        "2. 85% of assets are current, current ratio 51.08.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -29%."
+      ],
+      "verdict": "SOLID"
+    },
+    "PRLB": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +19% against payables at -3%, a 21 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 111m, covering 165% of current liabilities.",
+        "2. 31% of assets are current, 38% are goodwill and intangibles, current ratio 3.49.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +19% against payables at -3%, 54 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "PSIX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +31% against payables at -17%, a 48 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 41m, covering 45% of current liabilities.",
+        "2. 68% of assets are current, 7% are goodwill and intangibles, current ratio 3.15.",
+        "3. Debt of 97m against cash, so net debt of 55m.",
+        "4. Receivables +31% against payables at -17%, 46 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "QBTS": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 635m, covering 3004% of current liabilities.",
+        "2. 98% of assets are current, 0% are goodwill and intangibles, current ratio 42.38.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +12%, 24 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "QCOM": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 5,520m, covering 60% of current liabilities.",
+        "2. 51% of assets are current, 25% are goodwill and intangibles, current ratio 2.82.",
+        "3. Debt of 14,811m against cash, so net debt of 9,291m.",
+        "4. Receivables +22% against payables at +8%, 24 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "QXO": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "56% of total assets are goodwill and intangibles. NAV is 9,707m but NTAV is 776m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +42311% against payables at +13110%, a 29201 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +42311% while revenue grew +11925%, a 30386 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 17 to 61. It is taking 44 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 2,362m, covering 152% of current liabilities.",
+        "2. 35% of assets are current, 56% are goodwill and intangibles, current ratio 3.58.",
+        "3. Debt of 3,057m against cash, so net debt of 696m.",
+        "4. Receivables +42311% against payables at +13110%, 61 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "RDDT": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +69% against payables at +39%, a 30 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 954m, covering 352% of current liabilities.",
+        "2. 97% of assets are current, 2% are goodwill and intangibles, current ratio 11.56.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +69% against payables at +39%, 98 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "RELL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +38% against payables at -8%, a 46 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +38% while revenue grew +9%, a 28 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 32m, covering 87% of current liabilities.",
+        "2. 86% of assets are current, current ratio 4.75.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +38% against payables at -8%, 53 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "RGTI": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +5% while revenue grew -34%, a 39 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 82 to 131. It is taking 49 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 45m, covering 369% of current liabilities.",
+        "2. 68% of assets are current, current ratio 37.42.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +5% against payables at +119%, 131 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "RH": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -84m, because 144m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew -0% against payables at -19%, a 19 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 2,357m exceeds equity of 61m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 41m, covering 4% of current liabilities.",
+        "2. 23% of assets are current, 3% are goodwill and intangibles, current ratio 1.19.",
+        "3. Debt of 2,399m against cash, so net debt of 2,357m.",
+        "4. Receivables -0% against payables at -19%."
+      ],
+      "verdict": "CONCERN"
+    },
+    "RIOT": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.96, below 1.0. Current liabilities exceed current assets by 21m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 234m, covering 50% of current liabilities.",
+        "2. 11% of assets are current, 3% are goodwill and intangibles, current ratio 0.96.",
+        "3. Debt of 1,095m against cash, so net debt of 861m.",
+        "4. Receivables +10% against payables at +33%, 17 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "RKLB": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 829m, covering 248% of current liabilities.",
+        "2. 59% of assets are current, 19% are goodwill and intangibles, current ratio 4.08.",
+        "3. Debt of 152m against cash, so net CASH of 676m.",
+        "4. Receivables +7% against payables at +37%, 24 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "RMBS": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 183m, covering 152% of current liabilities.",
+        "2. 65% of assets are current, 19% are goodwill and intangibles, current ratio 8.20.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +12% against payables at +94%, 71 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ROOT": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 669m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt of 200m against cash, so net CASH of 469m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "RRX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "72% of total assets are goodwill and intangibles. NAV is 6,844m but NTAV is -3,186m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -3,186m, because 10,030m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 522m, covering 41% of current liabilities.",
+        "2. 19% of assets are current, 72% are goodwill and intangibles, current ratio 2.15.",
+        "3. Debt of 4,843m against cash, so net debt of 4,322m.",
+        "4. Receivables -38% against payables at +12%."
+      ],
+      "verdict": "CONCERN"
+    },
+    "SANM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 926m, covering 33% of current liabilities.",
+        "2. 83% of assets are current, current ratio 1.72.",
+        "3. Debt of 18m against cash, so net CASH of 909m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "SCCO": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +64% against payables at +40%, a 24 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +64% while revenue grew +17%, a 47 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 4,305m, covering 201% of current liabilities.",
+        "2. 39% of assets are current, 0% are goodwill and intangibles, current ratio 3.89.",
+        "3. Debt of 6,751m against cash, so net debt of 2,446m.",
+        "4. Receivables +64% against payables at +40%, 53 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "SEDG": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +67% while revenue grew +31%, a 35 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 455m, covering 57% of current liabilities.",
+        "2. 80% of assets are current, 3% are goodwill and intangibles, current ratio 2.17.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +67% against payables at +153%, 82 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "SEI": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 353m, covering 216% of current liabilities.",
+        "2. 23% of assets are current, 8% are goodwill and intangibles, current ratio 2.96.",
+        "3. Debt of 188m against cash, so net CASH of 165m.",
+        "4. Receivables +44% against payables at +268%."
+      ],
+      "verdict": "SOLID"
+    },
+    "SEZL": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 64m, covering 71% of current liabilities.",
+        "2. 88% of assets are current, 1% are goodwill and intangibles, current ratio 3.92.",
+        "3. Debt of 140m against cash, so net debt of 76m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "SOLID"
+    },
+    "SITM": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +18% against payables at -7%, a 25 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 17m, covering 20% of current liabilities.",
+        "2. 73% of assets are current, 18% are goodwill and intangibles, current ratio 11.30.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +18% against payables at -7%, 50 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "SMCI": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 5,170m, covering 220% of current liabilities.",
+        "2. 88% of assets are current, current ratio 5.25.",
+        "3. Debt of 112m against cash, so net CASH of 5,057m.",
+        "4. Receivables -19% against payables at -13%, 37 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "SMTC": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 195m, covering 71% of current liabilities.",
+        "2. 46% of assets are current, 35% are goodwill and intangibles, current ratio 2.37.",
+        "3. Debt of 491m against cash, so net debt of 296m.",
+        "4. Receivables -1%, 56 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "SNDK": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +341% while revenue grew +175%, a 166 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 53 to 85. It is taking 32 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 4,762m, covering 85% of current liabilities.",
+        "2. 57% of assets are current, 22% are goodwill and intangibles, current ratio 2.29.",
+        "3. No debt at all. A company with no debt cannot be forced under.",
+        "4. Receivables +341%, 85 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "SOFI": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 4,929m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt of 1,815m against cash, so net CASH of 3,114m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "SRPT": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 801m, covering 73% of current liabilities.",
+        "2. 76% of assets are current, 1% are goodwill and intangibles, current ratio 2.32.",
+        "3. Debt of 829m against cash, so net debt of 28m.",
+        "4. Receivables -34% against payables at +31%, 78 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "SSRM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 535m, covering 86% of current liabilities.",
+        "2. 21% of assets are current, current ratio 2.08.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +12% against payables at +34%, 21 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "ST": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "53% of total assets are goodwill and intangibles. NAV is 2,785m but NTAV is -784m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -784m, because 3,570m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 573m, covering 74% of current liabilities.",
+        "2. 30% of assets are current, 53% are goodwill and intangibles, current ratio 2.57.",
+        "3. Debt of 2,846m against cash, so net debt of 2,273m.",
+        "4. Receivables -0% against payables at +14%, 65 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "STRL": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -33m, because 1,140m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +75% while revenue grew +18%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 391m, covering 38% of current liabilities.",
+        "2. 39% of assets are current, 43% are goodwill and intangibles, current ratio 1.01.",
+        "3. Debt of 15m against cash, so net CASH of 376m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "STX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +60% against payables at +9%, a 51 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +60% while revenue grew +34%, a 26 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,704m, covering 54% of current liabilities.",
+        "2. 52% of assets are current, 12% are goodwill and intangibles, current ratio 1.67.",
+        "3. Debt of 3,788m against cash, so net debt of 2,084m.",
+        "4. Receivables +60% against payables at +9%, 46 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "SYM": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,245m, covering 72% of current liabilities.",
+        "2. 79% of assets are current, 6% are goodwill and intangibles, current ratio 1.09.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -7% against payables at +64%, 30 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "SYNA": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +26% against payables at -16%, a 42 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 442m, covering 63% of current liabilities.",
+        "2. 37% of assets are current, 41% are goodwill and intangibles, current ratio 1.12.",
+        "3. Debt of 1,277m against cash, so net debt of 834m.",
+        "4. Receivables +26% against payables at -16%, 50 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "TEM": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -334m, because 825m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +101% against payables at +52%, a 49 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +101% while revenue grew +83%, a 18 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 605m, covering 162% of current liabilities.",
+        "2. 51% of assets are current, 36% are goodwill and intangibles, current ratio 3.13.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +101% against payables at +52%, 89 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "TER": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 294m, covering 26% of current liabilities.",
+        "2. 47% of assets are current, 14% are goodwill and intangibles, current ratio 1.75.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +67% against payables at +100%."
+      ],
+      "verdict": "SOLID"
+    },
+    "TEX": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -23m, because 2,118m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 772m, covering 65% of current liabilities.",
+        "2. 44% of assets are current, 35% are goodwill and intangibles, current ratio 2.30.",
+        "3. Debt of 6m against cash, so net CASH of 766m.",
+        "4. Receivables +11% against payables at +18%, 48 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "TSLA": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 16,513m, covering 52% of current liabilities.",
+        "2. 50% of assets are current, 0% are goodwill and intangibles, current ratio 2.16.",
+        "3. Debt of 8,153m against cash, so net CASH of 8,360m.",
+        "4. Receivables +4% against payables at +7%, 18 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "TTMI": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 501m, covering 52% of current liabilities.",
+        "2. 48% of assets are current, 21% are goodwill and intangibles, current ratio 1.93.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +26% against payables at +34%, 71 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "TWST": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +63% while revenue grew +20%, a 43 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 183m, covering 200% of current liabilities.",
+        "2. 52% of assets are current, 15% are goodwill and intangibles, current ratio 3.64.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +63% against payables at +581%, 55 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "TXG": {
+      "coverage": 2,
+      "flags": [
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +298% while revenue grew +5%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Enough cash for normal operations: cash not reported.",
+        "2. 66% of assets are current, 6% are goodwill and intangibles, current ratio 4.46.",
+        "3. Debt: not reported separately.",
+        "4. Receivables -46% against payables at -1%, 27 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "U": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "56% of total assets are goodwill and intangibles. NAV is 3,496m but NTAV is -321m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -321m, because 3,817m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 2,056m, covering 135% of current liabilities.",
+        "2. 41% of assets are current, 56% are goodwill and intangibles, current ratio 1.84.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +12% against payables at +0%, 127 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "UAL": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.65, below 1.0. Current liabilities exceed current assets by 9,276m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 5,942m, covering 23% of current liabilities.",
+        "2. 22% of assets are current, 9% are goodwill and intangibles, current ratio 0.65.",
+        "3. Debt of 4,096m against cash, so net CASH of 1,846m.",
+        "4. Receivables +11% against payables at +9%, 15 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "UCTT": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 312m, covering 104% of current liabilities.",
+        "2. 56% of assets are current, 16% are goodwill and intangibles, current ratio 3.19.",
+        "3. Debt of 481m against cash, so net debt of 170m.",
+        "4. Receivables -13% against payables at -8%."
+      ],
+      "verdict": "SOLID"
+    },
+    "UMAC": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +2250% while revenue grew +101%, a 2149 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 4 to 51. It is taking 47 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 103m, covering 3970% of current liabilities.",
+        "2. 87% of assets are current, 10% are goodwill and intangibles, current ratio 61.32.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +2250%, 51 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "UPST": {
+      "coverage": 2,
+      "flags": [
+        {
+          "check": "leverage",
+          "message": "Net debt of 1,177m exceeds equity of 799m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 652m.",
+        "2. Current and tangible assets: the split is not reported.",
+        "3. Debt of 1,829m against cash, so net debt of 1,177m.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "WATCH"
+    },
+    "USAR": {
+      "coverage": 2,
+      "flags": [],
+      "notes": [
+        "1. Cash of 360m, covering 949% of current liabilities.",
+        "2. 55% of assets are current, 29% are goodwill and intangibles, current ratio 10.17.",
+        "3. Debt: not reported separately.",
+        "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
+      ],
+      "verdict": "UNKNOWN"
+    },
+    "VECO": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +14% while revenue grew -7%, a 22 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 163m, covering 92% of current liabilities.",
+        "2. 64% of assets are current, 16% are goodwill and intangibles, current ratio 4.75.",
+        "3. Debt of 226m against cash, so net debt of 63m.",
+        "4. Receivables +14% against payables at +27%, 61 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "VIAV": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 648m, covering 95% of current liabilities.",
+        "2. 46% of assets are current, 40% are goodwill and intangibles, current ratio 1.85.",
+        "3. Debt of 245m against cash, so net CASH of 403m.",
+        "4. Receivables +35% against payables at +34%, 84 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VICR": {
+      "coverage": 3,
+      "flags": [],
+      "notes": [
+        "1. Cash of 403m, covering 617% of current liabilities.",
+        "2. 75% of assets are current, current ratio 8.99.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +15% against payables at +41%, 54 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VOYG": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +94% against payables at +20%, a 74 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +94% while revenue grew +15%, a 79 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 39 to 65. It is taking 27 days longer to get paid than a year ago.",
+          "severity": "watch"
+        },
+        {
+          "check": "capitalised costs",
+          "message": "Intangibles grew +185% while revenue grew +15%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 491m, covering 369% of current liabilities.",
+        "2. 55% of assets are current, 24% are goodwill and intangibles, current ratio 4.37.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +94% against payables at +20%, 65 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "VPG": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 87m, covering 158% of current liabilities.",
+        "2. 54% of assets are current, 19% are goodwill and intangibles, current ratio 4.47.",
+        "3. Debt of 21m against cash, so net CASH of 67m.",
+        "4. Receivables +10% against payables at +6%, 67 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VRT": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,728m, covering 39% of current liabilities.",
+        "2. 56% of assets are current, 32% are goodwill and intangibles, current ratio 1.55.",
+        "3. Debt of 2,913m against cash, so net debt of 1,185m.",
+        "4. Receivables +32% against payables at +33%, 111 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VSAT": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,747m, covering 135% of current liabilities.",
+        "2. 21% of assets are current, 24% are goodwill and intangibles, current ratio 2.41.",
+        "3. Debt of 58m against cash, so net CASH of 1,689m.",
+        "4. Receivables +8% against payables at +9%, 59 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VSEC": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 69m, covering 29% of current liabilities.",
+        "2. 44% of assets are current, 46% are goodwill and intangibles, current ratio 3.76.",
+        "3. Debt of 300m against cash, so net debt of 231m.",
+        "4. Receivables +21% against payables at +6%, 63 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "VSH": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 515m, covering 71% of current liabilities.",
+        "2. 45% of assets are current, 6% are goodwill and intangibles, current ratio 2.62.",
+        "3. Debt of 951m against cash, so net debt of 436m.",
+        "4. Receivables -5% against payables at -1%, 45 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "W": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "current ratio",
+          "message": "Current ratio 0.94, below 1.0. Current liabilities exceed current assets by 128m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -2,782m, because 0m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 1,835m exceeds equity of -2,782m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 1,476m, covering 69% of current liabilities.",
+        "2. 58% of assets are current, 0% are goodwill and intangibles, current ratio 0.94.",
+        "3. Debt of 3,311m against cash, so net debt of 1,835m.",
+        "4. Receivables -15% against payables at -4%, 4 days of revenue outstanding."
+      ],
+      "verdict": "CONCERN"
+    },
+    "WATT": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +3731% against payables at -48%, a 3779 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +3731% while revenue grew +633%, a 3098 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 37 to 194. It is taking 157 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 10m, covering 285% of current liabilities.",
+        "2. 92% of assets are current, current ratio 4.19.",
+        "3. Debt of 0m against cash, so net CASH of 10m.",
+        "4. Receivables +3731% against payables at -48%, 194 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "WDC": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 1,579m, covering 37% of current liabilities.",
+        "2. 41% of assets are current, 31% are goodwill and intangibles, current ratio 1.33.",
+        "3. Debt of 1,052m against cash, so net CASH of 527m.",
+        "4. Receivables +36% against payables at +40%, 57 days of revenue outstanding."
+      ],
+      "verdict": "SOLID"
+    },
+    "WRBY": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +69% against payables at +36%, a 33 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +69% while revenue grew +13%, a 56 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 286m, covering 191% of current liabilities.",
+        "2. 49% of assets are current, current ratio 2.35.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +69% against payables at +36%, 1 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "WULF": {
+      "coverage": 4,
+      "flags": [],
+      "notes": [
+        "1. Cash of 3,266m, covering 188% of current liabilities.",
+        "2. 53% of assets are current, 1% are goodwill and intangibles, current ratio 2.00.",
+        "3. Debt of 3,145m against cash, so net CASH of 122m.",
+        "4. Receivables +155% against payables at +167%."
+      ],
+      "verdict": "SOLID"
+    },
+    "WW": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "intangibles",
+          "message": "73% of total assets are goodwill and intangibles. NAV is 318m but NTAV is -373m. Read the NTAV, because a creditor cannot sell a brand valuation.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -373m and the intangibles are NOT mostly goodwill, so they were largely self-generated. Strip them and the equity is worth less than nothing. This is the shape of a company capitalising its own costs onto the balance sheet.",
+          "severity": "critical"
+        },
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +14% against payables at -48%, a 62 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 160m, covering 127% of current liabilities.",
+        "2. 23% of assets are current, 73% are goodwill and intangibles, current ratio 1.69.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +14% against payables at -48%."
+      ],
+      "verdict": "AVOID"
+    },
+    "WYFI": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +354% against payables at +245%, a 109 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +354% while revenue grew +65%, a 289 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 41 to 112. It is taking 72 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
+      ],
+      "notes": [
+        "1. Cash of 114m, covering 139% of current liabilities.",
+        "2. 26% of assets are current, 5% are goodwill and intangibles, current ratio 2.03.",
+        "3. Debt of 20m against cash, so net CASH of 94m.",
+        "4. Receivables +354% against payables at +245%, 112 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "XMTR": {
+      "coverage": 3,
+      "flags": [
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -16m, because 292m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 15m, covering 17% of current liabilities.",
+        "2. 48% of assets are current, 42% are goodwill and intangibles, current ratio 3.76.",
+        "3. Debt: not reported separately.",
+        "4. Receivables +32%, 52 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    },
+    "ZETA": {
+      "coverage": 4,
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +37% against payables at -8%, a 45 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        }
+      ],
+      "notes": [
+        "1. Cash of 320m, covering 74% of current liabilities.",
+        "2. 46% of assets are current, 50% are goodwill and intangibles, current ratio 1.60.",
+        "3. Debt of 197m against cash, so net CASH of 123m.",
+        "4. Receivables +37% against payables at -8%, 90 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
+    }
+  },
+  "unreadable": {
+    "ADUR": "EdgarError: ADUR: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "AG": "EdgarError: AG: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "ARM": "EdgarError: ARM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "ARQQ": "EdgarError: ARQQ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "ASML": "EdgarError: ASML: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "ASX": "EdgarError: ASX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "AUGO": "EdgarError: AUGO: files no us-gaap facts, only ['dei']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "AYA": "EdgarError: not found: https://data.sec.gov/api/xbrl/companyfacts/CIK0001826836.json",
+    "BBAR": "EdgarError: BBAR: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "BRUN": "EdgarError: BRUN: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "CAMT": "EdgarError: CAMT: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "CCJ": "EdgarError: CCJ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "CSIQ": "EdgarError: CSIQ: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "ENLT": "EdgarError: ENLT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "ERO": "EdgarError: ERO: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "FUTU": "EdgarError: FUTU: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "GFS": "EdgarError: GFS: files no us-gaap facts, only ['dei', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "HBM": "EdgarError: HBM: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "HIMX": "EdgarError: HIMX: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "HMY": "EdgarError: HMY: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "HSAI": "EdgarError: HSAI: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "IAG": "EdgarError: IAG: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "IMOS": "EdgarError: IMOS: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "IPX": "EdgarError: IPX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "MT": "EdgarError: MT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'invest']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "NBIS": "EdgarError: NBIS: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "NBTX": "EdgarError: NBTX: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "NVMI": "EdgarError: NVMI: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "SA": "EdgarError: SA: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "SILC": "EdgarError: SILC: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "SIMO": "EdgarError: SIMO: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "STM": "EdgarError: STM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "TECK": "EdgarError: TECK: files no us-gaap facts, only ['ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "TSAT": "EdgarError: TSAT: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "TSEM": "EdgarError: TSEM: files us-gaap facts but no Assets tag, cannot read a balance sheet",
+    "TSM": "EdgarError: TSM: files no us-gaap facts, only ['dei', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread."
+  }
+}
