@@ -167,7 +167,11 @@ def main() -> int:
     for ticker in (t.upper() for t in args.tickers):
         cik = ciks.get(ticker)
         if cik is None:
-            failures[ticker] = "no CIK: foreign issuer, ETF, or delisted"
+            failures[ticker] = (
+                f"not in the SEC ticker-to-CIK map ({len(ciks):,} symbols). "
+                f"Cause not established: a foreign issuer, an ETF, a delisting and a "
+                f"ticker change all look identical from here."
+            )
             continue
         try:
             facts = cached(f"facts-{cik}", lambda c=cik: client.company_facts(c), not args.no_cache)

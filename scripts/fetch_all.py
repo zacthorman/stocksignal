@@ -130,7 +130,12 @@ def main() -> None:
         cik = cik_map.get(symbol)
         if cik is None:
             no_cik.append(symbol)
-            print(f"  {i}/{len(tickers)} {symbol}: no CIK, foreign or delisted", flush=True)
+            # The fact is the absence. Which of the four possible reasons applies
+            # is not checked here and naming one would be a guess.
+            print(
+                f"  {i}/{len(tickers)} {symbol}: not in the SEC ticker-to-CIK map",
+                flush=True,
+            )
             continue
         try:
             facts = cached(f"{symbol}_facts", lambda c=cik: client.company_facts(c), use_cache)

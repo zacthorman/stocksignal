@@ -51,6 +51,13 @@ tests/
 6. **A behaviour change comes with a test.** Not "add tests later". In the same commit.
 7. **The offline path must always work.** `stocksignal scan` with no arguments and no network has to produce a digest. CI enforces this.
 8. **The signal log is append-only.** Rows are never updated or deleted. A mistake gets a new row.
+9. **An error message reports what was observed, or it proves the cause it names.** Never both halves guessed. `"AssetsCurrent is absent"` is a fact. `"no CIK: foreign issuer, ETF, or delisted"` is a guess wearing the clothes of a finding, and a guess in an error string is the one kind of claim that never gets tested. If the cause matters, check it and then say it; if it cannot be checked, say what was looked for and what was found instead. Naming one plausible reason out of four is worse than naming none, because it stops the reader looking.
+
+   This is a review discipline and not a lint. There is no word list that catches it: none of the six below used a hedge word, and every one of them was true as far as it went.
+
+   > **30 August 2026, six in one day.** "no CIK: foreign issuer, ETF, or delisted" on all 256 names, when the watchlist parser was reading inline comments as tickers. "no Assets series, cannot read a balance sheet" on 36 companies that file full balance sheets. "the intangibles are NOT mostly goodwill, so they were largely self-generated" on a company reporting no intangibles. "files no us-gaap facts", true of 17 names and false of 18. "no total-assets figure under any of these tags", true, and pointing away from a one-line form filter. And `make: ruff: No such file or directory` with the binary present and executable, because the venv's `VIRTUAL_ENV` still pointed at a folder that had been moved.
+   >
+   > Each cost real time, because a wrong explanation that fits every case is more expensive than no explanation. The three that were rewritten to report what the code had actually looked at disproved themselves on their first run.
 
 ## Commands
 

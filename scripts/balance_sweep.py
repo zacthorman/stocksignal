@@ -150,7 +150,11 @@ def run(todo, ciks, client, sheets, failures, payload, args) -> None:
     for i, ticker in enumerate(todo, start=1):
         cik = ciks.get(ticker)
         if cik is None:
-            failures[ticker] = "no CIK: foreign issuer, ETF, or delisted"
+            failures[ticker] = (
+                f"not in the SEC ticker-to-CIK map ({len(ciks):,} symbols). "
+                f"Cause not established: a foreign issuer, an ETF, a delisting and a "
+                f"ticker change all look identical from here."
+            )
             print(f"  {i:3d}/{len(todo)}  {ticker:6s} FAILED  {failures[ticker]}")
             continue
         try:

@@ -225,7 +225,11 @@ def main() -> int:
         try:
             df = source.history(symbol, days=HISTORY_DAYS)
         except Exception as exc:  # noqa: BLE001 - one bad ticker must not end the run
-            errors.append((symbol, exc.__class__.__name__))
+            # THE MESSAGE TRAVELS, NOT JUST THE CLASS NAME. `DataError` on its own
+            # says a fetch failed and nothing about why, which is the same
+            # failure as a message naming a cause it never checked: the report
+            # is unactionable either way.
+            errors.append((symbol, f"{exc.__class__.__name__}: {exc}"))
             continue
         if df is None or df.empty:
             errors.append((symbol, "no bars"))
