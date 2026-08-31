@@ -67,6 +67,23 @@ POSITIVE = "positive"
 NEGATIVE = "negative"
 UNKNOWN = "unknown"
 
+# WHO MADE THE CALL, AND WHY IT IS RECORDED SEPARATELY FROM THE CALL ITSELF.
+# Reading a quarterly release and judging whether the business is on a path of
+# growth is the one input here that price data cannot supply, and it is now
+# something a language model can attempt. That is worth having, and it is not
+# worth having silently: a direction a model inferred from an IR release and a
+# direction Zac reached after reading six analyst write-ups produce an
+# identical price target, and on a phone at 8am they would look identical too.
+#
+# So provenance travels with the call and the card prints it. UNATTRIBUTED is
+# the default rather than HUMAN, because an entry with no `researched_by` field
+# is one nobody labelled, and inferring a person from silence is the same
+# missing-is-not-zero error this project keeps writing down.
+HUMAN = "human"
+MODEL = "model"
+UNATTRIBUTED = "unattributed"
+RESEARCHERS = (HUMAN, MODEL, UNATTRIBUTED)
+
 DISCOUNTED = "discounted"
 MOMENTUM = "momentum"
 AT_MEDIAN = "at median"
@@ -147,10 +164,19 @@ class GrowthDirection:
     basis: tuple[str, ...] = ()
     researched_on: date | None = None
     source: str = ""
+    researched_by: str = UNATTRIBUTED
 
     def __post_init__(self) -> None:
         if self.call not in (POSITIVE, NEGATIVE, UNKNOWN):
             raise ValueError(f"call must be positive, negative or unknown, got {self.call!r}")
+        if self.researched_by not in RESEARCHERS:
+            raise ValueError(
+                f"researched_by must be one of {RESEARCHERS}, got {self.researched_by!r}"
+            )
+
+    @property
+    def is_model_call(self) -> bool:
+        return self.call != UNKNOWN and self.researched_by == MODEL
 
     @property
     def is_positive(self) -> bool:
@@ -160,7 +186,12 @@ class GrowthDirection:
         if self.call == UNKNOWN:
             return "growth direction NOT RESEARCHED, the most important step is missing"
         stamp = f" as of {self.researched_on}" if self.researched_on else ""
-        return f"growth direction {self.call.upper()}{stamp}"
+        by = {
+            MODEL: ", CALLED BY A MODEL",
+            UNATTRIBUTED: ", researcher not recorded",
+            HUMAN: "",
+        }[self.researched_by]
+        return f"growth direction {self.call.upper()}{stamp}{by}"
 
 
 @dataclass(frozen=True)
@@ -939,6 +970,24 @@ def build_card(
         warnings.append(
             "No growth direction researched. Page 233 calls this the most important step "
             "of the three, so this card is chart geometry with the thesis missing."
+        )
+    elif direction.is_model_call:
+        # A WARNING RATHER THAN A REFUSAL. The card already refuses to print a
+        # target with no direction at all; refusing a model-supplied one as well
+        # would throw away a usable input. What it must not do is let the target
+        # look the same either way, because the arithmetic downstream is
+        # identical and only this line records that the premise was not read by
+        # a person.
+        warnings.append(
+            "THE GROWTH DIRECTION WAS CALLED BY A MODEL, not read by you. Every price "
+            "target on this card rests on it. Page 233 makes this the most important "
+            "step of the three, so check the basis below against the filing before "
+            "acting on any number here."
+        )
+    elif direction.researched_by == UNATTRIBUTED:
+        warnings.append(
+            "The growth direction has no researcher recorded, so it is not known whether "
+            "a person or a model made the call. Treat it as unverified."
         )
 
     warnings.append(

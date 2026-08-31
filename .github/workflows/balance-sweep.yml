@@ -1,0 +1,118 @@
+# The balance sheet readings, refreshed monthly.
+#
+# WHY MONTHLY AND NOT DAILY. A balance sheet changes when a company files, which
+# is four times a year. Running this daily would be 250 requests to the SEC for
+# an answer that changed on none of them, and it would put a ten-minute EDGAR
+# job in front of a scan that has to finish quickly.
+#
+# WHY THE 3rd. Filing season clusters in the weeks after each quarter end, so a
+# run on the 3rd of every month picks up the previous month's filings without
+# ever landing on the busiest days.
+#
+# WHAT IT COMMITS. `data/balance.json` only. The full sweep in `out/` is a
+# working artefact and stays gitignored.
+
+name: Balance sweep
+
+on:
+  schedule:
+    #        ┌── minute
+    #        │  ┌── hour (UTC), well clear of the noon scan
+    #        │  │ ┌── day of month
+    #        │  │ │ ┌── month
+    #        │  │ │ │ ┌── day of week
+    - cron: "0 6 3 * *"
+  # Same reasoning as the daily scan: a scheduled job you cannot trigger by hand
+  # is a job you cannot debug.
+  workflow_dispatch:
+    inputs:
+      retry_failures:
+        description: "Clear the recorded failures and read those names again"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: balance-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        # Pinned exactly, for the reason documented in ci.yml.
+        uses: astral-sh/setup-uv@v9.0.0
+
+      - name: Create the venv
+        run: |
+          uv venv --python 3.12
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install the project
+        # The `alpaca` extra, and not the base install, because that extra is
+        # where `requests` is declared and `EdgarClient` imports it. The base
+        # dependencies are pandas, numpy, typer and rich, none of which can make
+        # an HTTP call, so `uv pip install -e "."` would install cleanly here and
+        # then fail at the first EDGAR fetch.
+        run: uv pip install -e ".[alpaca]"
+
+      - name: Check the EDGAR contact is set
+        # The SEC asks for a real contact address and blocks fake ones. A secret
+        # rather than a literal because this repository is public: the address
+        # would otherwise be published along with the code.
+        env:
+          EDGAR_CONTACT: ${{ secrets.EDGAR_CONTACT }}
+        run: |
+          if [ -z "$EDGAR_CONTACT" ]; then
+            echo "::error::EDGAR_CONTACT is not set. Add it under Settings, Secrets and variables, Actions, in the form 'Your Name you@example.com'. The SEC requires a real address and blocks requests without one."
+            exit 1
+          fi
+
+      - name: Sweep
+        env:
+          EDGAR_CONTACT: ${{ secrets.EDGAR_CONTACT }}
+          RETRY: ${{ inputs.retry_failures && '--retry-failures' || '' }}
+        run: |
+          PYTHONPATH=src python scripts/balance_sweep.py \
+            --contact "$EDGAR_CONTACT" \
+            --store data/balance.json \
+            $RETRY
+
+      - name: Refuse to commit an empty or shrunken store
+        # A sweep that half-failed would otherwise quietly replace 233 good
+        # readings with 12, and the digest would carry "no balance reading"
+        # against most candidates without anything having reported an error.
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+
+          store = json.loads(Path("data/balance.json").read_text())
+          n = len(store.get("readings") or {})
+          print(f"{n} readings, {len(store.get('unreadable') or {})} unreadable")
+          if n < 150:
+              sys.exit(
+                  f"::error::only {n} readings in the store, expected 200 or more. "
+                  "Refusing to commit a partial sweep over a good one."
+              )
+          PY
+
+      - name: Commit it
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/balance.json
+          # --quiet exits non-zero with nothing staged, which happens when no
+          # company filed anything new this month. That is not an error.
+          if git diff --cached --quiet; then
+            echo "no change in the readings this month"
+          else
+            git commit -m "Balance readings $(date -u +%Y-%m-%d)"
+            git push
+          fi

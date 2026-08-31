@@ -33,9 +33,12 @@ from stocksignal.levels import RESISTANCE, SUPPORT, Level
 from stocksignal.opportunity import (
     BIG,
     DISCOUNTED,
+    HUMAN,
+    MODEL,
     MOMENTUM,
     NEGATIVE,
     POSITIVE,
+    UNATTRIBUTED,
     UNKNOWN,
     CardConfig,
     GrowthDirection,
@@ -501,3 +504,64 @@ def test_missing_numbers_render_as_n_a_not_as_punctuation(trending_frame, card_c
 
     assert "reward:risk n/a" in text
     assert "reward:risk , " not in text
+
+
+# --------------------------------------------------------------------------
+# Who made the growth direction call, added 2026-08-30
+# --------------------------------------------------------------------------
+
+
+def test_an_unlabelled_direction_is_unattributed_not_human():
+    """Absent provenance is not a person. Inferring one from silence is the
+    same missing-is-not-zero error this project keeps writing down."""
+    d = GrowthDirection(call=POSITIVE, researched_on=date(2026, 8, 30))
+    assert d.researched_by == UNATTRIBUTED
+    assert not d.is_model_call
+    assert "researcher not recorded" in d.describe()
+
+
+def test_a_model_call_says_so_in_its_own_description():
+    d = GrowthDirection(call=POSITIVE, researched_by=MODEL, researched_on=date(2026, 8, 30))
+    assert d.is_model_call
+    assert "CALLED BY A MODEL" in d.describe()
+
+
+def test_a_human_call_carries_no_provenance_noise():
+    d = GrowthDirection(call=POSITIVE, researched_by=HUMAN, researched_on=date(2026, 8, 30))
+    assert d.describe() == "growth direction POSITIVE as of 2026-08-30"
+
+
+def test_researched_by_is_validated():
+    with pytest.raises(ValueError, match="researched_by"):
+        GrowthDirection(call=POSITIVE, researched_by="the tea leaves")
+
+
+def test_a_model_direction_still_places_a_target_but_warns_on_the_card(
+    trending_frame, card_cfg
+):
+    """A warning rather than a refusal.
+
+    Refusing a model-supplied direction would throw away a usable input. What
+    the card must not do is let the target look identical either way, because
+    the arithmetic downstream is the same and only the warning records that the
+    premise was never read by a person.
+    """
+    model = build_card(
+        "TEST",
+        trending_frame,
+        card_cfg,
+        direction=GrowthDirection(
+            call=POSITIVE, researched_by=MODEL, researched_on=date.today()
+        ),
+    )
+    human = build_card(
+        "TEST",
+        trending_frame,
+        card_cfg,
+        direction=GrowthDirection(
+            call=POSITIVE, researched_by=HUMAN, researched_on=date.today()
+        ),
+    )
+    assert model.target.price == human.target.price, "same arithmetic, deliberately"
+    assert any("CALLED BY A MODEL" in w for w in model.warnings)
+    assert not any("CALLED BY A MODEL" in w for w in human.warnings)

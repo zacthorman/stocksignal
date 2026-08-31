@@ -63,6 +63,7 @@ from stocksignal.card_render import (  # noqa: E402
 from stocksignal.config import DEFAULT_CONFIG, OUT_DIR  # noqa: E402
 from stocksignal.data import DataError, get_source  # noqa: E402
 from stocksignal.opportunity import (  # noqa: E402
+    UNATTRIBUTED,
     CardConfig,
     GrowthDirection,
     OpportunityCard,
@@ -110,6 +111,9 @@ def load_directions(path: Path, stale_days: int) -> dict[str, GrowthDirection]:
         researched = date.fromisoformat(stamp) if stamp else None
         basis = tuple(entry.get("basis", ()))
         source = entry.get("source", "")
+        # Absent means unattributed, not human. An entry nobody labelled is one
+        # nobody vouched for, and the card says so rather than assuming.
+        by = entry.get("researched_by", UNATTRIBUTED)
 
         if researched is not None and researched < cutoff:
             out[ticker.upper()] = GrowthDirection(
@@ -120,6 +124,7 @@ def load_directions(path: Path, stale_days: int) -> dict[str, GrowthDirection]:
                 ),
                 researched_on=researched,
                 source=source,
+                researched_by=by,
             )
             continue
 
@@ -128,6 +133,7 @@ def load_directions(path: Path, stale_days: int) -> dict[str, GrowthDirection]:
             basis=basis,
             researched_on=researched,
             source=source,
+            researched_by=by,
         )
     return out
 
