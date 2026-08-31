@@ -50,7 +50,7 @@ tests/
 5. **Type hints everywhere**, including tests.
 6. **A behaviour change comes with a test.** Not "add tests later". In the same commit.
 7. **The offline path must always work.** `stocksignal scan` with no arguments and no network has to produce a digest. CI enforces this.
-8. **The signal log is append-only.** Rows are never updated or deleted. A mistake gets a new row.
+8. **The record is `signals/YYYY-MM-DD.jsonl`, committed, and `signals.db` is a derived cache.** This changed on 31 August 2026 and the reason is worth keeping: the scheduled scan wrote its log to `signals.db` on a GitHub runner, `signals.db` is gitignored, and the runner is destroyed a minute later, so thirteen trading days of signals were written and deleted. The `outcomes` table had never held a row. Git history is now the append-only guarantee: a day is written as a whole file, so a rerun shows as a diff rather than a second copy. Rebuild the cache with `import_ledgers` and never treat it as the source of truth.
 9. **An error message reports what was observed, or it proves the cause it names.** Never both halves guessed. `"AssetsCurrent is absent"` is a fact. `"no CIK: foreign issuer, ETF, or delisted"` is a guess wearing the clothes of a finding, and a guess in an error string is the one kind of claim that never gets tested. If the cause matters, check it and then say it; if it cannot be checked, say what was looked for and what was found instead. Naming one plausible reason out of four is worse than naming none, because it stops the reader looking.
 
    This is a review discipline and not a lint. There is no word list that catches it: none of the six below used a hedge word, and every one of them was true as far as it went.

@@ -146,8 +146,18 @@ def scan(
         console.print(f"[green]written[/green] {out}")
 
     if log:
+        # THE LEDGER FIRST, BECAUSE IT IS THE ONE THAT SURVIVES. `signals.db` is
+        # gitignored and, on a GitHub runner, destroyed with the runner. That is
+        # how thirteen trading days of signals were written and deleted between
+        # 11 and 28 August 2026. The committed file is the record; the database
+        # is a local convenience rebuilt from it.
+        path = signal_log.write_ledger(report.signals)
+        if path is None:
+            console.print("[dim]no signals to log, the digest says so in words[/dim]")
+        else:
+            console.print(f"[green]logged[/green] {len(report.signals)} signal(s) to {path}")
         n = signal_log.log_signals(report.signals)
-        console.print(f"[green]logged[/green] {n} signal(s) to signals.db")
+        console.print(f"[dim]and cached {n} row(s) in signals.db[/dim]")
 
     fatal: list[str] = []
 

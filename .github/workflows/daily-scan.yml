@@ -109,7 +109,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add digests/
+          git add digests/ signals/
           # --quiet exits non-zero with nothing staged, which happens whenever a
           # run repeats on a day already filed. That is not an error.
           if git diff --cached --quiet; then
