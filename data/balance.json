@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-08-31",
+  "as_of": "2026-09-03",
   "readings": {
     "AAOI": {
       "coverage": 4,
@@ -1936,17 +1936,6 @@
       ],
       "verdict": "WATCH"
     },
-    "ISSC": {
-      "coverage": 4,
-      "flags": [],
-      "notes": [
-        "1. Cash of 3m, covering 16% of current liabilities.",
-        "2. 49% of assets are current, 29% are goodwill and intangibles, current ratio 3.04.",
-        "3. Debt of 27m against cash, so net debt of 24m.",
-        "4. Receivables +3% against payables at +55%, 56 days of revenue outstanding."
-      ],
-      "verdict": "SOLID"
-    },
     "JBL": {
       "coverage": 3,
       "flags": [
@@ -3099,14 +3088,30 @@
     },
     "SMCI": {
       "coverage": 4,
-      "flags": [],
-      "notes": [
-        "1. Cash of 5,170m, covering 220% of current liabilities.",
-        "2. 88% of assets are current, current ratio 5.25.",
-        "3. Debt of 112m against cash, so net CASH of 5,057m.",
-        "4. Receivables -19% against payables at -13%, 37 days of revenue outstanding."
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +178% against payables at +75%, a 103 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +178% while revenue grew +78%, a 100 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 37 to 57. It is taking 21 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
       ],
-      "verdict": "SOLID"
+      "notes": [
+        "1. Cash of 7,521m, covering 105% of current liabilities.",
+        "2. 93% of assets are current, current ratio 3.87.",
+        "3. Debt of 4,056m against cash, so net CASH of 3,465m.",
+        "4. Receivables +178% against payables at +75%, 57 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "SMTC": {
       "coverage": 4,
@@ -3832,6 +3837,7 @@
     "IAG": "EdgarError: IAG: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IMOS": "EdgarError: IMOS: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IPX": "EdgarError: IPX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "ISSC": "not in the SEC ticker-to-CIK map (10,391 symbols). Cause not established: a foreign issuer, an ETF, a delisting and a ticker change all look identical from here.",
     "MT": "EdgarError: MT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'invest']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "NBTX": "EdgarError: NBTX: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "SA": "EdgarError: SA: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 7 us-gaap tags.",
