@@ -218,3 +218,128 @@ Recorded here so the terms are in one place rather than only in a scheduled task
 The whole value of this one is that the terms were set before the data existed.
 Running it early, on any pretext, destroys the only test in the project with a
 reachable bar.
+
+---
+
+## 3. Do the indicators do anything in combination? (registered 2026-09-17)
+
+Registered before the search was run, and before any combination number was
+looked at. Zac asked the question in the form it is usually asked in — "does
+combining them make it significant" — which is the form that manufactures
+findings. This is the version that can answer no.
+
+### The hypothesis
+
+Some combination of the nine price-bar factors in `factor_ledger.py` selects
+confirmation bars that go on to beat SPY by more than the confirmation bars it
+rejects, out of sample, after costs.
+
+### The search, exactly as it will run
+
+- **Events.** Every first candle opening above the 9 SMA inside the page 142
+  universe, entry at the next open, exit at the first open below the 9 SMA
+  (filled the following open), 252-session cap. Built once by
+  `scripts/factor_events.py`. 7,562 events, 247 tickers, 2021-08-23 to
+  2026-08-07.
+- **Configurations.** All 512 subsets of the nine elevating factors, each with
+  and without a veto on all six deprecating factors. 1,024 in total.
+- **Split.** Fit is every event whose signal AND exit fall on or before
+  2023-12-31. Hold-out is every event with a signal after it. The fit half
+  therefore never sees a hold-out price.
+- **Eligibility.** 40 or more fit trades. Below that a configuration is not
+  ranked at all.
+- **Selection statistic.** Mean excess over SPY per trade, net of 0.2% costs,
+  over the same window as each trade. Tie-break: more trades.
+- **Overlap.** One open trade per ticker at a time, greedy in date order.
+
+### The decision rule, fixed now
+
+The single fit winner is measured **once** on the hold-out. It counts as
+significant only if all three hold:
+
+1. 20 or more hold-out trades.
+2. Mean excess above zero.
+3. Selection p below 0.05, where the null is a random draw of the same number
+   of hold-out confirmations from the same period.
+
+Anything else is reported as not significant. No second configuration gets a
+hold-out measurement, no threshold moves afterwards, and the top ten fit
+configurations are printed so the search is visible rather than just its winner.
+
+### The best-of-1,024 null
+
+The whole search is repeated 200 times with the (return, SPY) pairs dealt out at
+random across the fit events, recording the best configuration each time. The
+observed fit winner is reported against that distribution. This is the number
+that says how much of any winner is the search itself.
+
+### What happens next, fixed now
+
+- The result goes into the README and the project dashboard **whatever it says**,
+  including if the answer is that nothing survives.
+- **No further combination variants get run against this snapshot.** Not a
+  different exit, not a different horizon, not a different factor definition, not
+  a threshold on the number of factors. If something looks promising the correct
+  response is a fresh pre-registered test on data that does not exist yet.
+- If the winner fails the hold-out, the honest reading is that these nine
+  factors, on these bars, do not combine into an edge. That is an answer and it
+  is allowed to be the answer.
+
+### Result
+
+Run 17 September 2026. Full report in `out/factor-combination-search.txt`.
+
+```
+python scripts/factor_events.py
+python scripts/factor_search.py
+```
+
+**It passes, and the passing is the least interesting thing about it.**
+
+| | |
+|---|---|
+| Configurations searched | 1,024, of which 65 had 40+ fit trades |
+| Fit winner | `macd + direction_tested + vol_squeeze`, 60 trades, +4.29% excess |
+| Best-of-1,024 null | median +1.51%, 95th +3.33%. Observed p = 0.015 |
+| Hold-out | 138 trades, **+3.35% excess per trade**, selection p = 0.011 |
+| Verdict by the registered rule | **SIGNIFICANT** |
+
+And then the diagnostics, which were not part of the decision rule and do not
+change the verdict:
+
+- **Median excess −1.11%.** The typical trade loses to SPY. The mean is positive
+  because seven trades out of 138 supply **92%** of the excess, and one of them,
+  GRAL, supplies 26% by itself.
+- **Trim the best 5% and it is +0.27%. Trim the best 10% and it is −1.04%.**
+- **2025Q2 and 2025Q3 supply essentially all of it.** 2024 is negative in three
+  quarters of four, 2026 is flat, and 6 of 11 quarters have a positive mean.
+- Three names out of 66 supply 55%.
+
+**The registered statistic was the mean, and that was my choice and a poor one.**
+The mean is precisely what a fat right tail flatters, and this project already
+knew that: it is the same shape that killed the breakout screen in August, where
+the best 5% of trades supplied 5.05 of 5.18 points. A rule passing a
+pre-registered test and still being untradeable is not a contradiction. It means
+the test asked whether the average was positive when the question worth asking
+was whether the typical trade was.
+
+**The sample is also not symmetric.** The fit half has 1,665 events across 80
+names; the hold-out has 5,872 across 247. The watchlist in `cache/` was built
+recently, so a name only enters the page 142 universe once it cleared $15 and
+beta 2, and the early half is a smaller and different market. The selection
+p-value is immune to this, since it compares the rule against random
+confirmations from the same period, but any comparison between the two halves is
+not.
+
+**What this closes.** Per the registration, no further combination variants get
+run against this snapshot: not a different exit, not a different horizon, not a
+threshold on factor count. The honest summary is that combining these nine
+price-bar factors produced a rule whose edge lives in seven trades in two
+quarters of 2025, which is the shape of something that does not repeat.
+
+**What it opens, and it needs its own registration before anything is run.** If
+the question is worth asking again, the statistic should be the median or a
+trimmed mean fixed in advance, the test should run forward on signals that did
+not exist when the rule was chosen, and the committed ledger in `signals/` is
+now capable of supplying exactly that.
+
