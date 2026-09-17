@@ -1,0 +1,60 @@
+FACTOR COMBINATION SEARCH
+events 7562   fit 1665 (signal and exit by 2023-12-31)   hold-out 5872
+selection: mean excess over SPY per trade, net of 0.2% costs, eligible at 40+ fit trades
+decision:  hold-out needs 20+ trades, excess above zero, selection p < 0.05
+
+configurations searched 1024, eligible on the fit half 65
+
+WINNER ON THE FIT HALF (this is a search result and proves nothing)
+  rule        macd + direction_tested + vol_squeeze
+  fit trades  60
+  fit excess  +4.29% per trade
+
+THE SAME SEARCH ON SHUFFLED OUTCOMES (best-of-1,024 null)
+  shuffles           200
+  best by luck       median +1.51%, 95th +3.33%, max +6.10%
+  observed best      +4.29%   p = 0.015
+  Reading: a p above 0.05 here means the fit winner is what searching 1,024 rules
+  produces from noise, and the hold-out is unlikely to rescue it.
+
+HOLD-OUT, MEASURED ONCE
+  trades             138
+  excess over SPY    +3.35% per trade, net of costs
+  raw return         +4.04%   SPY over the same windows +0.68%
+  hit rate           47.1%   median hold 4d
+  random 138 of 5872 confirmations: mean +0.24%, 95th +2.24%
+  selection p        0.011
+
+CONCENTRATION (descriptive, decides nothing)
+  mean +3.35%   median -1.11%
+  trim best 5% (7 trades) +0.27%   trim best 10% -1.04%
+  top 5% of trades supply 92% of the excess, the single best 26%
+  quarters with a positive mean 6/11   biggest quarter supplies 57%
+  66 names, top three supply 55%: GRAL, PSIX, OKLO
+  by quarter: 2024Q1 n=6 -1.5%  2024Q2 n=13 -2.3%  2024Q3 n=8 +3.0%  2024Q4 n=14 -3.0%  2025Q1 n=2 +20.8%  2025Q2 n=26 +7.5%  2025Q3 n=32 +8.3%  2025Q4 n=5 +1.0%  2026Q1 n=18 -0.5%  2026Q2 n=10 -0.8%  2026Q3 n=4 +8.3%
+
+VERDICT: SIGNIFICANT by the rule fixed above
+
+SAMPLE SHAPE, and it is not symmetric
+  fit        1665 events,  80 names, 2021-08-23 to 2023-12-27
+  hold-out   5872 events, 247 names, 2024-01-08 to 2026-08-07
+  The watchlist in cache/ was built recently, so a name only enters the page 142
+  universe once it cleared $15 and beta 2. The early half is a smaller, different market.
+
+REFERENCE POINTS (specified before the run, not selected)
+  every confirmation, no filter                  fit  1665 trades  -0.71%   hold-out  5872 trades  +0.21%
+  zero deprecating only                          fit   188 trades  +1.02%   hold-out  1040 trades  +1.86%
+  Zac's rule: direction + macd, zero deprecating fit   188 trades  +1.02%   hold-out  1040 trades  +1.86%
+
+TOP 10 ON THE FIT HALF, printed so the search is visible rather than just its winner.
+None of these are results. The hold-out above is the only measurement.
+   +4.29%  n=  60  macd + direction_tested + vol_squeeze
+   +4.29%  n=  60  direction + macd + direction_tested + vol_squeeze
+   +3.53%  n=  48  direction_tested + vol_squeeze , zero deprecating
+   +3.53%  n=  48  direction + direction_tested + vol_squeeze , zero deprecating
+   +3.53%  n=  48  macd + direction_tested + vol_squeeze , zero deprecating
+   +3.53%  n=  48  direction + macd + direction_tested + vol_squeeze , zero deprecating
+   +3.09%  n=  97  direction_tested + vol_squeeze
+   +3.09%  n=  97  direction + direction_tested + vol_squeeze
+   +3.09%  n=  55  direction + macd + volume_spike
+   +2.87%  n=  42  direction + macd + ignition_setup
