@@ -243,3 +243,59 @@ class TestThePhoneMessageExplainsWhyAName:
         )
         text = notify.render_telegram(report([gate_only]))
         assert "price clears the floor" in text
+
+
+# --------------------------------------------------------------------------
+# With memory: new names get cards, continuing names get one line
+# --------------------------------------------------------------------------
+
+
+def _memory(new_names, runs, dismissed=()):
+    from stocksignal.memory import Dismissal, Recurrence, ScanMemory
+
+    today = date(2026, 1, 2)
+    recs = {t: Recurrence(t, 1, today) for t in new_names}
+    recs.update({t: Recurrence(t, n, date(2025, 12, 1)) for t, n in runs.items()})
+    dis = {t: Dismissal(t, today, "no setup") for t in dismissed}
+    return ScanMemory(recurrences=recs, dismissals=dis, as_of=today)
+
+
+class TestTelegramWithMemory:
+    def test_new_names_get_cards_and_old_ones_get_a_line(self):
+        rep = report([signal("DELL", 1.5), signal("CHYM", 1.1), signal("SMTC", 0.9)])
+        text = notify.render_telegram(rep, memory=_memory(["CHYM"], {"DELL": 12, "SMTC": 8}))
+        assert "New today (1)" in text
+        assert "<b>1. CHYM</b>" in text
+        assert "<b>1. DELL</b>" not in text and "2. DELL" not in text
+        assert "Still passing (2)" in text
+        assert "DELL ×12, SMTC ×8" in text
+
+    def test_a_day_with_nothing_new_says_so(self):
+        rep = report([signal("DELL")])
+        text = notify.render_telegram(rep, memory=_memory([], {"DELL": 3}))
+        assert "Nothing new today" in text
+        assert "DELL ×3" in text
+
+    def test_dismissed_names_are_counted_not_carded(self):
+        rep = report([signal("TXG"), signal("CHYM")])
+        text = notify.render_telegram(rep, memory=_memory(["CHYM", "TXG"], {}, dismissed=["TXG"]))
+        assert "TXG" not in text
+        assert "1 dismissed by you" in text
+
+    def test_the_new_list_is_still_capped(self):
+        names = [f"T{i}" for i in range(12)]
+        rep = report([signal(t) for t in names])
+        text = notify.render_telegram(rep, limit=5, memory=_memory(names, {}))
+        assert "and 7 more new" in text
+
+    def test_deliver_passes_memory_through(self):
+        sent = {}
+        rep = report([signal("DELL")])
+        notify.deliver(
+            rep,
+            token="t",
+            chat_id="c",
+            transport=lambda url, payload: sent.update(payload),
+            memory=_memory([], {"DELL": 4}),
+        )
+        assert "DELL ×4" in sent["text"]

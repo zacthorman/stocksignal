@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from stocksignal.balance_store import MISSING_STORE_NOTE, BalanceStore
+from stocksignal.memory import ScanMemory
 from stocksignal.scanner import ScanReport
 
 
@@ -18,6 +19,7 @@ def render_terminal(
     report: ScanReport,
     console: Console | None = None,
     balance: BalanceStore | None = None,
+    memory: ScanMemory | None = None,
 ) -> None:
     console = console or Console()
 
@@ -33,6 +35,8 @@ def render_terminal(
     # balance sheet looked at the same company and saw receivables compounding
     # at 101%. Neither number should be allowed to hide the other.
     table.add_column("Balance")
+    # NEW is the only word in this table worth scanning for at 8am.
+    table.add_column("Age")
     table.add_column("Why")
 
     if not report.signals:
@@ -47,12 +51,20 @@ def render_terminal(
             if sig.not_firing:
                 why.append(f"[dim](no {', '.join(sig.not_firing)} setup)[/dim]")
             verdict = balance.line(sig.ticker).split(",")[0] if balance else "no readings"
+            age = "?"
+            if memory:
+                if memory.is_dismissed(sig.ticker):
+                    age = "[dim]dismissed[/dim]"
+                else:
+                    r = memory.recurrence(sig.ticker)
+                    age = "[bold]NEW[/bold]" if r and r.is_new else f"x{r.run_length}" if r else "?"
             table.add_row(
                 str(i),
                 sig.ticker,
                 f"{sig.close:,.2f}",
                 f"{sig.score:.2f}",
                 verdict,
+                age,
                 "\n".join(why),
             )
         console.print(table)
@@ -73,7 +85,37 @@ def render_terminal(
             console.print(f"  [red]![/red] {ticker}: {reason}")
 
 
-def render_markdown(report: ScanReport, balance: BalanceStore | None = None) -> str:
+def _candidate_block(
+    lines: list[str],
+    signals,
+    balance: BalanceStore | None,
+    memory: ScanMemory | None,
+    start: int,
+) -> int:
+    for i, sig in enumerate(signals, start=start):
+        lines.append(f"### {i}. {sig.ticker} at {sig.close:,.2f} (score {sig.score:.2f})")
+        lines.append("")
+        if memory:
+            d = memory.dismissals.get(sig.ticker.upper())
+            if d is not None and d.active_on(memory.as_of):
+                lines.append(f"- _{d.describe(memory.as_of)}._")
+            r = memory.recurrence(sig.ticker)
+            if r is not None and not r.is_new:
+                lines.append(f"- _{r.describe()}._")
+        lines += [f"- {r}" for r in sig.reasons]
+        if balance:
+            lines.append(f"- **Balance sheet:** {balance.line(sig.ticker)}")
+        if sig.not_firing:
+            lines.append(f"- _Did not fire on: {', '.join(sig.not_firing)}._")
+        lines.append("")
+    return start + len(signals)
+
+
+def render_markdown(
+    report: ScanReport,
+    balance: BalanceStore | None = None,
+    memory: ScanMemory | None = None,
+) -> str:
     lines = [
         f"# Signal digest, {report.as_of.isoformat()}",
         "",
@@ -89,16 +131,45 @@ def render_markdown(report: ScanReport, balance: BalanceStore | None = None) -> 
     ]
 
     if report.signals:
-        lines += ["## Candidates", ""]
-        for i, sig in enumerate(report.signals, start=1):
-            lines.append(f"### {i}. {sig.ticker} at {sig.close:,.2f} (score {sig.score:.2f})")
-            lines.append("")
-            lines += [f"- {r}" for r in sig.reasons]
-            if balance:
-                lines.append(f"- **Balance sheet:** {balance.line(sig.ticker)}")
-            if sig.not_firing:
-                lines.append(f"- _Did not fire on: {', '.join(sig.not_firing)}._")
-            lines.append("")
+        if memory is None:
+            lines += ["## Candidates", ""]
+            _candidate_block(lines, list(report.signals), balance, None, 1)
+        else:
+            # NEW FIRST, BECAUSE IT IS THE ONLY PART THAT IS NEWS. Eleven days
+            # of the freeze had TXG, SSRM and CHYM on every single one, so a
+            # digest that opens with the same three names every morning trains
+            # you to stop reading it. The continuing names are still here in
+            # full, they are just no longer the headline.
+            new, continuing, dismissed = memory.split(list(report.signals))
+            n = 1
+            if new:
+                lines += [f"## New today ({len(new)})", ""]
+                n = _candidate_block(lines, new, balance, memory, n)
+            else:
+                lines += [
+                    "## New today (0)",
+                    "",
+                    "Nothing passed today that was not already passing yesterday. "
+                    "That is a real result and not an empty section: the screens "
+                    "found no change worth your attention.",
+                    "",
+                ]
+            if continuing:
+                lines += [f"## Still passing ({len(continuing)})", ""]
+                n = _candidate_block(lines, continuing, balance, memory, n)
+            if dismissed:
+                # MOVED, NOT REMOVED. A dismissal is Zac's judgement rather than
+                # the tool's, which is why it is allowed to reorder the digest at
+                # all, and it still has to be visible and it still has to expire.
+                lines += [
+                    f"## Dismissed ({len(dismissed)})",
+                    "",
+                    "You have already looked at these and said no. They stay here so "
+                    "the decision is visible rather than silently shrinking the "
+                    "universe, and each one returns when its dismissal expires.",
+                    "",
+                ]
+                _candidate_block(lines, dismissed, balance, memory, n)
     else:
         lines += ["No candidates passed today.", ""]
 

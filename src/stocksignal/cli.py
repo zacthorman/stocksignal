@@ -28,6 +28,7 @@ from stocksignal.data import (
     shuffle_returns,
 )
 from stocksignal.digest import render_markdown, render_terminal
+from stocksignal.memory import ScanMemory
 from stocksignal.notify import deliver
 from stocksignal.scanner import scan as run_scan
 
@@ -137,12 +138,25 @@ def scan(
             f"rerun scripts/balance_sweep.py[/yellow]"
         )
 
-    render_terminal(report, console, balance=balance)
+    # BUILT BEFORE THE LEDGER IS WRITTEN, WHICH IS NOT AN ACCIDENT. Run lengths
+    # come from the committed ledger, and today's file has to be absent while
+    # they are computed or every name would count itself and nothing would ever
+    # read as new. `run_lengths` also skips any file dated today for the same
+    # reason, so a rerun stays correct.
+    memory = ScanMemory.build(list(report.signals), report.as_of)
+    new_today = sum(1 for s in report.signals if (r := memory.recurrence(s.ticker)) and r.is_new)
+    if report.signals:
+        console.print(
+            f"[dim]{new_today} new, {len(report.signals) - new_today} already passing "
+            f"yesterday[/dim]"
+        )
+
+    render_terminal(report, console, balance=balance, memory=memory)
 
     if save:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         out = OUT_DIR / f"digest-{report.as_of.isoformat()}.md"
-        out.write_text(render_markdown(report, balance=balance))
+        out.write_text(render_markdown(report, balance=balance, memory=memory))
         console.print(f"[green]written[/green] {out}")
 
     if log:
@@ -167,7 +181,7 @@ def scan(
         # the numbers are the product. But being asked for delivery when no
         # token is configured is not a hiccup, it is a misconfiguration, and it
         # is silent in exactly the way that cost two days on 12 and 13 August.
-        outcome = deliver(report)
+        outcome = deliver(report, memory=memory)
         colour = "green" if outcome.sent else "yellow"
         console.print(f"[{colour}]telegram[/{colour}] {outcome}")
         if not outcome.sent and "not set" in outcome.reason:

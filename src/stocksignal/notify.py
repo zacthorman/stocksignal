@@ -34,6 +34,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from stocksignal.memory import ScanMemory
 from stocksignal.scanner import ScanReport
 
 log = logging.getLogger(__name__)
@@ -64,7 +65,64 @@ def escape(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def render_telegram(report: ScanReport, limit: int = DEFAULT_LIMIT) -> str:
+def _cards(signals, limit: int, start: int = 1) -> list[str]:
+    chunks = []
+    for i, signal in enumerate(signals[:limit], start=start):
+        lines = [
+            f"\n<b>{i}. {escape(signal.ticker)}</b> {signal.close:,.2f} · score {signal.score:.2f}"
+        ]
+        # The scoring screens, not the hard gate. The gate's reasons come
+        # first on `reasons` and are the same on every candidate, so taking
+        # the top of that list made all eight names read identically and
+        # told you nothing about which to open. See `Signal.setup_reasons`.
+        why = signal.setup_reasons or signal.reasons
+        lines += [f"  · {escape(r)}" for r in why[:REASONS_PER_SIGNAL]]
+        chunks.append("\n".join(lines))
+    return chunks
+
+
+def _body_with_memory(report: ScanReport, memory: ScanMemory, limit: int) -> str:
+    """New names as full cards, everything else as one line of tickers.
+
+    THE PHONE MESSAGE IS WHERE THE REPETITION ACTUALLY HURT. The markdown
+    digest is opened when there is a reason to; this is the thing read every
+    morning, and for eleven days of the freeze it opened with the same names.
+    So a continuing name keeps its place in the message, it just stops taking
+    up a card: its ticker and how many scans it has been passing, which is all
+    that has changed about it since yesterday.
+    """
+    new, continuing, dismissed = memory.split(list(report.signals))
+    parts: list[str] = []
+
+    if new:
+        parts.append(f"\n<b>New today ({len(new)})</b>")
+        parts += _cards(new, limit)
+        if len(new) > limit:
+            parts.append(f"\n<i>and {len(new) - limit} more new, see the digest.</i>")
+    else:
+        parts.append("\n<b>Nothing new today.</b> Every name below was already passing.")
+
+    if continuing:
+        names = []
+        for s in continuing:
+            r = memory.recurrence(s.ticker)
+            run = f" ×{r.run_length}" if r is not None else ""
+            names.append(f"{escape(s.ticker)}{run}")
+        parts.append(f"\n<b>Still passing ({len(continuing)})</b>\n" + ", ".join(names))
+
+    if dismissed:
+        # Counted, not hidden. The digest names them with the reason and the
+        # days left; the phone only needs to say the list is shorter on purpose.
+        parts.append(f"\n<i>{len(dismissed)} dismissed by you, listed in the digest.</i>")
+
+    return "\n".join(parts)
+
+
+def render_telegram(
+    report: ScanReport,
+    limit: int = DEFAULT_LIMIT,
+    memory: ScanMemory | None = None,
+) -> str:
     """A phone-sized digest: the headline, the top few names, and the caveat.
 
     Deliberately not the markdown digest. That one is written to be read on a
@@ -80,21 +138,10 @@ def render_telegram(report: ScanReport, limit: int = DEFAULT_LIMIT) -> str:
 
     if not report.signals:
         body = "\nNothing passed today."
+    elif memory is not None:
+        body = _body_with_memory(report, memory, limit)
     else:
-        chunks = []
-        for i, signal in enumerate(report.signals[:limit], start=1):
-            lines = [
-                f"\n<b>{i}. {escape(signal.ticker)}</b> "
-                f"{signal.close:,.2f} · score {signal.score:.2f}"
-            ]
-            # The scoring screens, not the hard gate. The gate's reasons come
-            # first on `reasons` and are the same on every candidate, so taking
-            # the top of that list made all eight names read identically and
-            # told you nothing about which to open. See `Signal.setup_reasons`.
-            why = signal.setup_reasons or signal.reasons
-            lines += [f"  · {escape(r)}" for r in why[:REASONS_PER_SIGNAL]]
-            chunks.append("\n".join(lines))
-        body = "\n".join(chunks)
+        body = "\n".join(_cards(report.signals, limit))
         if len(report.signals) > limit:
             body += f"\n\n<i>and {len(report.signals) - limit} more, see the digest.</i>"
 
@@ -129,6 +176,7 @@ def deliver(
     chat_id: str | None = None,
     limit: int = DEFAULT_LIMIT,
     transport: Callable[[str, dict], None] = _post,
+    memory: ScanMemory | None = None,
 ) -> Delivery:
     """Send the digest to Telegram. Reports failure, never raises.
 
@@ -149,7 +197,7 @@ def deliver(
 
     payload = {
         "chat_id": chat_id,
-        "text": render_telegram(report, limit=limit),
+        "text": render_telegram(report, limit=limit, memory=memory),
         "parse_mode": "HTML",
         "disable_web_page_preview": True,
     }
