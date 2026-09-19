@@ -1,0 +1,70 @@
+# What happened to the signals, every Saturday.
+#
+# WHY WEEKLY AND NOT DAILY. The horizons are 5, 20 and 60 sessions, so a daily
+# run would rewrite the same file with almost the same numbers and bury the one
+# commit a month where something actually changed. Saturday because the week's
+# sessions are all final by then, and 07:00 UTC because nothing else competes
+# for the runner at that hour.
+#
+# WHY IT COMMITS RATHER THAN PRINTS. A result that lives only in a job's log is
+# a result that does not exist: that is exactly how thirteen trading days of
+# signals were written and destroyed in August. `outcomes/` is committed for the
+# same reason `digests/` and `signals/` are.
+#
+# THIS JOB DECIDES NOTHING. It does not gate the scan, promote a screen or
+# change a threshold. It puts the number in front of Zac.
+
+name: Score signals
+
+on:
+  schedule:
+    - cron: "0 7 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: score-signals
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+
+      - name: Create the venv
+        run: |
+          uv venv --python 3.12
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install the project with live data support
+        run: uv pip install -e ".[live,alpaca]"
+
+      - name: Score the ledger
+        env:
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+        run: python scripts/score_signals.py --source alpaca
+
+      - name: Fail if the report did not come out
+        # A missing report means the script died quietly, and a quiet death here
+        # looks exactly like a week where nothing changed.
+        run: test -s outcomes/REPORT.md
+
+      - name: Commit it
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add outcomes/
+          if git diff --cached --quiet; then
+            echo "outcomes unchanged since the last run, nothing to commit"
+          else
+            git commit -m "Signal outcomes $(date -u +%Y-%m-%d)"
+            git push
+          fi
