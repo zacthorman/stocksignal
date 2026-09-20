@@ -25,13 +25,31 @@ FOUR HORIZONS, AND THEY ARE NOT INTERCHANGEABLE.
                        later. 20 is the project's primary horizon and the
                        headline; 5 and 60 are context, not alternatives to
                        reach for when 20 disappoints.
-  rulebook exit        buy the next open, sell at the open after the first bar
-                       that OPENS below the 9 SMA (p111: a candle that dips
-                       below but does not open below "was not a Validation").
-                       The only horizon that corresponds to a rule Zac would
-                       actually trade, and the one that made the difference
-                       between a 96th percentile result and a worse-than-random
-                       one in August.
+  sell on validation   buy the next open, sell at the open after the first bar
+                       that OPENS below the 9 SMA.
+
+                       THIS IS NOT THE RULEBOOK'S EXIT, AND CALLING IT THAT WAS
+                       AN ERROR THIS DOCSTRING EXISTS TO STOP REPEATING. Page
+                       107 is explicit: validation is the first candle holding
+                       below the 9 SMA and it is NOT a concrete exit point, it
+                       is the moment you re-weigh the elevating factors against
+                       the deprecating ones and decide. `exits.py` carries that
+                       distinction in `ExitEvent.is_instruction` and warns that
+                       collapsing validation into a sell is the easiest way to
+                       get exits wrong. This column does exactly that, because
+                       a mechanical rule is all that can be scored without a
+                       person in the loop, and it is labelled as the proxy it is.
+
+                       The rulebook's actual exit is a hard stop at a previous
+                       support level plus a 5% trailing stop armed only AFTER
+                       the price target is reached. Neither can be scored from
+                       the ledger today: the stop basis is the open support
+                       question (three touches is undefined 92% of the time,
+                       and `position.py` records that a stop derived from the
+                       level that earned the ratio stopped out 77% of trades),
+                       and `opportunity.py` deliberately refuses to publish a
+                       price target without a growth direction. Two decisions,
+                       not two bugs.
 
 UNFINISHED IS NOT FLAT. A horizon that has not elapsed yet returns None and is
 recorded as pending. Counting an open position as a zero would drag every mean

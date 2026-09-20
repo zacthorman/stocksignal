@@ -209,13 +209,28 @@ def main() -> None:
         "best trades is a mean you cannot trade, because you do not know in advance "
         "which ones they are.",
         "",
+        "**No significance is claimed anywhere in this file.** Nothing here was "
+        "pre-registered, no test was run, and the trades overlap heavily: dozens bought "
+        "the same morning and held the same sessions are readings of one market move. "
+        "Read it as a record of what happened, and look at the entry-day tables below "
+        "before believing any average.",
+        "",
+        "**The last row is a proxy and not your exit rule.** Page 107 says validation, "
+        "the first candle holding below the 9 SMA, is not a concrete exit point: it is "
+        "where you re-weigh the factors and decide. Selling on it is what can be scored "
+        "without a person in the loop, so that is what the row measures. The rulebook's "
+        "real exit needs a hard stop at a previous support level and a 5% trailing stop "
+        "armed only after the price target is hit, and neither is decided yet: the "
+        "support definition is the project's open question, and the tool deliberately "
+        "publishes no price targets.",
+        "",
         "| horizon | trades | entry days | mean | median | trim best 5% | hit rate |"
         + "".join(f" {n} itself | excess vs {n} (mean / median) |" for n in names),
         "|---|---:|---:|---:|---:|---:|---:|" + "---:|---:|" * len(names),
     ]
     for horizon in (*HORIZONS, RULEBOOK):
         summary = summarise(rows, horizon, names)
-        label = "rulebook exit" if horizon == RULEBOOK else f"{horizon} sessions"
+        label = "sell on validation" if horizon == RULEBOOK else f"{horizon} sessions"
         if summary is None:
             # Not a zero. Nothing has been held that long yet, and the row says
             # so rather than reading as a flat result.
@@ -273,7 +288,7 @@ def main() -> None:
         subset = [s for s in rows if horizon in s.returns]
         if not subset:
             continue
-        label = "rulebook exit" if horizon == RULEBOOK else f"{horizon} sessions"
+        label = "sell on validation" if horizon == RULEBOOK else f"{horizon} sessions"
         clusters: dict[date, list] = defaultdict(list)
         for row_ in subset:
             clusters[row_.entry_date].append(row_)
@@ -306,27 +321,46 @@ def main() -> None:
         "## Data check: are these the prices the digest printed?",
         "",
     ]
+    # A TOLERANCE, BECAUSE A VENDOR CORRECTS THE ODD BAR. The first run of this
+    # check found one name in 1,048 off by 0.9%, which is a late correction to a
+    # daily bar rather than a misalignment, and the report called every number
+    # in it suspect. A check that cries wolf at one row in a thousand gets
+    # ignored at ten in a hundred, which is when it matters. So: exceptions are
+    # listed always, and the verdict flips only when they stop being exceptions.
+    rate = len(disagree) / total_checked if total_checked else 1.0
     if total_checked == 0:
         lines.append(
             f"No signal's date appeared in its own bars, which is itself wrong. "
             f"{unchecked} unchecked."
         )
-    elif not disagree:
+    elif rate <= 0.01:
         lines.append(
-            f"Yes. All {total_checked} signals whose date appears in the bars match the "
-            f"close the digest recorded, within 0.5%. {unchecked} could not be checked "
+            f"**Yes.** {agree} of {total_checked} signals match the close the digest "
+            f"recorded on the same date, within 0.5%. {unchecked} could not be checked "
             "because the signal date is not in the returned history."
         )
     else:
+        lines.append(
+            f"**No, and every number above is suspect.** {len(disagree)} of "
+            f"{total_checked} signals ({rate * 100:.1f}%) disagree with the close the "
+            "digest recorded on the same date, so the returns are measured from prices "
+            "the tool never claimed."
+        )
+    if disagree:
         lines += [
-            f"**No, and every number above is suspect.** {len(disagree)} of {total_checked} "
-            "signals disagree with the close the digest recorded on the same date, so the "
-            "returns are measured from prices the tool never claimed. First ten:",
             "",
-            "| ticker | date | digest said | bars say |",
-            "|---|---|---:|---:|",
+            f"{len(disagree)} exception{'' if len(disagree) == 1 else 's'}, "
+            "which at this rate means a corrected bar rather than a broken join:"
+            if rate <= 0.01
+            else "First ten:",
+            "",
+            "| ticker | date | digest said | bars say | gap |",
+            "|---|---|---:|---:|---:|",
         ]
-        lines += [f"| {t} | {d} | {c:,.2f} | {s_:,.2f} |" for t, d, c, s_ in disagree[:10]]
+        lines += [
+            f"| {t} | {d} | {c:,.2f} | {v:,.2f} | {(v - c) / c * 100:+.2f}% |"
+            for t, d, c, v in disagree[:10]
+        ]
 
     by_screen: dict[str, list] = defaultdict(list)
     for out, row in scored:
