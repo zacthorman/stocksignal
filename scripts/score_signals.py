@@ -163,7 +163,12 @@ def main() -> None:
             unchecked += 1
 
         out = score_signal(
-            ticker, date.fromisoformat(row["as_of"]), frame, benchmarks, cost_pct=args.cost
+            ticker,
+            date.fromisoformat(row["as_of"]),
+            frame,
+            benchmarks,
+            cost_pct=args.cost,
+            logged_at=row.get("logged_at"),
         )
         if out is None:
             pending += 1
@@ -182,6 +187,7 @@ def main() -> None:
                         "score": row.get("score"),
                         "screens": screens_of(row),
                         "held_sessions": out.held,
+                        "fill": out.basis,
                         "returns": {str(k): round(v, 4) for k, v in out.returns.items()},
                         "benchmarks": {
                             name: {str(k): round(v, 4) for k, v in legs.items()}
@@ -193,17 +199,27 @@ def main() -> None:
             )
 
     rows = [out for out, _ in scored]
+    open_fills = sum(1 for r in rows if r.basis == "open")
+    close_fills = len(rows) - open_fills
     names = tuple(benchmarks)
     lines = [
         f"# Signal outcomes, as of {date.today().isoformat()}",
         "",
         f"{len(signals)} signals in the ledger, {len(rows)} with at least one finished "
-        f"horizon, {pending} too recent to have an entry bar yet.",
+        f"horizon, {pending} with nothing finished yet.",
         "",
         "Every signal is scored as an equal-weight paper trade whether or not it was "
         "taken: the ledger records what the tool claimed, so this measures the tool. "
-        f"Entry is the next session's open. Costs of {args.cost}% are deducted once from "
-        "the trade and never from the benchmark.",
+        f"Costs of {args.cost}% are deducted once from the trade and never from the "
+        "benchmark.",
+        "",
+        "**Entry is the first price that existed after the digest did.** A signal "
+        "published before the opening bell fills at the next open; one published after "
+        "it fills at that session's close, which is the next price a reader could "
+        f"actually have paid. Here that is {open_fills} trades filled at an open and "
+        f"{close_fills} at a close. The split is computed per signal from the ledger's "
+        "own clock, so it tracks whatever the scheduled scan actually does rather than "
+        "what it is supposed to do.",
         "",
         "**Read the median and the trimmed mean before the mean.** A mean that needs its "
         "best trades is a mean you cannot trade, because you do not know in advance "

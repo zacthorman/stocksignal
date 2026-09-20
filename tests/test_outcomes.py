@@ -12,13 +12,19 @@ from datetime import date
 import pandas as pd
 import pytest
 
+from stocksignal.backtest import forward_return
 from stocksignal.outcomes import (
+    CLOSE,
+    OPEN,
     RULEBOOK,
     Scored,
     entry_index,
-    rulebook_exit_return,
+    entry_position,
+    fill_basis,
     score_signal,
+    span_return,
     summarise,
+    validation_exit,
 )
 
 
@@ -77,7 +83,7 @@ class TestHorizons:
         assert scored.returns[5] == pytest.approx(-0.2)
 
 
-class TestTheRulebookExit:
+class TestTheValidationProxy:
     def _falling(self):
         # Rises for 20 bars so the 9 SMA is well below price, then gaps down so
         # one bar OPENS below the line.
@@ -87,11 +93,10 @@ class TestTheRulebookExit:
 
     def test_sells_at_the_open_after_the_first_open_below_the_fast_sma(self):
         frame = self._falling()
-        out = rulebook_exit_return(frame, entry_pos=10)
-        assert out is not None
-        pct, held = out
+        held = validation_exit(frame, entry_pos=10)
         # The gap-down bar is position 20; the fill is position 21's open, 81.
         assert held == 21 - 10
+        pct = span_return(frame, 10, 10 + held, OPEN, OPEN, 0.2)
         assert pct == pytest.approx((81.0 / 110.0 - 1.0) * 100.0 - 0.2)
 
     def test_a_dip_that_does_not_open_below_the_line_is_not_an_exit(self):
@@ -99,14 +104,14 @@ class TestTheRulebookExit:
         closes = list(opens)
         closes[20] = 50.0  # a deep wick and a red close, but the OPEN held
         frame = bars(opens, closes)
-        out = rulebook_exit_return(frame, entry_pos=10)
+        held = validation_exit(frame, entry_pos=10)
         # It does eventually exit, because that close drags the SMA, but not on
         # bar 20 itself: p111 says the candle has to OPEN below to count.
-        assert out is None or out[1] != 20 - 10
+        assert held is None or held != 20 - 10
 
     def test_still_open_at_the_end_of_the_data_returns_none(self):
         frame = bars([100.0 + i for i in range(30)])
-        assert rulebook_exit_return(frame, entry_pos=25) is None
+        assert validation_exit(frame, entry_pos=25) is None
 
 
 class TestTheBenchmarkIsHeldForTheSameSessions:
@@ -165,3 +170,110 @@ class TestSummaryRefusesToPrintOnlyTheMean:
 
     def test_a_horizon_nothing_has_finished_at_returns_nothing(self):
         assert summarise([scored_row(1.0)], 60, ("SPY",)) is None
+
+
+# --------------------------------------------------------------------------
+# The fill: a price that existed when the signal did
+# --------------------------------------------------------------------------
+
+
+class TestWhichPriceYouCouldActuallyHavePaid:
+    """The scan ran before the bell until 28 August 2026 and after it since."""
+
+    def test_published_before_the_bell_fills_at_the_open(self):
+        assert fill_basis("2026-09-18T11:59:00", date(2026, 9, 18)) == OPEN
+
+    def test_published_after_the_bell_fills_at_the_close(self):
+        # 15:58 UTC is 11:58 in New York. The open has been and gone.
+        assert fill_basis("2026-09-18T15:58:15", date(2026, 9, 18)) == CLOSE
+
+    def test_published_the_evening_before_fills_at_the_open(self):
+        assert fill_basis("2026-09-17T22:10:00", date(2026, 9, 18)) == OPEN
+
+    def test_a_reconstructed_row_with_no_clock_fills_at_the_open(self):
+        assert fill_basis(None, date(2026, 8, 14)) == OPEN
+
+    def test_an_afternoon_signal_is_scored_from_the_close_it_could_have_bought(self):
+        opens = [100.0] * 10
+        closes = [90.0] * 10
+        closes[7] = 99.0
+        frame = bars(opens, closes)
+        late = score_signal("T", frame.index[1].date(), frame, {}, logged_at="2026-01-07T16:00:00")
+        early = score_signal("T", frame.index[1].date(), frame, {}, logged_at="2026-01-07T11:00:00")
+        # Entry is bar 2. Late pays that bar's close of 90, early pays its open
+        # of 100, and both sell the same close of 99 five sessions later.
+        assert late.basis == CLOSE
+        assert late.returns[5] == pytest.approx((99.0 / 90.0 - 1.0) * 100.0 - 0.2)
+        assert early.returns[5] == pytest.approx((99.0 / 100.0 - 1.0) * 100.0 - 0.2)
+
+
+class TestTheBenchmarkIsPricedLikeTheTrade:
+    def test_the_validation_exit_benchmark_is_open_to_open_too(self):
+        opens = [100.0 + i for i in range(20)] + [80.0, 81.0, 82.0]
+        frame = bars(opens)
+        # SPY opens and closes differ, so pricing the benchmark to a close
+        # instead of an open would show up here.
+        spy = bars([200.0 + i for i in range(len(opens))], [300.0] * len(opens))
+        scored = score_signal("T", frame.index[9].date(), frame, {"SPY": spy})
+        held = scored.held
+        expected = ((200.0 + 10 + held) / (200.0 + 10) - 1.0) * 100.0
+        assert scored.benchmarks["SPY"][RULEBOOK] == pytest.approx(expected)
+
+
+class TestTheConventionStillMatchesTheBacktest:
+    def test_an_open_filled_horizon_equals_backtest_forward_return(self):
+        opens = [100.0 + (i % 5) for i in range(30)]
+        closes = [101.0 + (i % 7) for i in range(30)]
+        frame = bars(opens, closes)
+        for pos in (3, 10, 20):
+            assert span_return(frame, pos, pos + 5, OPEN, CLOSE, 0.2) == pytest.approx(
+                forward_return(frame, pos, 5, 0.2)
+            )
+
+
+class TestAScanThatLandsADayLate:
+    """A delayed schedule, a rerun, a Friday signal scanned on Tuesday."""
+
+    def test_entry_moves_to_the_session_the_reader_could_reach(self):
+        frame = bars([100.0 + i for i in range(10)])
+        signal_day = frame.index[1].date()
+        # Published on the day of bar 4, so bars 2 and 3 had already closed.
+        late = frame.index[4].date().isoformat() + "T15:00:00"
+        assert entry_position(frame, signal_day, late) == 4
+        assert entry_position(frame, signal_day, None) == 2
+
+    def test_a_late_scan_before_the_bell_still_fills_at_that_open(self):
+        frame = bars([100.0 + i for i in range(10)])
+        signal_day = frame.index[1].date()
+        stamp = frame.index[4].date().isoformat() + "T11:00:00"
+        scored = score_signal("T", signal_day, frame, {}, logged_at=stamp)
+        assert scored.entry_date == frame.index[4].date()
+        assert scored.basis == OPEN
+
+    def test_a_stamp_past_the_end_of_the_data_is_not_scored(self):
+        frame = bars([100.0] * 5)
+        assert entry_position(frame, frame.index[0].date(), "2099-01-01T09:00:00") is None
+
+
+class TestClocksThatAreNotNaiveUtc:
+    def test_a_tz_aware_stamp_is_converted_rather_than_read_off_the_wall(self):
+        # 16:00+05:00 is 11:00 UTC, which is before the bell.
+        assert fill_basis("2026-09-18T16:00:00+05:00", date(2026, 9, 18)) == OPEN
+        # 09:00-05:00 is 14:00 UTC, which is after it.
+        assert fill_basis("2026-09-18T09:00:00-05:00", date(2026, 9, 18)) == CLOSE
+
+    def test_an_unparseable_stamp_falls_back_to_the_open_like_a_missing_one(self):
+        assert fill_basis("not a date", date(2026, 9, 18)) == OPEN
+
+
+class TestTheBenchmarkFollowsTheFillBasis:
+    def test_a_close_filled_trade_gets_a_close_filled_benchmark(self):
+        frame = bars([100.0] * 10, [50.0] * 10)
+        spy = bars([200.0] * 10, [400.0] * 10)
+        stamp = frame.index[2].date().isoformat() + "T16:00:00"
+        scored = score_signal("T", frame.index[1].date(), frame, {"SPY": spy}, logged_at=stamp)
+        assert scored.basis == CLOSE
+        # Both legs run close to close, so both are flat rather than the +100%
+        # an open-to-close benchmark would have invented for SPY.
+        assert scored.benchmarks["SPY"][5] == pytest.approx(0.0)
+        assert scored.returns[5] == pytest.approx(-0.2)

@@ -52,10 +52,16 @@ jobs:
           ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
         run: python scripts/score_signals.py --source alpaca
 
+      - name: The control arm, passed against screened out
+        env:
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+        run: python scripts/screen_control.py --source alpaca
+
       - name: Fail if the report did not come out
         # A missing report means the script died quietly, and a quiet death here
         # looks exactly like a week where nothing changed.
-        run: test -s outcomes/REPORT.md
+        run: test -s outcomes/REPORT.md && test -s outcomes/CONTROL.md
 
       - name: Commit it
         run: |

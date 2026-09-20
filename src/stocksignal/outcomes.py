@@ -13,11 +13,23 @@ not Zac took it. The ledger records what the TOOL claimed, so the measurement
 has to be of the tool's calls. Reconstructing which ones he would have taken,
 months later, from memory, would mark its own homework.
 
-ENTRY IS THE NEXT OPEN, ALWAYS. The scan reads completed daily bars, so a
-signal dated D is known after D's close and the earliest fill is D+1's open.
-This matches `backtest.forward_return` exactly, and matching it is the point:
-numbers from the live ledger and numbers from the backtest have to be readable
-against each other or neither means anything.
+ENTRY IS THE FIRST PRICE THAT EXISTED AFTER THE SIGNAL WAS PUBLISHED, AND THAT
+IS NOT ALWAYS THE NEXT OPEN. The design says a signal dated D is known after D's
+close and fills at D+1's open, which matched `backtest.forward_return` and was
+true while the scheduled scan ran before the bell. It stopped being true on
+28 August 2026: every run since has stamped `logged_at` between 15:53 and 18:53
+UTC, which is 11:53 to 14:53 in New York, hours after the open it was being
+scored at. Scoring those signals at D+1's open buys a price that had already
+gone by the time the digest existed.
+
+So the fill follows the clock in the ledger. A signal logged before the opening
+bell fills at D+1's OPEN; one logged after it fills at D+1's CLOSE, which is the
+next price a person reading the message could actually have paid. The basis is
+recorded per trade and counted in the report, because a mixed convention that
+nobody can see is worse than either convention alone.
+
+A row with no `logged_at` is one reconstructed from a digest, which the ledger
+marks; those all predate the drift and are filled at the open.
 
 FOUR HORIZONS, AND THEY ARE NOT INTERCHANGEABLE.
 
@@ -71,11 +83,10 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pandas as pd
 
-from stocksignal.backtest import forward_return
 from stocksignal.indicators import sma
 
 HORIZONS = (5, 20, 60)
@@ -94,35 +105,123 @@ def entry_index(bars: pd.DataFrame, as_of: date) -> int | None:
     return int(bars.index.get_loc(later[0]))
 
 
-def rulebook_exit_return(
+OPEN = "open"
+CLOSE = "close"
+BELL_UTC = 13 * 60 + 30
+"""13:30 UTC is the New York open under EDT, 14:30 under EST.
+
+The earlier of the two is used deliberately: through the winter months it
+classifies the 13:30-14:30 hour as "after the bell" when the market had not
+opened, which costs a slightly later fill and never an unbuyable one. Erring
+the other way would hand the tool prices it could not have had."""
+
+
+def published_at(logged_at: str | None) -> datetime | None:
+    """The ledger's clock, in UTC. None when the row carries no stamp.
+
+    The scan writes `datetime.now().isoformat()` on a GitHub runner, which is
+    naive UTC. A tz-aware stamp is converted rather than trusted for its wall
+    clock, because reading "16:00+05:00" as four in the afternoon UTC would
+    call an after-bell run a before-bell one.
+    """
+    if not logged_at:
+        return None
+    try:
+        stamp = datetime.fromisoformat(logged_at)
+    except ValueError:
+        return None
+    if stamp.tzinfo is not None:
+        stamp = stamp.astimezone(UTC).replace(tzinfo=None)
+    return stamp
+
+
+def fill_basis(logged_at: str | None, entry_day: date) -> str:
+    """OPEN if the signal was published before the bell on the entry day, else CLOSE.
+
+    A stamp LATER than the entry day cannot be filled on it at all, at any
+    price. That case is handled by `entry_position`, which moves the entry to a
+    session the reader could have acted in; by the time this function sees such
+    a row the day has already been corrected, so the late branch here is a
+    backstop and returns the conservative answer.
+    """
+    stamp = published_at(logged_at)
+    if stamp is None:
+        return OPEN
+    if stamp.date() < entry_day:
+        return OPEN
+    if stamp.date() > entry_day:
+        return CLOSE
+    return OPEN if stamp.hour * 60 + stamp.minute < BELL_UTC else CLOSE
+
+
+def entry_position(bars: pd.DataFrame, as_of: date, logged_at: str | None) -> int | None:
+    """The first session the reader could have traded, which is not always D+1.
+
+    Normally the bar after the signal date. But a run that lands a day or more
+    late -- a delayed schedule, a rerun, a Friday signal scanned on Tuesday --
+    publishes after D+1 has already closed, and filling it there would buy a
+    session nobody could reach. Those enter on the first session at or after the
+    day the digest actually existed.
+    """
+    pos = entry_index(bars, as_of)
+    if pos is None:
+        return None
+    stamp = published_at(logged_at)
+    if stamp is None:
+        return pos
+    while pos < len(bars) and bars.index[pos].date() < stamp.date():
+        pos += 1
+    return pos if pos < len(bars) else None
+
+
+def span_return(
+    bars: pd.DataFrame,
+    entry_pos: int,
+    exit_pos: int,
+    entry_field: str,
+    exit_field: str,
+    cost_pct: float,
+) -> float | None:
+    """Percent from one named price to another. None if the exit is off the end.
+
+    ONE FUNCTION FOR THE TRADE AND THE BENCHMARK, which is the point. They were
+    separate, and the benchmark leg for the validation exit was priced to a
+    CLOSE while the trade sold at an OPEN, so every such comparison ran half a
+    session long. Sharing the code makes that class of mismatch unsayable.
+    """
+    if exit_pos >= len(bars) or entry_pos < 0 or exit_pos <= entry_pos:
+        return None
+    entry = float(bars[entry_field].iloc[entry_pos])
+    exit_price = float(bars[exit_field].iloc[exit_pos])
+    if not (math.isfinite(entry) and math.isfinite(exit_price)) or entry <= 0:
+        return None
+    return (exit_price / entry - 1.0) * 100.0 - cost_pct
+
+
+def validation_exit(
     bars: pd.DataFrame,
     entry_pos: int,
     fast_window: int = 9,
-    cost_pct: float = DEFAULT_COST_PCT,
     max_hold: int = MAX_HOLD,
-) -> tuple[float, int] | None:
-    """Hold until the first bar that OPENS below the fast SMA, then sell the next open.
+) -> int | None:
+    """Sessions held until the sell, for the validation proxy. None while still open.
 
-    Returns (percent, sessions held), or None while the trade is still open at
-    the end of the data. A position that reaches `max_hold` without ever opening
-    below the SMA is closed there and reported as closed, because a cap that
-    silently discards its longest holds would drop precisely the trades that
-    trended.
+    The rule scored here: hold until the first bar that OPENS below the fast
+    SMA, sell at the next open. THIS IS NOT THE RULEBOOK'S EXIT. Page 107 calls
+    validation a moment to re-weigh the elevating factors against the
+    deprecating ones, explicitly not a concrete exit point, and `exits.py`
+    carries that distinction. This is the mechanical proxy that can be scored
+    without a person in the loop, and it is named for what it is.
     """
     fast = sma(bars["close"], fast_window)
-    entry = float(bars["open"].iloc[entry_pos])
-    if entry <= 0 or not math.isfinite(entry):
-        return None
     limit = min(entry_pos + max_hold, len(bars) - 2)
     for pos in range(entry_pos, limit + 1):
-        open_ = float(bars["open"].iloc[pos])
+        open_ = float(bars[OPEN].iloc[pos])
         line = float(fast.iloc[pos])
-        if math.isfinite(line) and open_ < line:
-            exit_price = float(bars["open"].iloc[pos + 1])
-            return (exit_price / entry - 1.0) * 100.0 - cost_pct, pos + 1 - entry_pos
+        if math.isfinite(line) and math.isfinite(open_) and open_ < line:
+            return pos + 1 - entry_pos
     if entry_pos + max_hold <= len(bars) - 2:
-        exit_price = float(bars["open"].iloc[entry_pos + max_hold])
-        return (exit_price / entry - 1.0) * 100.0 - cost_pct, max_hold
+        return max_hold
     return None
 
 
@@ -136,6 +235,8 @@ class Scored:
     returns: dict[str | int, float]
     benchmarks: dict[str, dict[str | int, float]]
     held: int | None = None
+    basis: str = "open"
+    """Which price the entry was filled at. See `fill_basis`."""
 
     def excess(self, horizon: str | int, benchmark: str) -> float | None:
         mine = self.returns.get(horizon)
@@ -152,42 +253,47 @@ def score_signal(
     benchmarks: dict[str, pd.DataFrame],
     cost_pct: float = DEFAULT_COST_PCT,
     fast_window: int = 9,
+    logged_at: str | None = None,
 ) -> Scored | None:
-    """Score one signal. None when the entry bar does not exist yet.
+    """Score one signal. None when no horizon has finished yet.
 
-    THE BENCHMARK IS HELD FOR THE SAME NUMBER OF SESSIONS, not the same dates.
-    Sessions are what the horizons are denominated in, and a tracker's calendar
-    can differ from a single name's by a halted day. Costs are NOT deducted from
-    the benchmark: the comparison is "my trade after costs against buying the
-    index", and the index leg is one purchase you would have made anyway.
+    THE BENCHMARK IS HELD FOR THE SAME SESSIONS AND PRICED THE SAME WAY. Same
+    entry basis, same exit field, same number of sessions; only the instrument
+    differs. Costs are deducted from the trade and never from the benchmark,
+    because the comparison is "my trade after costs against buying the index",
+    and the index leg is one purchase made once.
     """
-    entry_pos = entry_index(bars, as_of)
+    entry_pos = entry_position(bars, as_of, logged_at)
     if entry_pos is None or entry_pos >= len(bars):
         return None
+    entry_day = bars.index[entry_pos].date()
+    basis = fill_basis(logged_at, entry_day)
 
-    returns: dict[str | int, float] = {}
-    for horizon in HORIZONS:
-        value = forward_return(bars, entry_pos, horizon, cost_pct)
+    def legs(frame: pd.DataFrame, pos: int, cost: float) -> dict[str | int, float]:
+        out: dict[str | int, float] = {}
+        for horizon in HORIZONS:
+            value = span_return(frame, pos, pos + horizon, basis, CLOSE, cost)
+            if value is not None:
+                out[horizon] = value
+        return out
+
+    returns = legs(bars, entry_pos, cost_pct)
+    held = validation_exit(bars, entry_pos, fast_window)
+    if held is not None:
+        value = span_return(bars, entry_pos, entry_pos + held, basis, OPEN, cost_pct)
         if value is not None:
-            returns[horizon] = value
-
-    held: int | None = None
-    exit_ = rulebook_exit_return(bars, entry_pos, fast_window, cost_pct)
-    if exit_ is not None:
-        returns[RULEBOOK], held = exit_
+            returns[RULEBOOK] = value
+        else:
+            held = None
 
     marks: dict[str, dict[str | int, float]] = {}
     for name, frame in benchmarks.items():
-        bench_entry = entry_index(frame, as_of)
+        bench_entry = entry_position(frame, as_of, logged_at)
         if bench_entry is None:
             continue
-        row: dict[str | int, float] = {}
-        for horizon in HORIZONS:
-            value = forward_return(frame, bench_entry, horizon, 0.0)
-            if value is not None:
-                row[horizon] = value
+        row = legs(frame, bench_entry, 0.0)
         if held is not None:
-            value = forward_return(frame, bench_entry, held, 0.0)
+            value = span_return(frame, bench_entry, bench_entry + held, basis, OPEN, 0.0)
             if value is not None:
                 row[RULEBOOK] = value
         marks[name] = row
@@ -197,10 +303,11 @@ def score_signal(
     return Scored(
         ticker=ticker,
         as_of=as_of,
-        entry_date=bars.index[entry_pos].date(),
+        entry_date=entry_day,
         returns=returns,
         benchmarks=marks,
         held=held,
+        basis=basis,
     )
 
 
