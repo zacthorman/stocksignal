@@ -38,6 +38,8 @@ from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
+import pandas as pd
+
 sys.path.insert(0, "src")
 
 from stocksignal.data import get_source  # noqa: E402
@@ -136,6 +138,13 @@ def main() -> None:
         # SPY costs the comparison, and the report says which happened.
         print(f"benchmark bars unavailable: {', '.join(missing_bench)}")
 
+    # THE CHECK THIS SCRIPT SHOULD HAVE BEEN BORN WITH. The ledger records the
+    # close the tool CLAIMED on the signal date. If the bar this script reads
+    # for that same date disagrees, then every return below is measured from a
+    # price the digest never printed, and the whole report is fiction. It costs
+    # one comparison per signal and it is the only thing standing between a
+    # misalignment and a confident conclusion.
+    agree, disagree, unchecked = 0, [], 0
     scored, pending, unreadable = [], 0, []
     for row in signals:
         ticker = row["ticker"].upper()
@@ -143,6 +152,16 @@ def main() -> None:
         if frame is None or frame.empty:
             unreadable.append(ticker)
             continue
+        stamp = pd.Timestamp(row["as_of"])
+        if stamp in frame.index and row.get("close"):
+            claimed, seen = float(row["close"]), float(frame.loc[stamp, "close"])
+            if seen > 0 and abs(seen - claimed) / claimed <= 0.005:
+                agree += 1
+            else:
+                disagree.append((ticker, row["as_of"], claimed, seen))
+        else:
+            unchecked += 1
+
         out = score_signal(
             ticker, date.fromisoformat(row["as_of"]), frame, benchmarks, cost_pct=args.cost
         )
@@ -190,9 +209,9 @@ def main() -> None:
         "best trades is a mean you cannot trade, because you do not know in advance "
         "which ones they are.",
         "",
-        "| horizon | n | mean | median | trim best 5% | hit rate | top 5% share |"
-        + "".join(f" excess vs {n} (mean / median) |" for n in names),
-        "|---|---:|---:|---:|---:|---:|---:|" + "---:|" * len(names),
+        "| horizon | trades | entry days | mean | median | trim best 5% | hit rate |"
+        + "".join(f" {n} itself | excess vs {n} (mean / median) |" for n in names),
+        "|---|---:|---:|---:|---:|---:|---:|" + "---:|---:|" * len(names),
     ]
     for horizon in (*HORIZONS, RULEBOOK):
         summary = summarise(rows, horizon, names)
@@ -203,22 +222,31 @@ def main() -> None:
             lines.append(f"| {label} | not yet elapsed | | | | | |" + " |" * len(names))
             continue
         cells = "".join(
+            f" {fmt(summary.benchmark_mean.get(n))} |"
             f" {fmt(summary.excess_mean.get(n))} / {fmt(summary.excess_median.get(n))} |"
             for n in names
         )
+        days = len({s.entry_date for s in rows if horizon in s.returns})
         lines.append(
-            f"| {label} | {summary.n} | {fmt(summary.mean)} | {fmt(summary.median)} | "
-            f"{fmt(summary.trimmed)} | {summary.hit_rate:.0f}% | "
-            f"{share(summary.top_5pct_share)} |" + cells
+            f"| {label} | {summary.n} | {days} | {fmt(summary.mean)} | {fmt(summary.median)} | "
+            f"{fmt(summary.trimmed)} | {summary.hit_rate:.0f}% |" + cells
         )
 
     headline = summarise(rows, 20, names)
     if headline is not None:
+        finished = [s for s in rows if 20 in s.returns]
+        days = sorted({s.entry_date for s in finished})
         lines += ["", "## The 20-session horizon, in words", ""]
+        lines.append(
+            f"These {headline.n} trades were entered on {len(days)} mornings, "
+            f"{days[0].isoformat()} to {days[-1].isoformat()}, so this is one window of "
+            "market rather than a track record. It will read differently every month "
+            "until the ledger covers several."
+        )
         spy = headline.excess_mean.get("SPY")
         spy_median = headline.excess_median.get("SPY")
         lines.append(
-            f"{headline.n} finished trades. The average one "
+            "The average one "
             f"{'beat' if (spy or 0) > 0 else 'lost to'} SPY by "
             f"{abs(spy or 0):.2f} points; the median one "
             f"{'beat' if (spy_median or 0) > 0 else 'lost to'} it by "
@@ -234,6 +262,71 @@ def main() -> None:
             lines.append(
                 f"The best 5% of trades supply {headline.top_5pct_share:.0f}% of the total."
             )
+
+    # WHAT n IS REALLY WORTH, AND IT IS NOT WHAT IT SAYS IN THE TABLE. Ninety
+    # names bought on the same morning and held the same twenty sessions are
+    # ninety readings of ONE market move, not ninety independent bets. The
+    # count in the table is trades; the count that governs how much the average
+    # can be trusted is entry days, and on a young ledger that is a handful.
+    # Printing the clusters is the only honest way to show it.
+    for horizon in (20, RULEBOOK):
+        subset = [s for s in rows if horizon in s.returns]
+        if not subset:
+            continue
+        label = "rulebook exit" if horizon == RULEBOOK else f"{horizon} sessions"
+        clusters: dict[date, list] = defaultdict(list)
+        for row_ in subset:
+            clusters[row_.entry_date].append(row_)
+        lines += [
+            "",
+            f"## Every entry day at {label}",
+            "",
+            "One row here is one morning's worth of signals, which is one market "
+            "move. Read the number of rows, not the number of trades, when judging "
+            "how much any average above is worth.",
+            "",
+            "| entry day | trades | mean | median | SPY itself | excess vs SPY |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+        for day in sorted(clusters):
+            summary = summarise(clusters[day], horizon, names)
+            if summary is None:
+                continue
+            lines.append(
+                f"| {day.isoformat()} | {summary.n} | {fmt(summary.mean)} | "
+                f"{fmt(summary.median)} | {fmt(summary.benchmark_mean.get('SPY'))} | "
+                f"{fmt(summary.excess_mean.get('SPY'))} |"
+            )
+
+    # The audit, printed whether it passes or fails. A check that only speaks up
+    # when it is unhappy is a check nobody remembers exists.
+    total_checked = agree + len(disagree)
+    lines += [
+        "",
+        "## Data check: are these the prices the digest printed?",
+        "",
+    ]
+    if total_checked == 0:
+        lines.append(
+            f"No signal's date appeared in its own bars, which is itself wrong. "
+            f"{unchecked} unchecked."
+        )
+    elif not disagree:
+        lines.append(
+            f"Yes. All {total_checked} signals whose date appears in the bars match the "
+            f"close the digest recorded, within 0.5%. {unchecked} could not be checked "
+            "because the signal date is not in the returned history."
+        )
+    else:
+        lines += [
+            f"**No, and every number above is suspect.** {len(disagree)} of {total_checked} "
+            "signals disagree with the close the digest recorded on the same date, so the "
+            "returns are measured from prices the tool never claimed. First ten:",
+            "",
+            "| ticker | date | digest said | bars say |",
+            "|---|---|---:|---:|",
+        ]
+        lines += [f"| {t} | {d} | {c:,.2f} | {s_:,.2f} |" for t, d, c, s_ in disagree[:10]]
 
     by_screen: dict[str, list] = defaultdict(list)
     for out, row in scored:
