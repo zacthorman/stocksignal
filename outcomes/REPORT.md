@@ -6,12 +6,16 @@ Every signal is scored as an equal-weight paper trade whether or not it was take
 
 **Read the median and the trimmed mean before the mean.** A mean that needs its best trades is a mean you cannot trade, because you do not know in advance which ones they are.
 
+**No significance is claimed anywhere in this file.** Nothing here was pre-registered, no test was run, and the trades overlap heavily: dozens bought the same morning and held the same sessions are readings of one market move. Read it as a record of what happened, and look at the entry-day tables below before believing any average.
+
+**The last row is a proxy and not your exit rule.** Page 107 says validation, the first candle holding below the 9 SMA, is not a concrete exit point: it is where you re-weigh the factors and decide. Selling on it is what can be scored without a person in the loop, so that is what the row measures. The rulebook's real exit needs a hard stop at a previous support level and a 5% trailing stop armed only after the price target is hit, and neither is decided yet: the support definition is the project's open question, and the tool deliberately publishes no price targets.
+
 | horizon | trades | entry days | mean | median | trim best 5% | hit rate | SPY itself | excess vs SPY (mean / median) | VT itself | excess vs VT (mean / median) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 5 sessions | 893 | 19 |   -4.20% |   -4.69% |   -5.33% | 30% |   -0.60% |   -3.60% /   -4.06% |   -0.60% |   -3.59% /   -3.81% |
 | 20 sessions | 360 | 5 |  -12.09% |  -14.48% |  -13.84% | 17% |   -1.93% |  -10.16% /  -12.28% |   -2.12% |   -9.97% /  -12.18% |
 | 60 sessions | not yet elapsed | | | | | | | |
-| rulebook exit | 937 | 23 |   -4.26% |   -4.18% |   -4.88% | 21% |   -0.59% |   -3.67% /   -3.60% |   -0.69% |   -3.57% /   -3.44% |
+| sell on validation | 937 | 23 |   -4.26% |   -4.18% |   -4.88% | 21% |   -0.59% |   -3.67% /   -3.60% |   -0.69% |   -3.57% /   -3.44% |
 
 ## The 20-session horizon, in words
 
@@ -30,7 +34,7 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | 2026-08-19 | 35 |   -7.50% |  -10.38% |   -1.01% |   -6.49% |
 | 2026-08-20 | 28 |   -0.44% |   +1.99% |   -0.31% |   -0.13% |
 
-## Every entry day at rulebook exit
+## Every entry day at sell on validation
 
 One row here is one morning's worth of signals, which is one market move. Read the number of rows, not the number of trades, when judging how much any average above is worth.
 
@@ -62,11 +66,13 @@ One row here is one morning's worth of signals, which is one market move. Read t
 
 ## Data check: are these the prices the digest printed?
 
-**No, and every number above is suspect.** 1 of 1048 signals disagree with the close the digest recorded on the same date, so the returns are measured from prices the tool never claimed. First ten:
+**Yes.** 1047 of 1048 signals match the close the digest recorded on the same date, within 0.5%. 0 could not be checked because the signal date is not in the returned history.
 
-| ticker | date | digest said | bars say |
-|---|---|---:|---:|
-| AUGO | 2026-08-14 | 76.02 | 75.32 |
+1 exception, which at this rate means a corrected bar rather than a broken join:
+
+| ticker | date | digest said | bars say | gap |
+|---|---|---:|---:|---:|
+| AUGO | 2026-08-14 | 76.02 | 75.32 | -0.92% |
 
 ## By screen, at 20 sessions
 
