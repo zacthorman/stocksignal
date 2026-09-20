@@ -36,7 +36,23 @@ on:
     #        │  │ ┌── day of month
     #        │  │ │ ┌── month
     #        │  │ │ │ ┌── day of week, 1-5 = Monday to Friday
-    - cron: "0 12 * * 1-5"
+    #
+    # 11:17 AND NOT 12:00, MEASURED RATHER THAN GUESSED. From 12 to 26 August
+    # this fired at 12:00 and the digest was committed between 12:44 and 13:11,
+    # so the schedule was already running ~45 minutes late. On 27 August it
+    # moved: the Actions API shows `created_at` == `run_started_at` at 15:5x to
+    # 17:5x every day since, while the runs themselves still finish in about
+    # ninety seconds. Nothing in this repo changed that day. The delay is
+    # GitHub's scheduler, which deprioritises queued cron runs under load and
+    # is worst at the top of the hour, and the job spent four weeks arriving
+    # after the New York open without anything saying so.
+    #
+    # An odd minute well before the hour is the documented mitigation. It is
+    # not a guarantee: if this keeps landing late, the fix is to stop relying
+    # on GitHub's cron and have something external call `workflow_dispatch`.
+    # Either way the digest now prints its own publication time, so a late one
+    # announces itself instead of quietly implying a fill nobody could get.
+    - cron: "17 11 * * 1-5"
   # Always keep this. A scheduled job you cannot trigger by hand is a job you
   # cannot debug, and you will want to run it the first time without waiting
   # until tomorrow.

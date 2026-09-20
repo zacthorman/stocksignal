@@ -7,11 +7,12 @@ costs the most.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 
 from stocksignal import notify
+from stocksignal.digest import publication_line
 from stocksignal.models import ScreenResult, Signal
 from stocksignal.scanner import ScanReport
 
@@ -299,3 +300,28 @@ class TestTelegramWithMemory:
             memory=_memory([], {"DELL": 4}),
         )
         assert "DELL ×4" in sent["text"]
+
+
+# --------------------------------------------------------------------------
+# The message says when it was sent, because the scheduler stopped being early
+# --------------------------------------------------------------------------
+
+
+class TestPublicationTime:
+    """Four weeks of digests arrived after the open without saying so."""
+
+    def test_before_the_bell_promises_the_open(self):
+        line = publication_line(datetime(2026, 9, 18, 11, 17, tzinfo=UTC))
+        assert "before the New York open" in line and "today's open" in line
+
+    def test_after_the_bell_says_the_open_has_gone(self):
+        line = publication_line(datetime(2026, 9, 18, 15, 58, tzinfo=UTC))
+        assert "after the New York open" in line and "today's close" in line
+
+    def test_the_boundary_is_the_bell_itself(self):
+        assert "before" in publication_line(datetime(2026, 9, 18, 13, 29, tzinfo=UTC))
+        assert "after" in publication_line(datetime(2026, 9, 18, 13, 30, tzinfo=UTC))
+
+    def test_the_phone_message_carries_it(self):
+        text = notify.render_telegram(report([signal("NVDA")]))
+        assert "New York open" in text

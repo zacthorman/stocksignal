@@ -34,6 +34,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from stocksignal.digest import publication_line
 from stocksignal.memory import ScanMemory
 from stocksignal.scanner import ScanReport
 
@@ -133,7 +134,11 @@ def render_telegram(
     header = (
         f"<b>stocksignal</b> · {report.as_of.isoformat()}\n"
         f"scanned {report.scanned} · passed {len(report.signals)} · "
-        f"rejected {len(report.rejected)} · errors {len(report.errors)}"
+        f"rejected {len(report.rejected)} · errors {len(report.errors)}\n"
+        # THE READER CANNOT SEE THE CLOCK THE JOB RAN ON. Since 27 August 2026
+        # the scheduler has been firing hours late, so "buy the open" stopped
+        # being available without anything saying so.
+        f"<i>{escape(publication_line().strip('_'))}</i>"
     )
 
     if not report.signals:

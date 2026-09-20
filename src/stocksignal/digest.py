@@ -7,6 +7,8 @@ tempted to print.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from rich.console import Console
 from rich.table import Table
 
@@ -85,6 +87,31 @@ def render_terminal(
             console.print(f"  [red]![/red] {ticker}: {reason}")
 
 
+def publication_line(now: datetime | None = None) -> str:
+    """When this digest was written, and therefore what you could buy on it.
+
+    WHY A DIGEST HAS TO SAY ITS OWN TIME. The design assumes the scan lands
+    before the New York open, so a signal read at breakfast is acted on at that
+    morning's open. GitHub's scheduler stopped cooperating on 27 August 2026:
+    the 12:00 UTC cron began firing three to six hours late, the runs themselves
+    still taking ninety seconds, and every digest since has arrived after the
+    market opened. Nothing in the message said so, so the reader could not tell
+    a pre-open list from a mid-session one, and the scoring quietly assumed the
+    open either way.
+
+    The line costs nothing and it is checkable against the file's own history.
+    """
+    now = now or datetime.now(UTC)
+    bell = now.replace(hour=13, minute=30, second=0, microsecond=0)
+    when = now.strftime("%H:%M UTC")
+    if now < bell:
+        return f"_Published {when}, before the New York open. First fill: today's open._"
+    return (
+        f"_Published {when}, after the New York open. The open has gone, so the first "
+        "price this could be acted on is today's close._"
+    )
+
+
 def _candidate_block(
     lines: list[str],
     signals,
@@ -127,6 +154,8 @@ def render_markdown(
         # margins. A digest that quietly stopped carrying the second reading
         # would look identical to one where every company came back clean.
         balance.header(report.as_of) if balance else MISSING_STORE_NOTE,
+        "",
+        publication_line(),
         "",
     ]
 
