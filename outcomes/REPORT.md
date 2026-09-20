@@ -1,8 +1,10 @@
 # Signal outcomes, as of 2026-09-20
 
-1048 signals in the ledger, 957 with at least one finished horizon, 91 too recent to have an entry bar yet.
+1048 signals in the ledger, 957 with at least one finished horizon, 91 with nothing finished yet.
 
-Every signal is scored as an equal-weight paper trade whether or not it was taken: the ledger records what the tool claimed, so this measures the tool. Entry is the next session's open. Costs of 0.2% are deducted once from the trade and never from the benchmark.
+Every signal is scored as an equal-weight paper trade whether or not it was taken: the ledger records what the tool claimed, so this measures the tool. Costs of 0.2% are deducted once from the trade and never from the benchmark.
+
+**Entry is the first price that existed after the digest did.** A signal published before the opening bell fills at the next open; one published after it fills at that session's close, which is the next price a reader could actually have paid. Here that is 533 trades filled at an open and 424 at a close. The split is computed per signal from the ledger's own clock, so it tracks whatever the scheduled scan actually does rather than what it is supposed to do.
 
 **Read the median and the trimmed mean before the mean.** A mean that needs its best trades is a mean you cannot trade, because you do not know in advance which ones they are.
 
@@ -12,10 +14,10 @@ Every signal is scored as an equal-weight paper trade whether or not it was take
 
 | horizon | trades | entry days | mean | median | trim best 5% | hit rate | SPY itself | excess vs SPY (mean / median) | VT itself | excess vs VT (mean / median) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 5 sessions | 893 | 19 |   -4.20% |   -4.69% |   -5.33% | 30% |   -0.60% |   -3.60% /   -4.06% |   -0.60% |   -3.59% /   -3.81% |
+| 5 sessions | 893 | 19 |   -4.23% |   -4.92% |   -5.37% | 31% |   -0.56% |   -3.66% /   -4.41% |   -0.52% |   -3.71% /   -4.39% |
 | 20 sessions | 360 | 5 |  -12.09% |  -14.48% |  -13.84% | 17% |   -1.93% |  -10.16% /  -12.28% |   -2.12% |   -9.97% /  -12.18% |
 | 60 sessions | not yet elapsed | | | | | | | |
-| sell on validation | 937 | 23 |   -4.26% |   -4.18% |   -4.88% | 21% |   -0.59% |   -3.67% /   -3.60% |   -0.69% |   -3.57% /   -3.44% |
+| sell on validation | 937 | 23 |   -4.18% |   -4.04% |   -4.77% | 22% |   -0.45% |   -3.73% /   -3.42% |   -0.45% |   -3.72% /   -3.36% |
 
 ## The 20-session horizon, in words
 
@@ -40,29 +42,29 @@ One row here is one morning's worth of signals, which is one market move. Read t
 
 | entry day | trades | mean | median | SPY itself | excess vs SPY |
 |---|---:|---:|---:|---:|---:|
-| 2026-08-14 | 94 |   -4.94% |   -6.00% |   -1.51% |   -3.43% |
-| 2026-08-17 | 98 |   -7.83% |   -8.42% |   -1.31% |   -6.52% |
-| 2026-08-18 | 105 |   -4.44% |   -3.99% |   -0.34% |   -4.09% |
-| 2026-08-19 | 35 |   -4.51% |   -5.09% |   -0.67% |   -3.85% |
-| 2026-08-20 | 28 |   -0.07% |   -0.29% |   -0.07% |   +0.01% |
-| 2026-08-21 | 28 |   -4.87% |   -4.76% |   -0.06% |   -4.81% |
-| 2026-08-24 | 30 |   -4.09% |   -4.21% |   +0.04% |   -4.13% |
-| 2026-08-25 | 23 |   -3.45% |   -3.84% |   -0.17% |   -3.28% |
-| 2026-08-26 | 26 |   -5.21% |   -5.14% |   +0.04% |   -5.24% |
-| 2026-08-28 | 65 |   -6.40% |   -5.86% |   -0.92% |   -5.48% |
-| 2026-08-31 | 59 |   -3.40% |   -3.02% |   -0.46% |   -2.94% |
-| 2026-09-01 | 27 |   -2.34% |   -1.12% |   +0.58% |   -2.92% |
-| 2026-09-02 | 13 |   -2.17% |   -1.24% |   +0.71% |   -2.88% |
-| 2026-09-03 | 13 |   -0.63% |   -1.30% |   -0.77% |   +0.14% |
-| 2026-09-04 | 26 |   -2.72% |   -2.53% |   -1.34% |   -1.38% |
-| 2026-09-08 | 39 |   -4.56% |   -4.83% |   -1.17% |   -3.39% |
-| 2026-09-09 | 61 |   -5.31% |   -5.81% |   -0.59% |   -4.72% |
-| 2026-09-10 | 65 |   -2.06% |   -1.29% |   +0.29% |   -2.35% |
-| 2026-09-11 | 38 |   -5.72% |   -5.79% |   -0.96% |   -4.75% |
-| 2026-09-14 | 48 |   +0.16% |   +0.93% |   -0.26% |   +0.42% |
-| 2026-09-15 | 10 |   -0.95% |   -0.74% |   -0.43% |   -0.52% |
-| 2026-09-16 | 4 |   -3.61% |   -4.23% |   +0.47% |   -4.09% |
-| 2026-09-17 | 2 |   -2.89% |   -2.89% |   +0.06% |   -2.94% |
+| 2026-08-14 | 94 |   -4.94% |   -6.00% |   -1.29% |   -3.66% |
+| 2026-08-17 | 98 |   -7.83% |   -8.42% |   -1.11% |   -6.73% |
+| 2026-08-18 | 105 |   -4.44% |   -3.99% |   -0.15% |   -4.29% |
+| 2026-08-19 | 35 |   -4.51% |   -5.09% |   -0.58% |   -3.93% |
+| 2026-08-20 | 28 |   -0.07% |   -0.29% |   -0.02% |   -0.05% |
+| 2026-08-21 | 28 |   -4.87% |   -4.76% |   -0.09% |   -4.78% |
+| 2026-08-24 | 30 |   -4.09% |   -4.21% |   -0.01% |   -4.08% |
+| 2026-08-25 | 23 |   -3.45% |   -3.84% |   -0.24% |   -3.20% |
+| 2026-08-26 | 26 |   -5.21% |   -5.14% |   -0.02% |   -5.18% |
+| 2026-08-28 | 65 |   -6.40% |   -5.86% |   -1.03% |   -5.38% |
+| 2026-08-31 | 59 |   -3.17% |   -2.49% |   -0.56% |   -2.62% |
+| 2026-09-01 | 27 |   -1.45% |   -0.20% |   +0.27% |   -1.71% |
+| 2026-09-02 | 13 |   -3.12% |   -0.93% |   +0.03% |   -3.15% |
+| 2026-09-03 | 13 |   -1.57% |   -0.07% |   -1.23% |   -0.34% |
+| 2026-09-04 | 26 |   -3.59% |   -2.57% |   -0.92% |   -2.67% |
+| 2026-09-08 | 39 |   -4.36% |   -5.35% |   -0.58% |   -3.78% |
+| 2026-09-09 | 61 |   -5.03% |   -4.55% |   -0.14% |   -4.88% |
+| 2026-09-10 | 65 |   -1.95% |   -0.58% |   +0.55% |   -2.50% |
+| 2026-09-11 | 38 |   -6.09% |   -6.13% |   -0.56% |   -5.53% |
+| 2026-09-14 | 48 |   +1.03% |   +1.10% |   -0.10% |   +1.13% |
+| 2026-09-15 | 10 |   +0.00% |   +1.54% |   +0.43% |   -0.42% |
+| 2026-09-16 | 4 |   -0.38% |   -0.52% |   +1.21% |   -1.59% |
+| 2026-09-17 | 2 |   -0.15% |   -0.15% |   +0.08% |   -0.23% |
 
 ## Data check: are these the prices the digest printed?
 
