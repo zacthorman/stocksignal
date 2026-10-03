@@ -1,4 +1,4 @@
-# Did passing the screens beat not passing them? As of 2026-09-26
+# Did passing the screens beat not passing them? As of 2026-10-03
 
 Each morning's published signals against the names the same scan rejected **on a screen rather than a gate**: same watchlist, same day, same holding period, so the beta and the market cancel and what is left is the screens' opinion.
 
@@ -8,9 +8,9 @@ Each morning's published signals against the names the same scan rejected **on a
 
 ## 5 sessions
 
-**12 of 24 days favour the screens**, median daily difference **+0.01 points**. Those days overlap heavily, so that count is description rather than evidence.
+**17 of 29 days favour the screens**, median daily difference **+0.37 points**. Those days overlap heavily, so that count is description rather than evidence.
 
-**No test yet.** Only 4 non-overlapping days exist at this horizon, and even if every one agreed the p could not fall below 0.125. A number here would read as a measurement when it would only be arithmetic on one observation, so there isn't one.
+Of the 5 non-overlapping days, 4 favour the screens: sign test p = 0.375.
 
 | day | passed | median | control | median | difference |
 |---|---:|---:|---:|---:|---:|
@@ -34,14 +34,19 @@ Each morning's published signals against the names the same scan rejected **on a
 | 2026-09-09 | 69 | -0.23% | 136 | -0.51% | +0.28 |
 | 2026-09-10 | 42 | +0.86% | 163 | -1.01% | +1.87 |
 | 2026-09-11 | 52 | +11.50% | 153 | +5.40% | +6.10 |
-| 2026-09-14 | 15 | +15.14% | 187 | +9.55% | +5.59 |
+| 2026-09-14 | 15 | +15.14% | 187 | +9.56% | +5.58 |
 | 2026-09-15 | 19 | +4.68% | 182 | +6.99% | -2.32 |
 | 2026-09-16 | 24 | +2.64% | 178 | +4.00% | -1.36 |
 | 2026-09-17 | 45 | +3.76% | 158 | +3.36% | +0.40 |
+| 2026-09-18 | 50 | -1.22% | 153 | -1.86% | +0.64 |
+| 2026-09-21 | 68 | -1.62% | 137 | -2.97% | +1.35 |
+| 2026-09-22 | 75 | -0.41% | 131 | -1.07% | +0.66 |
+| 2026-09-23 | 67 | +0.33% | 137 | -0.74% | +1.08 |
+| 2026-09-24 | 53 | +1.90% | 151 | +0.55% | +1.35 |
 
 ## 20 sessions
 
-**1 of 9 days favour the screens**, median daily difference **-4.15 points**. Those days overlap heavily, so that count is description rather than evidence.
+**6 of 14 days favour the screens**, median daily difference **-1.38 points**. Those days overlap heavily, so that count is description rather than evidence.
 
 **No test yet.** Only 1 non-overlapping day exists at this horizon, and even if every one agreed the p could not fall below 1.000. A number here would read as a measurement when it would only be arithmetic on one observation, so there isn't one.
 
@@ -51,15 +56,20 @@ Each morning's published signals against the names the same scan rejected **on a
 | 2026-08-14 | 98 | -18.11% | 117 | -13.64% | -4.48 |
 | 2026-08-17 | 105 | -14.95% | 105 | -9.71% | -5.23 |
 | 2026-08-18 | 35 | -10.18% | 177 | -7.80% | -2.38 |
-| 2026-08-19 | 28 | +2.19% | 185 | -3.88% | +6.07 |
+| 2026-08-19 | 28 | +2.17% | 185 | -3.88% | +6.05 |
 | 2026-08-20 | 28 | -3.67% | 182 | -2.56% | -1.11 |
-| 2026-08-21 | 30 | -0.50% | 178 | +1.13% | -1.63 |
+| 2026-08-21 | 30 | -0.52% | 178 | +1.13% | -1.65 |
 | 2026-08-24 | 23 | -4.03% | 186 | +0.12% | -4.15 |
-| 2026-08-25 | 26 | -6.80% | 181 | +1.23% | -8.04 |
+| 2026-08-25 | 26 | -6.82% | 181 | +1.23% | -8.06 |
+| 2026-08-27 | 66 | +3.47% | 139 | -2.30% | +5.77 |
+| 2026-08-28 | 60 | +6.84% | 144 | +2.61% | +4.23 |
+| 2026-08-31 | 28 | +7.09% | 179 | +5.80% | +1.28 |
+| 2026-09-01 | 14 | +9.97% | 189 | +7.05% | +2.92 |
+| 2026-09-02 | 14 | +9.30% | 191 | +7.33% | +1.97 |
 
 ---
 
-Cohorts came from 29 digests: 4622 rejections on a screen, 1441 on a hard gate. Gated names are excluded from the control on purpose: a name turned down for an 11 million float says nothing about the trend screen.
+Cohorts came from 34 digests: 5329 rejections on a screen, 1722 on a hard gate. Gated names are excluded from the control on purpose: a name turned down for an 11 million float says nothing about the trend screen.
 
 Costs are not deducted on either leg, because both cohorts pay the same round trip and it cancels in the difference.
 
