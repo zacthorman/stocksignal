@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-03",
+  "as_of": "2026-10-03",
   "readings": {
     "AAOI": {
       "coverage": 4,
@@ -278,30 +278,14 @@
     },
     "ALMU": {
       "coverage": 3,
-      "flags": [
-        {
-          "check": "receivables vs payables",
-          "message": "Receivables grew +1503% against payables at +14%, a 1489 point gap. Cash is leaving faster than it arrives.",
-          "severity": "serious"
-        },
-        {
-          "check": "receivables vs revenue",
-          "message": "Receivables grew +1503% while revenue grew +408%, a 1096 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
-          "severity": "serious"
-        },
-        {
-          "check": "collection period",
-          "message": "Receivable days went from 24 to 75. It is taking 51 days longer to get paid than a year ago.",
-          "severity": "watch"
-        }
-      ],
+      "flags": [],
       "notes": [
-        "1. Cash of 4m, covering 515% of current liabilities.",
-        "2. 89% of assets are current, 0% are goodwill and intangibles, current ratio 24.59.",
+        "1. Cash of 56m, covering 2963% of current liabilities.",
+        "2. 94% of assets are current, current ratio 30.32.",
         "3. Debt: not reported separately.",
-        "4. Receivables +1503% against payables at +14%, 75 days of revenue outstanding."
+        "4. Receivables -65% against payables at -6%, 28 days of revenue outstanding."
       ],
-      "verdict": "WATCH"
+      "verdict": "SOLID"
     },
     "ALNT": {
       "coverage": 3,
@@ -3831,13 +3815,13 @@
     "CCJ": "EdgarError: CCJ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "ENLT": "EdgarError: ENLT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "ERO": "EdgarError: ERO: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "GFS": "EdgarError: GFS: files no us-gaap facts, only ['dei', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
+    "GFS": "EdgarError: GFS: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'srt']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "HBM": "EdgarError: HBM: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "HMY": "EdgarError: HMY: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "IAG": "EdgarError: IAG: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IMOS": "EdgarError: IMOS: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IPX": "EdgarError: IPX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "ISSC": "not in the SEC ticker-to-CIK map (10,391 symbols). Cause not established: a foreign issuer, an ETF, a delisting and a ticker change all look identical from here.",
+    "ISSC": "not in the SEC ticker-to-CIK map (10,434 symbols). Cause not established: a foreign issuer, an ETF, a delisting and a ticker change all look identical from here.",
     "MT": "EdgarError: MT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'invest']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "NBTX": "EdgarError: NBTX: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "SA": "EdgarError: SA: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 7 us-gaap tags.",
