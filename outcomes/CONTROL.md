@@ -1,4 +1,4 @@
-# Did passing the screens beat not passing them? As of 2026-10-10
+# Did passing the screens beat not passing them? As of 2026-10-17
 
 Each morning's published signals against the names the same scan rejected **on a screen rather than a gate**: same watchlist, same day, same holding period, so the beta and the market cancel and what is left is the screens' opinion.
 
@@ -8,9 +8,9 @@ Each morning's published signals against the names the same scan rejected **on a
 
 ## 5 sessions
 
-**19 of 34 days favour the screens**, median daily difference **+0.33 points**. Those days overlap heavily, so that count is description rather than evidence.
+**19 of 38 days favour the screens**, median daily difference **+0.01 points**. Those days overlap heavily, so that count is description rather than evidence.
 
-Of the 6 non-overlapping days, 4 favour the screens: sign test p = 0.688.
+Of the 7 non-overlapping days, 4 favour the screens: sign test p = 1.000.
 
 | day | passed | median | control | median | difference |
 |---|---:|---:|---:|---:|---:|
@@ -48,12 +48,16 @@ Of the 6 non-overlapping days, 4 favour the screens: sign test p = 0.688.
 | 2026-09-29 | 61 | +2.09% | 138 | +1.38% | +0.72 |
 | 2026-09-30 | 58 | -3.50% | 140 | -1.30% | -2.20 |
 | 2026-10-01 | 48 | -5.93% | 151 | -2.89% | -3.04 |
+| 2026-10-05 | 81 | -9.58% | 119 | -7.62% | -1.96 |
+| 2026-10-06 | 83 | -12.21% | 120 | -10.64% | -1.56 |
+| 2026-10-07 | 48 | -12.09% | 151 | -7.19% | -4.90 |
+| 2026-10-08 | 40 | -17.56% | 157 | -12.81% | -4.75 |
 
 ## 20 sessions
 
-**10 of 19 days favour the screens**, median daily difference **+1.28 points**. Those days overlap heavily, so that count is description rather than evidence.
+**14 of 24 days favour the screens**, median daily difference **+1.54 points**. Those days overlap heavily, so that count is description rather than evidence.
 
-**No test yet.** Only 1 non-overlapping day exists at this horizon, and even if every one agreed the p could not fall below 1.000. A number here would read as a measurement when it would only be arithmetic on one observation, so there isn't one.
+**No test yet.** Only 2 non-overlapping days exist at this horizon, and even if every one agreed the p could not fall below 0.500. A number here would read as a measurement when it would only be arithmetic on one observation, so there isn't one.
 
 | day | passed | median | control | median | difference |
 |---|---:|---:|---:|---:|---:|
@@ -76,10 +80,15 @@ Of the 6 non-overlapping days, 4 favour the screens: sign test p = 0.688.
 | 2026-09-08 | 64 | +5.89% | 141 | +1.79% | +4.09 |
 | 2026-09-09 | 69 | +4.88% | 136 | +0.83% | +4.05 |
 | 2026-09-10 | 42 | +3.40% | 163 | +0.49% | +2.91 |
+| 2026-09-11 | 52 | +7.50% | 153 | +1.30% | +6.21 |
+| 2026-09-14 | 15 | +5.32% | 187 | +2.65% | +2.67 |
+| 2026-09-15 | 19 | -3.04% | 182 | -4.31% | +1.27 |
+| 2026-09-16 | 24 | -5.71% | 178 | -7.50% | +1.80 |
+| 2026-09-17 | 45 | -12.16% | 158 | -12.02% | -0.14 |
 
 ---
 
-Cohorts came from 38 digests: 5876 rejections on a screen, 1947 on a hard gate. Gated names are excluded from the control on purpose: a name turned down for an 11 million float says nothing about the trend screen.
+Cohorts came from 42 digests: 6573 rejections on a screen, 2215 on a hard gate. Gated names are excluded from the control on purpose: a name turned down for an 11 million float says nothing about the trend screen.
 
 Costs are not deducted on either leg, because both cohorts pay the same round trip and it cancels in the difference.
 
