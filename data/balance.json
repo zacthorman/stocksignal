@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-03",
+  "as_of": "2026-11-03",
   "readings": {
     "AAOI": {
       "coverage": 4,
@@ -1924,18 +1924,28 @@
       "coverage": 3,
       "flags": [
         {
-          "check": "capitalised costs",
-          "message": "Intangibles grew +91% while revenue grew +3%. Check whether development costs are being capitalised onto the balance sheet rather than expensed.",
-          "severity": "watch"
+          "check": "current ratio",
+          "message": "Current ratio 0.99, below 1.0. Current liabilities exceed current assets by 153m, which is the shape that precedes a cash call.",
+          "severity": "serious"
+        },
+        {
+          "check": "negative NTAV",
+          "message": "Net tangible assets are NEGATIVE at -211m, because 1,828m of the balance sheet is goodwill and intangibles. Most of that is GOODWILL, so it came from buying businesses rather than from capitalising the company's own costs. Ordinary for an acquirer and not the mining-company trap, but it does mean there is no tangible asset backing behind the equity.",
+          "severity": "serious"
+        },
+        {
+          "check": "leverage",
+          "message": "Net debt of 1,640m exceeds equity of 1,613m. Creditors have priority and there is more owed than owned.",
+          "severity": "serious"
         }
       ],
       "notes": [
-        "1. Cash of 1,933m, covering 14% of current liabilities.",
-        "2. 74% of assets are current, 6% are goodwill and intangibles, current ratio 1.00.",
-        "3. Debt of 2,885m against cash, so net debt of 952m.",
+        "1. Cash of 1,739m, covering 8% of current liabilities.",
+        "2. 78% of assets are current, 7% are goodwill and intangibles, current ratio 0.99.",
+        "3. Debt of 3,379m against cash, so net debt of 1,640m.",
         "4. Receivables against payables: no trade receivable line is reported. For a lender the equivalent sits in the loan book, which is a different thing and is deliberately not substituted here."
       ],
-      "verdict": "WATCH"
+      "verdict": "CONCERN"
     },
     "KLAC": {
       "coverage": 4,
@@ -2330,14 +2340,25 @@
     },
     "MU": {
       "coverage": 4,
-      "flags": [],
-      "notes": [
-        "1. Cash of 9,642m, covering 84% of current liabilities.",
-        "2. 35% of assets are current, 2% are goodwill and intangibles, current ratio 2.52.",
-        "3. Debt of 12,093m against cash, so net debt of 2,451m.",
-        "4. Receivables +32% against payables at +32%, 70 days of revenue outstanding."
+      "flags": [
+        {
+          "check": "receivables vs payables",
+          "message": "Receivables grew +344% against payables at +134%, a 210 point gap. Cash is leaving faster than it arrives.",
+          "severity": "serious"
+        },
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +344% while revenue grew +256%, a 88 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        }
       ],
-      "verdict": "SOLID"
+      "notes": [
+        "1. Cash of 38,364m, covering 140% of current liabilities.",
+        "2. 46% of assets are current, 1% are goodwill and intangibles, current ratio 3.31.",
+        "3. Debt of 3,283m against cash, so net CASH of 35,081m.",
+        "4. Receivables +344% against payables at +134%, 87 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "MUX": {
       "coverage": 3,
@@ -2575,14 +2596,25 @@
     },
     "PENG": {
       "coverage": 4,
-      "flags": [],
-      "notes": [
-        "1. Cash of 454m, covering 96% of current liabilities.",
-        "2. 66% of assets are current, 14% are goodwill and intangibles, current ratio 2.25.",
-        "3. Debt of 482m against cash, so net debt of 28m.",
-        "4. Receivables +22% against payables at +47%, 82 days of revenue outstanding."
+      "flags": [
+        {
+          "check": "receivables vs revenue",
+          "message": "Receivables grew +159% while revenue grew +26%, a 132 point gap. Sales are being booked faster than they are being collected. This is the pattern that precedes a profitable company running out of money.",
+          "severity": "serious"
+        },
+        {
+          "check": "collection period",
+          "message": "Receivable days went from 82 to 168. It is taking 86 days longer to get paid than a year ago.",
+          "severity": "watch"
+        }
       ],
-      "verdict": "SOLID"
+      "notes": [
+        "1. Cash of 647m, covering 54% of current liabilities.",
+        "2. 81% of assets are current, 7% are goodwill and intangibles, current ratio 1.88.",
+        "3. Debt of 842m against cash, so net debt of 195m.",
+        "4. Receivables +159% against payables at +205%, 168 days of revenue outstanding."
+      ],
+      "verdict": "WATCH"
     },
     "PGY": {
       "coverage": 1,
@@ -3811,7 +3843,7 @@
     "AUGO": "EdgarError: AUGO: files no us-gaap facts, only ['dei']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "AYA": "EdgarError: not found: https://data.sec.gov/api/xbrl/companyfacts/CIK0001826836.json",
     "BBAR": "EdgarError: BBAR: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "BRUN": "EdgarError: BRUN: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: none. The filer reports 177 us-gaap tags.",
+    "BRUN": "EdgarError: BRUN: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: none. The filer reports 178 us-gaap tags.",
     "CCJ": "EdgarError: CCJ: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "ENLT": "EdgarError: ENLT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "ERO": "EdgarError: ERO: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
@@ -3821,7 +3853,7 @@
     "IAG": "EdgarError: IAG: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IMOS": "EdgarError: IMOS: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 1 us-gaap tags.",
     "IPX": "EdgarError: IPX: files no us-gaap facts, only ['dei', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
-    "ISSC": "not in the SEC ticker-to-CIK map (10,434 symbols). Cause not established: a foreign issuer, an ETF, a delisting and a ticker change all look identical from here.",
+    "ISSC": "not in the SEC ticker-to-CIK map (10,423 symbols). Cause not established: a foreign issuer, an ETF, a delisting and a ticker change all look identical from here.",
     "MT": "EdgarError: MT: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full', 'invest']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "NBTX": "EdgarError: NBTX: files no us-gaap facts, only ['dei', 'ffd', 'ifrs-full']. This reader covers us-gaap only, so a 20-F filer reporting under IFRS is not unreadable, it is unread.",
     "SA": "EdgarError: SA: no total-assets figure under any of [Assets, LiabilitiesAndStockholdersEquity, AssetsNet]. Other accounting taxonomies present: ['ifrs-full']. The filer reports 7 us-gaap tags.",
