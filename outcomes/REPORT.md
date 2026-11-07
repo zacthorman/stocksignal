@@ -1,10 +1,10 @@
-# Signal outcomes, as of 2026-10-31
+# Signal outcomes, as of 2026-11-07
 
-2080 signals in the ledger, 2012 with at least one finished horizon, 68 with nothing finished yet.
+2131 signals in the ledger, 2118 with at least one finished horizon, 13 with nothing finished yet.
 
 Every signal is scored as an equal-weight paper trade whether or not it was taken: the ledger records what the tool claimed, so this measures the tool. Costs of 0.2% are deducted once from the trade and never from the benchmark.
 
-**Entry is the first price that existed after the digest did.** A signal published before the opening bell fills at the next open; one published after it fills at that session's close, which is the next price a reader could actually have paid. Here that is 533 trades filled at an open and 1479 at a close. The split is computed per signal from the ledger's own clock, so it tracks whatever the scheduled scan actually does rather than what it is supposed to do.
+**Entry is the first price that existed after the digest did.** A signal published before the opening bell fills at the next open; one published after it fills at that session's close, which is the next price a reader could actually have paid. Here that is 533 trades filled at an open and 1585 at a close. The split is computed per signal from the ledger's own clock, so it tracks whatever the scheduled scan actually does rather than what it is supposed to do.
 
 **Read the median and the trimmed mean before the mean.** A mean that needs its best trades is a mean you cannot trade, because you do not know in advance which ones they are.
 
@@ -14,15 +14,15 @@ Every signal is scored as an equal-weight paper trade whether or not it was take
 
 | horizon | trades | entry days | mean | median | trim best 5% | hit rate | SPY itself | excess vs SPY (mean / median) | VT itself | excess vs VT (mean / median) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 5 sessions | 1995 | 47 |   -2.90% |   -2.81% |   -4.07% | 37% |   -0.13% |   -2.77% /   -2.96% |   -0.31% |   -2.59% /   -2.69% |
-| 20 sessions | 1653 | 34 |   -7.75% |   -9.41% |   -9.86% | 29% |   +0.04% |   -7.79% /   -9.51% |   -1.03% |   -6.71% /   -8.43% |
+| 5 sessions | 2080 | 52 |   -3.38% |   -3.26% |   -4.56% | 36% |   -0.23% |   -3.14% /   -3.22% |   -0.39% |   -2.99% /   -2.95% |
+| 20 sessions | 1905 | 38 |  -10.07% |  -11.33% |  -12.23% | 26% |   -0.41% |   -9.66% /  -10.99% |   -1.32% |   -8.75% /  -10.20% |
 | 60 sessions | not yet elapsed | | | | | | | |
-| sell on validation | 2010 | 51 |   -2.80% |   -2.40% |   -3.56% | 31% |   -0.07% |   -2.73% /   -2.28% |   -0.30% |   -2.49% /   -2.03% |
+| sell on validation | 2118 | 56 |   -2.88% |   -2.41% |   -3.65% | 31% |   -0.10% |   -2.79% /   -2.28% |   -0.31% |   -2.57% /   -2.04% |
 
 ## The 20-session horizon, in words
 
-These 1653 trades were entered on 34 mornings, 2026-08-14 to 2026-10-02, so this is one window of market rather than a track record. It will read differently every month until the ledger covers several.
-The average one lost to SPY by 7.79 points; the median one lost to it by 9.51.
+These 1905 trades were entered on 38 mornings, 2026-08-14 to 2026-10-09, so this is one window of market rather than a track record. It will read differently every month until the ledger covers several.
+The average one lost to SPY by 9.66 points; the median one lost to it by 10.99.
 
 ## Every entry day at 20 sessions
 
@@ -35,7 +35,7 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | 2026-08-18 | 105 |  -12.28% |  -15.15% |   -1.91% |  -10.37% |
 | 2026-08-19 | 35 |   -7.50% |  -10.38% |   -1.01% |   -6.49% |
 | 2026-08-20 | 28 |   -0.44% |   +1.97% |   -0.31% |   -0.13% |
-| 2026-08-21 | 28 |   -1.85% |   -3.87% |   +1.22% |   -3.08% |
+| 2026-08-21 | 28 |   -1.85% |   -3.86% |   +1.22% |   -3.08% |
 | 2026-08-24 | 30 |   +1.97% |   -0.72% |   +1.38% |   +0.60% |
 | 2026-08-25 | 23 |   -2.21% |   -4.23% |   +0.46% |   -2.67% |
 | 2026-08-26 | 26 |   -0.76% |   -7.02% |   +0.57% |   -1.33% |
@@ -62,8 +62,12 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | 2026-09-28 | 65 |  -19.10% |  -21.12% |   -0.03% |  -19.07% |
 | 2026-09-29 | 60 |  -16.35% |  -17.54% |   +0.71% |  -17.06% |
 | 2026-09-30 | 61 |  -13.25% |  -13.01% |   +1.27% |  -14.52% |
-| 2026-10-01 | 58 |  -15.82% |  -17.57% |   +0.70% |  -16.52% |
+| 2026-10-01 | 58 |  -15.82% |  -17.56% |   +0.70% |  -16.52% |
 | 2026-10-02 | 48 |  -23.25% |  -26.13% |   -1.81% |  -21.44% |
+| 2026-10-06 | 81 |  -23.13% |  -25.70% |   -3.18% |  -19.95% |
+| 2026-10-07 | 83 |  -22.98% |  -25.36% |   -1.34% |  -21.64% |
+| 2026-10-08 | 48 |  -30.37% |  -35.31% |   -5.29% |  -25.08% |
+| 2026-10-09 | 40 |  -28.46% |  -32.61% |   -5.56% |  -22.90% |
 
 ## Every entry day at sell on validation
 
@@ -105,7 +109,7 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | 2026-09-30 | 61 |   -0.91% |   -0.05% |   +1.26% |   -2.17% |
 | 2026-10-01 | 58 |   -2.36% |   -1.06% |   +1.26% |   -3.62% |
 | 2026-10-02 | 48 |   -6.67% |   -6.46% |   +0.63% |   -7.30% |
-| 2026-10-06 | 81 |   -6.23% |   -5.50% |   -0.50% |   -5.74% |
+| 2026-10-06 | 81 |   -6.24% |   -5.50% |   -0.50% |   -5.74% |
 | 2026-10-07 | 83 |   -4.63% |   -2.72% |   -0.25% |   -4.38% |
 | 2026-10-08 | 48 |   -2.85% |   -1.54% |   +0.21% |   -3.05% |
 | 2026-10-09 | 40 |   -6.18% |   -5.46% |   -0.41% |   -5.77% |
@@ -116,18 +120,23 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | 2026-10-19 | 8 |   -0.62% |   -0.87% |   -0.09% |   -0.53% |
 | 2026-10-20 | 4 |   -0.14% |   +0.64% |   -0.09% |   -0.05% |
 | 2026-10-21 | 2 |   -1.06% |   -1.06% |   -0.98% |   -0.08% |
-| 2026-10-22 | 9 |   +0.12% |   -0.26% |   -0.31% |   +0.43% |
-| 2026-10-23 | 6 |   +1.23% |   +0.58% |   +0.42% |   +0.81% |
-| 2026-10-26 | 3 |   +3.32% |   +1.25% |   +0.06% |   +3.26% |
-| 2026-10-27 | 4 |   -0.27% |   +0.45% |   -0.27% |   +0.00% |
-| 2026-10-28 | 5 |   -8.21% |   -4.98% |   -1.03% |   -7.18% |
-| 2026-10-29 | 5 |   -3.59% |   -2.89% |   -1.04% |   -2.56% |
+| 2026-10-22 | 10 |   +0.23% |   -0.24% |   -0.43% |   +0.66% |
+| 2026-10-23 | 7 |   +1.13% |   +0.55% |   +0.23% |   +0.91% |
+| 2026-10-26 | 4 |   +2.80% |   +1.25% |   -0.37% |   +3.17% |
+| 2026-10-27 | 6 |   -1.32% |   -0.05% |   -0.69% |   -0.63% |
+| 2026-10-28 | 22 |   -9.13% |   -9.03% |   -1.61% |   -7.52% |
+| 2026-10-29 | 27 |   -7.32% |   -7.59% |   -1.41% |   -5.91% |
+| 2026-10-30 | 26 |   -1.39% |   +0.27% |   +0.23% |   -1.63% |
+| 2026-11-02 | 12 |   +0.40% |   +0.29% |   +0.68% |   -0.28% |
+| 2026-11-03 | 13 |   -5.52% |   -1.45% |   +0.07% |   -5.59% |
+| 2026-11-04 | 9 |   -5.79% |   -4.56% |   -1.95% |   -3.84% |
+| 2026-11-05 | 4 |   +4.01% |   +3.56% |   +0.25% |   +3.76% |
 
 ## Data check: are these the prices the digest printed?
 
-**Yes.** 2066 of 2080 signals match the close the digest recorded on the same date, within 0.5%. 0 could not be checked because the signal date is not in the returned history.
+**No, and every number above is suspect.** 41 of 2131 signals (1.9%) disagree with the close the digest recorded on the same date, so the returns are measured from prices the tool never claimed.
 
-14 exceptions, which at this rate means a corrected bar rather than a broken join:
+First ten:
 
 | ticker | date | digest said | bars say | gap |
 |---|---|---:|---:|---:|
@@ -136,11 +145,11 @@ One row here is one morning's worth of signals, which is one market move. Read t
 | HMY | 2026-08-14 | 19.44 | 19.02 | -2.16% |
 | HMY | 2026-08-17 | 20.03 | 19.60 | -2.15% |
 | HMY | 2026-08-19 | 21.09 | 20.64 | -2.13% |
+| SCCO | 2026-08-19 | 194.68 | 192.18 | -1.28% |
 | HMY | 2026-08-20 | 22.02 | 21.55 | -2.13% |
+| SCCO | 2026-08-20 | 198.73 | 196.18 | -1.28% |
 | HMY | 2026-08-21 | 23.54 | 23.03 | -2.17% |
-| HMY | 2026-08-24 | 22.81 | 22.32 | -2.15% |
-| HMY | 2026-08-25 | 22.95 | 22.45 | -2.18% |
-| HMY | 2026-09-09 | 20.80 | 20.35 | -2.16% |
+| SCCO | 2026-08-21 | 216.00 | 213.23 | -1.28% |
 
 ## By screen, at 20 sessions
 
@@ -148,9 +157,9 @@ Descriptive. A screen looking better here is not a reason to promote it: these a
 
 | screen | n | mean | median | trim best 5% | excess vs SPY | excess vs VT |
 |---|---:|---:|---:|---:|---:|---:|
-| breakout | 50 |  -12.81% |  -13.69% |  -14.54% |  -13.23% |  -11.90% |
-| tradability | 1120 |   -7.61% |   -9.25% |   -9.81% |   -8.24% |   -6.87% |
-| trend | 1621 |   -7.72% |   -9.47% |   -9.85% |   -7.76% |   -6.68% |
+| breakout | 59 |  -14.33% |  -14.31% |  -15.90% |  -14.24% |  -13.13% |
+| tradability | 1372 |  -10.86% |  -11.86% |  -13.10% |  -10.76% |   -9.67% |
+| trend | 1868 |  -10.01% |  -11.35% |  -12.17% |   -9.61% |   -8.70% |
 
 ---
 
